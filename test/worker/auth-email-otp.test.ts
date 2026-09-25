@@ -1,11 +1,13 @@
 import { SELF } from "cloudflare:test";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getSentMails, resetSentMails } from "../../src/worker/lib/mailer";
+import { stubTurnstileSiteverify } from "./support/turnstile";
 
 async function signUp(email: string, password: string) {
+	stubTurnstileSiteverify(true);
 	return SELF.fetch("https://example.com/api/auth/sign-up/email", {
 		method: "POST",
-		headers: { "content-type": "application/json" },
+		headers: { "content-type": "application/json", "x-turnstile-token": "valid-token" },
 		body: JSON.stringify({ email, password, name: "テストユーザー" }),
 	});
 }
@@ -21,6 +23,10 @@ function extractCode(text: string): string {
 describe("6桁の確認コードによるメール確認", () => {
 	beforeEach(() => {
 		resetSentMails();
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
 	});
 
 	it("登録→コードが送信される→コードで確認→ログインできる", async () => {

@@ -17,7 +17,7 @@
 - [x] T6: Better Authの基本設定
 - [x] T7: 確認コード(6桁)による確認・パスワード再設定
 - [x] T8: 認証のレート制限
-- [ ] T9: 新規登録のbot対策(Turnstile)
+- [x] T9: 新規登録のbot対策(Turnstile)
 - [ ] T10: セキュリティヘッダとキャッシュ
 - [ ] T11: デザインの基礎(色・文字)
 - [ ] T12: アイコンとStatusIcon
@@ -91,3 +91,10 @@
 - IPアドレスの取得は、rateLimitオプションではなくトップレベルの`advanced.ipAddress.ipAddressHeaders`で設定することをドキュメントで確認し、`["cf-connecting-ip"]`を指定した(既知の落とし穴2)
 - rateLimit.storage: "database" にしたことで rate_limit テーブルが追加になったため、`npx auth generate` → `pnpm run db:generate` を再実行し、新しいマイグレーション(migrations/0001_white_stepford_cuckoos.sql)を生成した
 - テストは、同一IPから6回連続でログイン失敗を試み、6回目が429になること、そして制限に達した後でも別IPからの試行は429にならないことを確認する形にした
+
+### T9
+
+- 公式ドキュメントでTurnstileのテスト用キーを確認した。secretは常に成功する `1x0000000000000000000000000000000AA` を.dev.vars.exampleに設定した(失敗させたい場合は `2x0000000000000000000000000000000AA` に差し替える旨をコメントで残した)
+- siteverify APIのリクエストは `secret`・`response`・`remoteip` のフィールド名、レスポンスは `success` の真偽値であることを公式ドキュメントで確認して実装した
+- 新規登録にTurnstileを必須にしたことで、T6・T7で書いた既存のテスト(サインアップを行うもの)がトークン無しで失敗するようになったため、共通のテストヘルパー(test/worker/support/turnstile.ts の stubTurnstileSiteverify)を作り、該当テストにヘッダーとモックを追加して修正した
+- Turnstileの検証はHonoのミドルウェア(src/worker/middleware/turnstile.ts)として実装し、`app.use("/api/auth/sign-up/email", turnstileMiddleware)` で対象パスのみに適用した。他の認証エンドポイント(ログイン・コード確認等)には適用していない(指示通り新規登録のみ)

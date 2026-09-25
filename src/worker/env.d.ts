@@ -4,10 +4,12 @@ export {};
 declare global {
 	interface Env {
 		readonly BETTER_AUTH_SECRET: string;
+		readonly TURNSTILE_SECRET_KEY: string;
 	}
 	namespace Cloudflare {
 		interface Env {
 			readonly BETTER_AUTH_SECRET: string;
+			readonly TURNSTILE_SECRET_KEY: string;
 		}
 	}
 }

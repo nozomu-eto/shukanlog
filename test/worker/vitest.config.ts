@@ -22,6 +22,9 @@ export default defineConfig({
 						BETTER_AUTH_SECRET: "test-only-secret-do-not-use-in-production-32chars",
 						// テストではメール送信を実際には行わず、内容を記録するmemory実装を使う
 						MAIL_TRANSPORT: "memory",
+						// TURNSTILE_SECRET_KEYもwrangler secretで設定するシークレットのため、テストではここで補う
+						// (実際の値はテストごとにfetchのモックで検証結果を制御する)
+						TURNSTILE_SECRET_KEY: "test-only-turnstile-secret",
 					},
 				},
 			};

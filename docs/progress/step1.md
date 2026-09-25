@@ -23,7 +23,7 @@
 - [x] T12: アイコンとStatusIcon
 - [x] T13: 画面の骨組み(ルーティング)
 - [x] T14: ドキュメント
-- [ ] T15: PRの作成
+- [x] T15: PRの作成(手動作成が必要。詳細は判断ログのT15を参照)
 
 ## 判断ログ
 
@@ -132,3 +132,47 @@
 - lucide-reactのLICENSEファイルを直接確認し、Feather Icons由来としてMITライセンス表記が付くアイコンの一覧に`chevron-left`・`chevron-right`・`plus`が含まれ、`settings`は含まれない(Lucide独自でISCのみ)ことを確認してdocs/licenses.mdに反映した
 - docs/architecture.mdは、T1〜T13で実際に判断・実装した内容(Better Authの構成、レート制限のルール表、メール送信の安全装置、セキュリティヘッダ、既知の落とし穴と対策)を一次情報として書いた。日付の扱い(日本時間基準)は指示に明記が無かったため、サービスの性質(「今日やったか」を記録する)から方針として明記した
 - docs/production-verification.mdは、指示にあった6項目(プレースホルダー置き換え・D1作成・secret登録・Email Sendingドメイン登録と実機確認・Turnstile本番キー・課金通知)に加え、リポジトリを公開する前のシークレットスキャンの項目を追加した(指示の「完了時の報告」欄にも同様の項目があったため)
+
+### T15
+
+- `gh` CLIは使用可能・認証済み(アカウント: n-eto-dev)だったが、このリポジトリには git remote(origin)が設定されておらず、T1の作業前にユーザーへ確認したところ「pushせずローカルでコミットのみ進める」との指示だったため、リモートリポジトリが存在しない状態のまま作業した。そのため `gh pr create` を実行できる状態になく、**PRは手動で作成する**。
+- また、git のコミット者情報(n-eto-hub)と `gh` の認証アカウント(n-eto-dev)が異なっている点も未確認のまま残っている。リモートを用意する際にどちらのアカウントを使うか、あわせて確認してほしい。
+- 以下はPRの本文として使う想定の下書き。
+
+```
+## 概要
+
+shukanlog(Cloudflare版)の基盤(ステップ1、T1〜T15)を実装した。
+
+- 雛形の整理・React Router導入(T1)
+- テスト(Worker用: @cloudflare/vitest-plugin、フロントエンド用: jsdom + Testing Library)・lint環境(T2)
+- wranglerの設定・本番環境の分離(T3)
+- D1・drizzleの設定(T4)
+- メール送信の仕組み(console/memory/cloudflareの3実装、本番での安全装置付き)(T5)
+- Better Authの基本設定(メールアドレス・パスワード、requireEmailVerification)(T6)
+- 6桁の確認コードによるメールアドレス確認・パスワード再設定(emailOTPプラグイン)(T7)
+- 認証エンドポイントのレート制限(Better Auth rateLimit、storage: database)(T8)
+- 新規登録へのTurnstile導入(T9)
+- セキュリティヘッダ・静的ファイルのキャッシュ設定(T10)
+- 色・文字のデザイントークン(T11)
+- 状態記号(StatusIcon)・アイコン(lucide-react)の導入(T12)
+- 画面のルーティングの骨組み(T13)
+- README・アーキテクチャ・公開前確認手順・ライセンスのドキュメント(T14)
+
+画面の中身(日・週・月タブ、設定画面、認証フォームなど)は指示によりこのステップの範囲外としており、実装していない。
+
+## 自分で判断した事項(抜粋。詳細はdocs/progress/step1.mdの判断ログを参照)
+
+- git remoteが無かったため、ユーザーの指示でpushせずローカルコミットのみで進めた
+- @cloudflare/vitest-pool-workersが現在は@cloudflare/vitest-pluginに置き換わっていることを公式ドキュメントで確認し、後者を採用した
+- Better AuthのCLIが@better-auth/cliから独立パッケージ`auth`に移っていたため、`npx auth generate`を使った
+- assets.run_worker_firstを`["/api/*"]`から`true`に変更し、静的ファイルもWorker経由でセキュリティヘッダを付けられるようにした
+
+## 次のステップに持ち越した事項
+
+- 画面の中身(日・週・月タブ、設定画面、認証フォームなど)全般
+- メールアドレス変更のOTPフロー(emailOTPプラグインの`changeEmail`オプションの有効化。仕組みは使えることを確認済み)
+- 利用規約への同意状況による/app配下の振り分け(現在はログイン有無のみで振り分けている)
+- 本番環境の実際のセットアップ(D1作成・secret登録・Turnstile本番キー・Email Sendingドメイン登録など。docs/production-verification.mdに手順を用意済み)
+```
+

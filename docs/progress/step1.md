@@ -19,7 +19,7 @@
 - [x] T8: 認証のレート制限
 - [x] T9: 新規登録のbot対策(Turnstile)
 - [x] T10: セキュリティヘッダとキャッシュ
-- [ ] T11: デザインの基礎(色・文字)
+- [x] T11: デザインの基礎(色・文字)
 - [ ] T12: アイコンとStatusIcon
 - [ ] T13: 画面の骨組み(ルーティング)
 - [ ] T14: ドキュメント
@@ -105,3 +105,9 @@
 - ASSETSから返るレスポンスはヘッダーを直接変更できないため、`new Response(assetResponse.body, assetResponse)` で複製してからCache-Controlを付けている(既知の落とし穴3)。Honoの`secureHeaders`ミドルウェアは`app.use("*", ...)`でルーティングの外側にかけており、ハンドラが返した(複製済みの)レスポンスに対して後からヘッダーを追加する形になるため、ASSETSの元レスポンスを直接書き換えようとする問題は起きない
 - `wrangler dev`を実際に起動し、/api/health・/ (index.html)・存在しないパス・/assets/配下のファイルの4パターンで、指定した全ヘッダー(HSTS・X-Content-Type-Options・Referrer-Policy・X-Frame-Options・CSP Report-Only)とアセットのCache-Controlが実際に付くことを確認した
 - CSPはReport-Onlyでの導入のみとし(指示通り)、違反を収集する仕組み(report-uri/report-to)はこのステップでは設定していない(将来必要になれば追加する)
+
+### T11
+
+- 色・文字のCSS変数は docs/design.md 2章・3章の表をそのままstyles/tokens.cssの変数にした(T1で作った空の器を埋める形)
+- Fontsourceは、パッケージ内に太さごとの個別CSSファイル(400.css/500.css/700.css)が用意されていることを確認し、必要な太さ(Zen Maru Gothic: 500,700 / Zen Kaku Gothic New: 400,500,700)だけをmain.tsxでインポートした(全体をまとめて読み込むファイルは使っていない)
+- フォーカス表示は `:focus-visible` に対して outline 2px 実線・オフセット2pxを指定した(指示の色 #1F1F1D は --color-text と同じ値のため変数を使った)

@@ -2,6 +2,8 @@
 	"name": "shukanlog",
 	"description": "服薬・運動・カロリーを記録し、週・月で振り返る個人向けの健康習慣記録サービス",
 	"dependencies": {
+		"@fontsource/zen-kaku-gothic-new": "^5.3.0",
+		"@fontsource/zen-maru-gothic": "^5.3.0",
 		"better-auth": "^1.7.6",
 		"drizzle-orm": "^0.45.3",
 		"hono": "4.11.1",

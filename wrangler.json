@@ -16,9 +16,11 @@
 	"upload_source_maps": true,
 	"assets": {
 		"directory": "./dist/client",
-		// /api/ 始まりのパスは常にWorkerへ(静的ファイルとして探しに行かない)。
-		// これが無いと /api/ 配下も静的ファイル層で処理され、Honoのルートに届かない
-		"run_worker_first": ["/api/*"],
+		// ASSETSバインディング経由でWorkerから静的ファイルを取得できるようにする(セキュリティヘッダ付与のため)
+		"binding": "ASSETS",
+		// 常にWorkerを先に実行する。静的ファイルはWorker側でASSETSバインディングを呼んで取得し、
+		// レスポンスにセキュリティヘッダを付けてから返す(既知の落とし穴3)
+		"run_worker_first": true,
 		"not_found_handling": "single-page-application"
 	},
 

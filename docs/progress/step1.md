@@ -18,7 +18,7 @@
 - [x] T7: 確認コード(6桁)による確認・パスワード再設定
 - [x] T8: 認証のレート制限
 - [x] T9: 新規登録のbot対策(Turnstile)
-- [ ] T10: セキュリティヘッダとキャッシュ
+- [x] T10: セキュリティヘッダとキャッシュ
 - [ ] T11: デザインの基礎(色・文字)
 - [ ] T12: アイコンとStatusIcon
 - [ ] T13: 画面の骨組み(ルーティング)
@@ -98,3 +98,10 @@
 - siteverify APIのリクエストは `secret`・`response`・`remoteip` のフィールド名、レスポンスは `success` の真偽値であることを公式ドキュメントで確認して実装した
 - 新規登録にTurnstileを必須にしたことで、T6・T7で書いた既存のテスト(サインアップを行うもの)がトークン無しで失敗するようになったため、共通のテストヘルパー(test/worker/support/turnstile.ts の stubTurnstileSiteverify)を作り、該当テストにヘッダーとモックを追加して修正した
 - Turnstileの検証はHonoのミドルウェア(src/worker/middleware/turnstile.ts)として実装し、`app.use("/api/auth/sign-up/email", turnstileMiddleware)` で対象パスのみに適用した。他の認証エンドポイント(ログイン・コード確認等)には適用していない(指示通り新規登録のみ)
+
+### T10
+
+- T3で `assets.run_worker_first` を `["/api/*"]` にしていたため、/api/ 以外の静的ファイルはWorkerを経由せず配信されており、このままではセキュリティヘッダを付けられないことに気づいた。`run_worker_first: true` に変更し、すべてのリクエストがWorkerを通るようにした上で、/api/ 以外を処理する `app.get("*", serveAssets)` を追加し、その中で `c.env.ASSETS.fetch()` を呼んで静的ファイルを取得している(ASSETSバインディングを新設)
+- ASSETSから返るレスポンスはヘッダーを直接変更できないため、`new Response(assetResponse.body, assetResponse)` で複製してからCache-Controlを付けている(既知の落とし穴3)。Honoの`secureHeaders`ミドルウェアは`app.use("*", ...)`でルーティングの外側にかけており、ハンドラが返した(複製済みの)レスポンスに対して後からヘッダーを追加する形になるため、ASSETSの元レスポンスを直接書き換えようとする問題は起きない
+- `wrangler dev`を実際に起動し、/api/health・/ (index.html)・存在しないパス・/assets/配下のファイルの4パターンで、指定した全ヘッダー(HSTS・X-Content-Type-Options・Referrer-Policy・X-Frame-Options・CSP Report-Only)とアセットのCache-Controlが実際に付くことを確認した
+- CSPはReport-Onlyでの導入のみとし(指示通り)、違反を収集する仕組み(report-uri/report-to)はこのステップでは設定していない(将来必要になれば追加する)

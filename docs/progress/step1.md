@@ -13,7 +13,7 @@
 - [x] T2: テストとlintの準備
 - [x] T3: wranglerの設定と本番環境の分離
 - [x] T4: D1とdrizzle
-- [ ] T5: メール送信
+- [x] T5: メール送信
 - [ ] T6: Better Authの基本設定
 - [ ] T7: 確認コード(6桁)による確認・パスワード再設定
 - [ ] T8: 認証のレート制限
@@ -60,3 +60,9 @@
 - src/worker/db/schema/index.ts は、認証テーブル(T6)やドメインテーブル(ステップ2以降)をまだ持たない空のバレルファイルとして用意した。この時点でテーブルが無いため `drizzle-kit generate` は「No schema changes」で何も生成しない。migrations/ の仕組み自体(readD1Migrations→miniflareのbindingsに注入→apply-migrations.tsでapplyD1Migrations)が正しく動くことは、D1へ `SELECT 1` を投げるテスト(test/worker/db.test.ts)で確認した。実際のテーブル定義・マイグレーションはT6以降で追加する
 - cloudflare:test の `env` の型は `Cloudflare.Env`(worker-configuration.d.tsのnamespace)であり、素のグローバル`Env`とは別物だったため、テスト専用のTEST_MIGRATIONSバインディングの型は `declare global { namespace Cloudflare { interface Env {...} } }` で拡張する必要があった(最初グローバルEnvを拡張して失敗した)
 - migrations/ ディレクトリはgitで空ディレクトリを追跡できないため .gitkeep を置いた
+
+### T5
+
+- Cloudflare公式ドキュメントを確認したところ、send_emailバインディングには生MIMEを組み立てる従来のEmailMessage方式に加え、`env.MAILER.send({ to, from, subject, text, html })` という構造化オブジェクトをそのまま渡せる新しいAPIがあることが分かったため、依存(mimetext)を増やさずに済むこちらを採用した
+- createMailerの引数型は、生成されたEnv型のMAIL_TRANSPORTがwrangler.jsonのvarsから導出されるリテラルユニオン("console"|"cloudflare")になっており"memory"を受け付けられないため、Mailer用に独自の最小限のMailerEnv型(MAIL_TRANSPORT: string)を定義して受け取るようにした。これによりテスト用の"memory"も型エラー無く渡せる
+- メモリ実装の送信記録は、モジュールスコープの配列に保持し、getSentMails/resetSentMailsで参照・初期化する方式にした(テストごとにbeforeEachでリセット)

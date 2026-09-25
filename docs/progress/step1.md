@@ -11,7 +11,7 @@
 
 - [x] T1: 雛形を整える
 - [x] T2: テストとlintの準備
-- [ ] T3: wranglerの設定と本番環境の分離
+- [x] T3: wranglerの設定と本番環境の分離
 - [ ] T4: D1とdrizzle
 - [ ] T5: メール送信
 - [ ] T6: Better Authの基本設定
@@ -45,3 +45,12 @@
 - Worker用テストとフロントエンド用テストは、実行環境(実際のWorkersランタイム vs jsdom)が異なり1つの設定に同居できないため、ルートの vitest.config.ts の `test.projects` で test/worker/vitest.config.ts と test/frontend/vitest.config.ts の2つを束ねる構成にした
 - tsconfig.test.json をT1で見送った分、ここで追加した(test/ 配下に実ファイルができたため)
 - D1マイグレーションの適用の仕組み(readD1Migrations/applyD1Migrations)は、D1バインディング自体がまだ無いためT4で行うことにし、T2では /api/health の最小テストのみ用意した
+
+### T3
+
+- Cloudflare公式ドキュメントを確認したところ、`assets`と`main`(Worker)を両方設定した場合、既定では静的アセットが優先され、Workerは静的ファイルに一致しないリクエストにのみ実行される仕様だった。これだと /api/health も(一致する静的ファイルが無いため)SPAのフォールバックでindex.htmlが返ってしまう。`assets.run_worker_first: ["/api/*"]` を指定することで /api/ 配下は常にWorkerが処理するようにした。`wrangler dev`を実際に起動し、`/api/health`が200のJSON、`/`がSPAのHTMLを返すことを確認した
+- Wranglerの環境(env.production)は、compatibility_date/compatibility_flags/assetsなど一部のキーはトップレベルから引き継がれるが、vars・d1_databases・send_email・ratelimits などのバインディング系キーは環境ごとに完全に再定義が必要という公式ドキュメントの記載を確認し、production環境側に同じ形でバインディングを書いた
+- 開発用D1のdatabase_idは、実際のD1データベース作成をT4で行うため、T3時点では "REPLACE_WITH_DEV_D1_DATABASE_ID" のプレースホルダーにした(ローカル実行のみなら実IDが無くても`wrangler dev`は起動できることを確認済み)
+- Workers Rate Limitingバインディング(ratelimits)は、ログイン等の細かい制限はBetter AuthのcustomRules(T8)で行う方針のため、ここではAPI全体への過度なアクセスを防ぐ粗い制限(60秒に300回)として`API_RATE_LIMITER`を1つ定義した。用途はT8以降で検討する
+- send_emailバインディングは、開発・テストではconsole/memory実装を使いCloudflareのEmail Sendingを使わないため、production環境にのみ定義した
+- deploy:productionスクリプトはタスク指示通り作成したが実行はしていない

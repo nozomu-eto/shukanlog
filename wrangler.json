@@ -6,39 +6,82 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "shukanlog",
 	"main": "./src/worker/index.ts",
-	"compatibility_date": "2025-10-08",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
+	// compatibility_date は作業日の日付にする(既知の落とし穴1: 2026-03-03より前だと
+	// Better Authのログイン失敗時に「未処理のPromise拒否」が誤検知されテストが失敗する)
+	"compatibility_date": "2026-09-25",
+	"compatibility_flags": ["nodejs_compat"],
 	"observability": {
 		"enabled": true
 	},
 	"upload_source_maps": true,
 	"assets": {
 		"directory": "./dist/client",
+		// /api/ 始まりのパスは常にWorkerへ(静的ファイルとして探しに行かない)。
+		// これが無いと /api/ 配下も静的ファイル層で処理され、Honoのルートに届かない
+		"run_worker_first": ["/api/*"],
 		"not_found_handling": "single-page-application"
+	},
+
+	// 開発用(トップレベル)の環境変数・バインディング
+	"vars": {
+		"BETTER_AUTH_URL": "http://localhost:5173",
+		"MAIL_TRANSPORT": "console",
+		"MAIL_FROM_ADDRESS": "noreply@example.com"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "shukanlog-dev",
+			// 開発用DBの実体はT4でローカルにセットアップする(ローカル実行のみのためIDは仮のまま)
+			"database_id": "REPLACE_WITH_DEV_D1_DATABASE_ID",
+			"migrations_dir": "./migrations"
+		}
+	],
+	"ratelimits": [
+		{
+			// APIへの過度なアクセスを弾くための全体的なレート制限(period は 10 か 60 のみ指定可能)。
+			// ログイン試行回数などの細かい制限はBetter Auth側のcustomRulesで行う(既知の落とし穴5)
+			"name": "API_RATE_LIMITER",
+			"namespace_id": "1001",
+			"simple": { "limit": 300, "period": 60 }
+		}
+	],
+
+	// 本番環境。バインディングは環境ごとに再定義が必要(トップレベルからは引き継がれない)
+	"env": {
+		"production": {
+			"vars": {
+				"BETTER_AUTH_URL": "https://shukanlog.com",
+				"MAIL_TRANSPORT": "cloudflare",
+				"MAIL_FROM_ADDRESS": "noreply@shukanlog.com"
+			},
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "shukanlog-production",
+					"database_id": "REPLACE_WITH_PRODUCTION_D1_DATABASE_ID",
+					"migrations_dir": "./migrations"
+				}
+			],
+			"send_email": [
+				{
+					"name": "MAILER",
+					"destination_address": "REPLACE_WITH_VERIFIED_DESTINATION_ADDRESS"
+				}
+			],
+			"ratelimits": [
+				{
+					"name": "API_RATE_LIMITER",
+					"namespace_id": "1002",
+					"simple": { "limit": 300, "period": 60 }
+				}
+			]
+		}
 	}
+
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
 	 */
 	// "placement": {  "mode": "smart" }
-	/**
-	 * Bindings
-	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
-	 * databases, object storage, AI inference, real-time communication and more.
-	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
-	 */
-	/**
-	 * Environment Variables
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
-	 * Note: Use secrets to store sensitive data.
-	 * https://developers.cloudflare.com/workers/configuration/secrets/
-	 */
-	// "vars": {  "MY_VARIABLE": "production_value" }
-	/**
-	 * Service Bindings (communicate between multiple Workers)
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
-	 */
-	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
 }

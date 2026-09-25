@@ -12,7 +12,7 @@
 - [x] T1: 雛形を整える
 - [x] T2: テストとlintの準備
 - [x] T3: wranglerの設定と本番環境の分離
-- [ ] T4: D1とdrizzle
+- [x] T4: D1とdrizzle
 - [ ] T5: メール送信
 - [ ] T6: Better Authの基本設定
 - [ ] T7: 確認コード(6桁)による確認・パスワード再設定
@@ -54,3 +54,9 @@
 - Workers Rate Limitingバインディング(ratelimits)は、ログイン等の細かい制限はBetter AuthのcustomRules(T8)で行う方針のため、ここではAPI全体への過度なアクセスを防ぐ粗い制限(60秒に300回)として`API_RATE_LIMITER`を1つ定義した。用途はT8以降で検討する
 - send_emailバインディングは、開発・テストではconsole/memory実装を使いCloudflareのEmail Sendingを使わないため、production環境にのみ定義した
 - deploy:productionスクリプトはタスク指示通り作成したが実行はしていない
+
+### T4
+
+- src/worker/db/schema/index.ts は、認証テーブル(T6)やドメインテーブル(ステップ2以降)をまだ持たない空のバレルファイルとして用意した。この時点でテーブルが無いため `drizzle-kit generate` は「No schema changes」で何も生成しない。migrations/ の仕組み自体(readD1Migrations→miniflareのbindingsに注入→apply-migrations.tsでapplyD1Migrations)が正しく動くことは、D1へ `SELECT 1` を投げるテスト(test/worker/db.test.ts)で確認した。実際のテーブル定義・マイグレーションはT6以降で追加する
+- cloudflare:test の `env` の型は `Cloudflare.Env`(worker-configuration.d.tsのnamespace)であり、素のグローバル`Env`とは別物だったため、テスト専用のTEST_MIGRATIONSバインディングの型は `declare global { namespace Cloudflare { interface Env {...} } }` で拡張する必要があった(最初グローバルEnvを拡張して失敗した)
+- migrations/ ディレクトリはgitで空ディレクトリを追跡できないため .gitkeep を置いた

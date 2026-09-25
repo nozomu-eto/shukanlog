@@ -10,7 +10,7 @@
 ## タスク一覧
 
 - [x] T1: 雛形を整える
-- [ ] T2: テストとlintの準備
+- [x] T2: テストとlintの準備
 - [ ] T3: wranglerの設定と本番環境の分離
 - [ ] T4: D1とdrizzle
 - [ ] T5: メール送信
@@ -37,3 +37,11 @@
 - React Router は react-router-dom を採用した(SPA として使うための標準的な選択で、公式ドキュメント上もライブラリモードでの利用が案内されている)
 - ルーティングの本実装(design.md 8章のURL一覧)はT13で行うため、T1では最小限のプレースホルダー("/" のみ)を用意した
 - styles/tokens.css・styles/ui.css は空の器としてT1で作成し、内容はT11で定義する
+- git remote が未設定(origin なし)で push できなかったため、ユーザーに確認したところ「push せずローカルでコミットのみ進める」との指示を受けた。以降のタスクはローカルコミットのみ行い、pushとT15のPR作成は行わない(T15で改めて記録する)
+
+### T2
+
+- Worker用のテストランナーは、当初 `@cloudflare/vitest-pool-workers` を導入しようとしたが、Cloudflare公式ドキュメント(2026-09-25時点)を確認したところ `@cloudflare/vitest-plugin`(`cloudflareTest()`)が pool-workers を置き換える現行パッケージであることが判明したため、こちらを採用した(Vitest 4.1以上が必要)
+- Worker用テストとフロントエンド用テストは、実行環境(実際のWorkersランタイム vs jsdom)が異なり1つの設定に同居できないため、ルートの vitest.config.ts の `test.projects` で test/worker/vitest.config.ts と test/frontend/vitest.config.ts の2つを束ねる構成にした
+- tsconfig.test.json をT1で見送った分、ここで追加した(test/ 配下に実ファイルができたため)
+- D1マイグレーションの適用の仕組み(readD1Migrations/applyD1Migrations)は、D1バインディング自体がまだ無いためT4で行うことにし、T2では /api/health の最小テストのみ用意した

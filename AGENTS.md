@@ -60,3 +60,51 @@ If the application uses Durable Objects or Workflows, refer to the relevant best
 
 - Durable Objects: https://developers.cloudflare.com/durable-objects/best-practices/rules-of-durable-objects/
 - Workflows: https://developers.cloudflare.com/workflows/build/rules-of-workflows/
+
+# shukanlog プロジェクト規約
+
+## 概要
+
+shukanlog は、服薬・運動・カロリーを記録し、週・月で振り返る個人向けの健康習慣記録サービス。誰でも登録できる公開サービスとして運用する。
+
+## 仕様の正となるドキュメント
+
+- デザインと画面の仕様は docs/design.md と docs/week-month-tabs.md が正。これと矛盾する実装をしない
+- docs/design/mockups/ は画面のモックアップ(参照専用のHTML)。実装の見た目はここを参照する
+- docs/legacy/ は以前の版から引き継ぐ資料(利用規約・プライバシーポリシーの本文、入力上限、日付処理、初期データ、メール文面)。ビルド・lint・型チェックの対象からは外れているが、内容は実装の参考にする
+- 画面は 1024px 以上の PC レイアウトを前提にする
+
+## 開発の基本ルール
+
+- パッケージマネージャーは pnpm のみを使う(npm/yarn は使わない)
+- 実装は TypeScript で書く
+- コードには日本語コメントを書く。「処理の内容」と「その処理の役割・目的」がわかるように書く
+- コミットメッセージは Conventional Commits 形式・日本語で書く
+- ライブラリ(Hono、React Router、Better Auth、drizzle、Cloudflare Workers/D1/Email Sending/Turnstile/Rate Limiting、Fontsource、lucide-react)の仕様は、Context7または公式ドキュメントで現行バージョンを確認してから使う。推測で書かない
+
+## ディレクトリ構成
+
+- `src/react-app/`: フロントエンド(React、React Router)。`main.tsx`、`routes/`(ページ)、`components/`(部品)、`api/`(APIの呼び出し)
+- `src/worker/`: Hono の API。`index.ts`(アプリの入口)、`auth/`(Better Auth の設定)、`db/schema/`(drizzle のスキーマ)、`lib/`(メール送信・Turnstile などの部品)、`middleware/`、`routes/`
+- `src/shared/`: フロントエンドと API の両方で使うもの(型、入力上限などの定数、日付などの純粋関数)
+- `styles/`: `tokens.css`(CSS変数)、`ui.css`(基本のスタイル)。スタイルは CSS 変数と通常の CSS で書き、Tailwind は使わない
+- `migrations/`: D1 のマイグレーション(drizzle-kit で生成)
+- `test/worker/`: API のテスト(`@cloudflare/vitest-pool-workers` で実際の Workers ランタイムで動かす)
+- `test/frontend/`: 画面・部品のテスト(jsdom + Testing Library)
+- API のパスは `/api/` で始める。それ以外のパスは SPA(静的ファイル)として返す
+
+## API のエラーレスポンス
+
+エラーレスポンスは `{ error: { code, message } }` の形に統一し、内部のエラー内容(スタックトレースなど)は返さない。
+
+## 既知の落とし穴(必ず対策する)
+
+1. `compatibility_date` が古いと、Better Auth でログイン失敗時に「未処理の Promise 拒否」が誤検知され、テストが非ゼロで終了することがある(Better Auth の issue #10658)。`compatibility_date` は作業日時点の最新日付にする
+2. Better Auth のレート制限は既定でメモリに保存され、Workers では isolate ごとにカウンタが分かれるため実質的に効かない。`storage: "database"` にし、テストでも有効にする。IPアドレスの取得には `cf-connecting-ip` ヘッダーを使う
+3. Workers の静的ファイル(ASSETS)から返したレスポンスは、ヘッダーを直接変更できない。セキュリティヘッダを付けるには、レスポンスを複製(`new Response(res.body, res)`)してから付ける
+4. メール送信を開発用の console のまま本番に出すと、確認コードが届かず誰も登録できないうえ、コードがログに平文で残る。本番の URL(https://)で console / memory のメール送信が使われたら例外を投げる安全装置を入れる
+5. Workers Rate Limiting バインディング(wrangler の ratelimits)の period は 10 秒か 60 秒しか指定できない。長い期間の制限は Better Auth 側の customRules で行う
+6. D1 を使う API のテストでは、テスト開始時にマイグレーションを適用する必要がある(`@cloudflare/vitest-pool-workers` の `readD1Migrations` / `applyD1Migrations` を使う)
+7. Email Sending で、登録していない任意の宛先に送るには Workers Paid プランが必要。開発・テストでは console / memory のメール送信を使う
+8. Turnstile の検証は、フロントエンドにウィジェットを置くだけでは防御にならない。サーバー側で siteverify API を呼んで検証する。ローカル・テストでは Cloudflare 公式のテスト用キーを使う
+9. テストスクリプトが監視モードのままだと CI やエージェントからの実行が終了しない。`test` は 1 回だけ実行して終了する形にする

@@ -1,0 +1,8 @@
+/* ページ全体の基本スタイル。中身はT11で整える */
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+}

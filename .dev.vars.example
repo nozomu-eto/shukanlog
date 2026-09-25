@@ -1,0 +1,7 @@
+# ローカル開発用の環境変数のサンプル。コピーして .dev.vars を作る
+# .dev.vars 自体は .gitignore で除外されているため、機密情報を直接ここに書かない
+
+BETTER_AUTH_URL="http://localhost:5173"
+BETTER_AUTH_SECRET="REPLACE_WITH_RANDOM_SECRET"
+MAIL_TRANSPORT="console"
+MAIL_FROM_ADDRESS="noreply@example.com"

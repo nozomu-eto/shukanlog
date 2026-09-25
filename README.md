@@ -1,90 +1,56 @@
-# React + Vite + Hono + Cloudflare Workers
+# shukanlog
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/vite-react-template)
+服薬・運動・カロリーを記録し、週・月で振り返るための個人向け健康習慣記録サービスです。
 
-This template provides a minimal setup for building a React application with TypeScript and Vite, designed to run on Cloudflare Workers. It features hot module replacement, ESLint integration, and the flexibility of Workers deployments.
+自分自身が服薬や運動の習慣をなかなか続けられず、「今日やったかどうか」を振り返る場所が欲しくて作り始めました。1日ごとに◯△×で記録し、週・月単位でどれくらい続けられているかを見返せることを目指しています。誰でも登録できる公開サービスとして運用します。
 
-![React + TypeScript + Vite + Cloudflare Workers](https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/fc7b4b62-442b-4769-641b-ad4422d74300/public)
+## 技術構成
 
-<!-- dash-content-start -->
+- フロントエンド: React + React Router(SPA) + Vite
+- API: Hono(Cloudflare Workers)
+- 認証: Better Auth(メールアドレス・パスワード、確認コードによるメール確認、Turnstileによるbot対策)
+- データベース: Cloudflare D1 + drizzle
+- メール送信: Cloudflare Email Sending(本番)/ console・memory(開発・テスト)
+- スタイル: CSS変数 + 通常のCSS(Tailwindは使わない)
+- デプロイ先: Cloudflare Workers
 
-🚀 Supercharge your web development with this powerful stack:
+デザイン・画面の仕様は [docs/design.md](docs/design.md) と [docs/week-month-tabs.md](docs/week-month-tabs.md) を正としています。技術的な構成やハマりどころの詳細は [docs/architecture.md](docs/architecture.md) にまとめています。
 
-- [**React**](https://react.dev/) - A modern UI library for building interactive interfaces
-- [**Vite**](https://vite.dev/) - Lightning-fast build tooling and development server
-- [**Hono**](https://hono.dev/) - Ultralight, modern backend framework
-- [**Cloudflare Workers**](https://developers.cloudflare.com/workers/) - Edge computing platform for global deployment
+## ローカル開発
 
-### ✨ Key Features
-
-- 🔥 Hot Module Replacement (HMR) for rapid development
-- 📦 TypeScript support out of the box
-- 🛠️ ESLint configuration included
-- ⚡ Zero-config deployment to Cloudflare's global network
-- 🎯 API routes with Hono's elegant routing
-- 🔄 Full-stack development setup
-- 🔎 Built-in Observability to monitor your Worker
-
-Get started in minutes with local development or deploy directly via the Cloudflare dashboard. Perfect for building modern, performant web applications at the edge.
-
-<!-- dash-content-end -->
-
-## Getting Started
-
-To start a new project with this template, run:
+パッケージマネージャーは pnpm のみを使います。
 
 ```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/vite-react-template
+pnpm install
+cp .dev.vars.example .dev.vars   # 必要に応じて値を書き換える
+pnpm run dev
 ```
 
-A live deployment of this template is available at:
-[https://react-vite-template.templates.workers.dev](https://react-vite-template.templates.workers.dev)
+`http://localhost:5173` で開発サーバーが起動します。
 
-## Development
-
-Install dependencies:
+### D1(ローカル)へのマイグレーション適用
 
 ```bash
-npm install
+pnpm run db:migrate:local
 ```
 
-Start the development server with:
+## テストの実行
 
 ```bash
-npm run dev
+pnpm run test        # 1回だけ実行して終了する
+pnpm run test:watch  # 監視モード
+pnpm run typecheck
+pnpm run lint
 ```
 
-Your application will be available at [http://localhost:5173](http://localhost:5173).
+Worker側のテストは `@cloudflare/vitest-plugin` により実際のWorkersランタイム上で、フロントエンド側のテストは jsdom + Testing Library で実行します。
 
-## Production
+## デプロイ
 
-Build your project for production:
+本番環境へのデプロイ前に、[docs/production-verification.md](docs/production-verification.md) の確認項目をすべて満たしていることを確認してください。
 
 ```bash
-npm run build
+pnpm run deploy:production
 ```
 
-Preview your build locally:
-
-```bash
-npm run preview
-```
-
-Deploy your project to Cloudflare Workers:
-
-```bash
-npm run build && npm run deploy
-```
-
-Monitor your workers:
-
-```bash
-npx wrangler tail
-```
-
-## Additional Resources
-
-- [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
-- [Vite Documentation](https://vitejs.dev/guide/)
-- [React Documentation](https://reactjs.org/)
-- [Hono Documentation](https://hono.dev/)
+このコマンドは、本番D1へのマイグレーション適用 → ビルド → `wrangler deploy --env production` の順に実行します。事前に本番用のD1データベース作成、各種シークレットの登録(`wrangler secret put`)が必要です。

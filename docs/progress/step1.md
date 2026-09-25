@@ -22,7 +22,7 @@
 - [x] T11: デザインの基礎(色・文字)
 - [x] T12: アイコンとStatusIcon
 - [x] T13: 画面の骨組み(ルーティング)
-- [ ] T14: ドキュメント
+- [x] T14: ドキュメント
 - [ ] T15: PRの作成
 
 ## 判断ログ
@@ -126,3 +126,9 @@
 - パスワード再設定の2画面(/reset, /reset/new)は、design.md上は1つの名前(「パスワード再設定」)でまとまっているため、両方のh1を同じ文言にした
 - 404ページの文言・リンク(「記録画面へ」→/app、「トップページへ」→/)は docs/design/mockups/NotFound.dc.html の文言をそのまま使った
 - `wrangler dev`を実際に起動し、/・存在しないパス・/app のいずれもSPAのシェル(index.html)が200で返り、クライアント側のReact Routerがルーティングを処理できる状態になっていることを確認した
+
+### T14
+
+- lucide-reactのLICENSEファイルを直接確認し、Feather Icons由来としてMITライセンス表記が付くアイコンの一覧に`chevron-left`・`chevron-right`・`plus`が含まれ、`settings`は含まれない(Lucide独自でISCのみ)ことを確認してdocs/licenses.mdに反映した
+- docs/architecture.mdは、T1〜T13で実際に判断・実装した内容(Better Authの構成、レート制限のルール表、メール送信の安全装置、セキュリティヘッダ、既知の落とし穴と対策)を一次情報として書いた。日付の扱い(日本時間基準)は指示に明記が無かったため、サービスの性質(「今日やったか」を記録する)から方針として明記した
+- docs/production-verification.mdは、指示にあった6項目(プレースホルダー置き換え・D1作成・secret登録・Email Sendingドメイン登録と実機確認・Turnstile本番キー・課金通知)に加え、リポジトリを公開する前のシークレットスキャンの項目を追加した(指示の「完了時の報告」欄にも同様の項目があったため)

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>設定</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;family=Zen+Maru+Gothic:wght@500;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Sans",sans-serif;background:#F5F5F3;color:#1F1F1D}
+a{color:#1F1F1D}a:hover{color:#57574F}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F5F3; display: flex; flex-direction: column; font-family: 'Zen Kaku Gothic New', 'Hiragino Sans', sans-serif; color: #1F1F1D">
+  <header style="display: flex; align-items: center; gap: 4px; padding: 8px 12px 0; height: 56px; box-sizing: border-box">
+    <a href="Day.dc.html" aria-label="記録に戻る" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px">
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#1F1F1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+    </a>
+    <h1 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 20px">設定</h1>
+  </header>
+
+  <main style="flex-grow: 1; display: flex; flex-direction: column; gap: 20px; padding: 12px 20px 20px">
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0 4px; font-size: 13px; font-weight: 700; color: #57574F">アカウント</h2>
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 16px; overflow: hidden">
+        <a href="EmailChange.dc.html" style="min-height: 60px; padding: 8px 14px 8px 16px; display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: #1F1F1D">
+          <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px">メールアドレス</span><span style="font-size: 13px; color: #57574F">[登録中のメールアドレス]</span></span>
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#57574F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+        </a>
+        <a href="PasswordChange.dc.html" style="min-height: 52px; padding: 0 14px 0 16px; display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: #1F1F1D; border-top: 1px solid #EEEDE8">
+          <span style="font-size: 15px">パスワードを変更</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#57574F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+        </a>
+        <a href="LoggedOut.dc.html" style="min-height: 52px; padding: 0 16px; display: flex; align-items: center; border: none; border-top: 1px solid #EEEDE8; background: #FFFFFF; font-size: 15px; color: #1F1F1D; text-decoration: none; box-sizing: border-box">ログアウト</a>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0 4px; font-size: 13px; font-weight: 700; color: #57574F">記録</h2>
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 16px; padding: 10px 14px 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+        <span style="display: flex; flex-direction: column; gap: 2px">
+          <span id="calorie-label" style="font-size: 15px">カロリーを記録する</span>
+          <span style="font-size: 13px; color: #57574F">オフにすると、日・週・月の画面からカロリーの項目が消えます</span>
+        </span>
+        <button type="button" role="switch" aria-checked="{{ calorieChecked }}" aria-labelledby="calorie-label" onClick="{{ toggleCalorie }}" style="{{ switchStyle }}">
+          <span style="{{ trackStyle }}"><span style="{{ knobStyle }}"></span></span>
+        </button>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0 4px; font-size: 13px; font-weight: 700; color: #57574F">サポート</h2>
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 16px; overflow: hidden">
+        <a href="#terms" style="min-height: 52px; padding: 0 14px 0 16px; display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: #1F1F1D">
+          <span style="font-size: 15px">利用規約</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#57574F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+        </a>
+        <a href="#privacy" style="min-height: 52px; padding: 0 14px 0 16px; display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: #1F1F1D; border-top: 1px solid #EEEDE8">
+          <span style="font-size: 15px">プライバシーポリシー</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#57574F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+        </a>
+        <a href="mailto:info@shukanlog.com" style="min-height: 60px; padding: 8px 14px 8px 16px; display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: #1F1F1D; border-top: 1px solid #EEEDE8">
+          <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px">お問い合わせ</span><span style="font-size: 13px; color: #57574F">info@shukanlog.com</span></span>
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#57574F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+        </a>
+      </div>
+    </section>
+
+    <section style="margin-top: auto; display: flex; flex-direction: column; gap: 8px">
+      <a href="Withdraw.dc.html" style="min-height: 52px; border-radius: 14px; border: 1px solid #C9C8C1; background: #FFFFFF; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 15px; font-weight: 700; color: #1F1F1D">退会する</a>
+      <p style="margin: 0 4px; font-size: 12px; line-height: 1.6; color: #57574F">退会後30日間はデータを保管し、その後完全に削除します。</p>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { calorie: true };
+  }
+  renderVals() {
+    const on = this.state.calorie;
+    return {
+      calorieChecked: on ? 'true' : 'false',
+      toggleCalorie: () => this.setState({ calorie: !on }),
+      switchStyle: 'flex-shrink: 0; width: 60px; height: 44px; border: none; background: transparent; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center',
+      trackStyle: 'width: 52px; height: 32px; border-radius: 999px; padding: 3px; display: flex; align-items: center; box-sizing: border-box; background: ' + (on ? '#1F1F1D' : '#C9C8C1') + '; justify-content: ' + (on ? 'flex-end' : 'flex-start'),
+      knobStyle: 'width: 26px; height: 26px; border-radius: 999px; background: #FFFFFF; display: block'
+    };
+  }
+}
+</script>
+</body>
+</html>

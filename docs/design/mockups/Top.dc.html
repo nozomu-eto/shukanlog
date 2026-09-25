@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>トップページ</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;family=Zen+Maru+Gothic:wght@500;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Sans",sans-serif;background:#F5F5F3;color:#1F1F1D}
+a{color:#1F1F1D}a:hover{color:#57574F}
+</style>
+</helmet>
+<div style="width: 390px; height: 900px; box-sizing: border-box; background: #F5F5F3; display: flex; flex-direction: column; font-family: 'Zen Kaku Gothic New', 'Hiragino Sans', sans-serif; color: #1F1F1D">
+  <header style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0 20px; height: 56px; box-sizing: border-box">
+    <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 20px">shukanlog</span>
+    <a href="Login.dc.html" style="min-height: 44px; padding: 0 12px; display: flex; align-items: center; font-size: 14px; font-weight: 700; text-decoration: none; color: #1F1F1D">ログイン</a>
+  </header>
+
+  <main style="flex-grow: 1; display: flex; flex-direction: column; gap: 20px; padding: 20px 20px 16px">
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <h1 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 26px; line-height: 1.4">カロリーと習慣を<br>シンプルに記録するアプリです</h1>
+      <p style="margin: 0; font-size: 15px; line-height: 1.8; color: #57574F">個人向けの健康習慣記録サービスです。</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <a href="Signup.dc.html" style="min-height: 52px; border-radius: 14px; background: #1F1F1D; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; text-decoration: none">無料ではじめる</a>
+      <a href="Login.dc.html" style="min-height: 52px; border-radius: 14px; border: 1.5px solid #1F1F1D; background: #FFFFFF; color: #1F1F1D; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; text-decoration: none">ログイン</a>
+    </div>
+
+    <div aria-label="週のふりかえり画面の例" style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 15px">今週のふりかえり</span>
+        <span style="font-size: 12px; color: #57574F">画面の例</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 40px repeat(7, minmax(0, 1fr)); gap: 4px; font-size: 12px; color: #57574F; text-align: center"><span></span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span><span>日</span></div>
+      <div style="display: grid; grid-template-columns: 40px repeat(7, minmax(0, 1fr)); gap: 4px; align-items: center"><span style="font-size: 13px; font-weight: 700">服薬</span><span style="height: 36px; border-radius: 8px; border: 1px solid #E3E2DC; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="2.6"></circle></svg></span><span style="height: 36px; border-radius: 8px; border: 1px solid #E3E2DC; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="2.6"></circle></svg></span><span style="height: 36px; border-radius: 8px; border: 1px solid #E3E2DC; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5 L15 15 M15 5 L5 15" fill="none" stroke="#71717A" stroke-width="2.4" stroke-linecap="round"></path></svg></span><span style="height: 36px; border-radius: 8px; border: 1px solid #E3E2DC; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="2.6"></circle></svg></span><span style="height: 36px; border-radius: 8px; border: 1px solid #E3E2DC; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="2.6"></circle></svg></span><span style="height: 36px; border-radius: 8px; border: 1px solid #E3E2DC; display: flex; align-items: center; justify-content: center"></span><span style="height: 36px; border-radius: 8px; border: 1px solid #E3E2DC; display: flex; align-items: center; justify-content: center"></span></div>
+      <div style="display: grid; grid-template-columns: 40px repeat(7, minmax(0, 1fr)); gap: 4px; align-items: center"><span style="font-size: 13px; font-weight: 700">運動</span><span style="height: 36px; border-radius: 8px; border: 1px solid #E3E2DC; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3 L17.5 16.5 L2.5 16.5 Z" fill="none" stroke="#D97706" stroke-width="2.4" stroke-linejoin="round"></path></svg></span><span style="height: 36px; border-radius: 8px; border: 1px solid #E3E2DC; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="2.6"></circle></svg></span><span style="height: 36px; border-radius: 8px; border: 1px solid #E3E2DC; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5 L15 15 M15 5 L5 15" fill="none" stroke="#71717A" stroke-width="2.4" stroke-linecap="round"></path></svg></span><span style="height: 36px; border-radius: 8px; border: 1px solid #E3E2DC; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3 L17.5 16.5 L2.5 16.5 Z" fill="none" stroke="#D97706" stroke-width="2.4" stroke-linejoin="round"></path></svg></span><span style="height: 36px; border-radius: 8px; border: 1px solid #E3E2DC; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="2.6"></circle></svg></span><span style="height: 36px; border-radius: 8px; border: 1px solid #E3E2DC; display: flex; align-items: center; justify-content: center"></span><span style="height: 36px; border-radius: 8px; border: 1px solid #E3E2DC; display: flex; align-items: center; justify-content: center"></span></div>
+    </div>
+
+    <section style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; gap: 12px; align-items: flex-start">
+        <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 15px; width: 24px">1</span>
+        <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">1日1回、記号をえらぶだけ</span><span style="font-size: 13px; line-height: 1.6; color: #57574F">服薬は◯×、運動は◯△×で記録します</span></span>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: flex-start; border-top: 1px solid #EEEDE8; padding-top: 14px">
+        <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 15px; width: 24px">2</span>
+        <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">週・月でふりかえる</span><span style="font-size: 13px; line-height: 1.6; color: #57574F">カレンダーで、続いている日がひと目で分かります</span></span>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: flex-start; border-top: 1px solid #EEEDE8; padding-top: 14px">
+        <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 15px; width: 24px">3</span>
+        <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">カロリーもいっしょに</span><span style="font-size: 13px; line-height: 1.6; color: #57574F">必要なければ設定でオフにできます</span></span>
+      </div>
+    </section>
+  </main>
+
+  <footer style="padding: 12px 20px 20px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #E3E2DC">
+    <nav aria-label="サイト情報" style="display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px">
+      <a href="#terms" style="min-height: 44px; display: flex; align-items: center; color: #57574F">利用規約</a>
+      <a href="#privacy" style="min-height: 44px; display: flex; align-items: center; color: #57574F">プライバシーポリシー</a>
+      <a href="mailto:info@shukanlog.com" style="min-height: 44px; display: flex; align-items: center; color: #57574F">お問い合わせ</a>
+    </nav>
+    <p style="margin: 0; font-size: 12px; color: #57574F">© 2026 shukanlog</p>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

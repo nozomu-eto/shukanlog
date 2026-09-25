@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>利用規約への同意</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;family=Zen+Maru+Gothic:wght@500;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Sans",sans-serif;background:#F5F5F3;color:#1F1F1D}
+a{color:#1F1F1D}a:hover{color:#57574F}
+button,input{font-family:inherit}
+input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid #1F1F1D;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F5F3; display: flex; flex-direction: column; font-family: 'Zen Kaku Gothic New', 'Hiragino Sans', sans-serif; color: #1F1F1D">
+  <header style="display: flex; align-items: center; gap: 4px; padding: 8px 12px 0; height: 56px; box-sizing: border-box">
+    <span style="width: 8px"></span>
+    <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 20px">shukanlog</span>
+  </header>
+  <main style="flex-grow: 1; display: flex; flex-direction: column; gap: 18px; padding: 20px 20px 24px; box-sizing: border-box">
+      <h1 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 24px; line-height: 1.4">はじめる前に</h1>
+      <p style="margin: 0; font-size: 15px; line-height: 1.8; color: #57574F">shukanlogは、服薬・運動・カロリーの記録を保存します。服薬の記録は健康に関する情報のため、内容を確認のうえ同意してください。</p>
+      <ul style="margin: 0; padding: 14px 16px 14px 32px; background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 14px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.7">
+        <li>記録はあなたのアカウントでのみ閲覧できます</li>
+        <li>退会後30日間はデータを保管し、その後完全に削除します</li>
+        <li>本サービスは医療機器ではありません。服薬に関する判断は医師・薬剤師にご相談ください</li>
+      </ul>
+      <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; flex-direction: column">
+        <a href="#terms" target="_blank" style="min-height: 44px; display: flex; align-items: center; font-size: 14px; font-weight: 700">利用規約を読む</a>
+        <a href="#privacy" target="_blank" style="min-height: 44px; display: flex; align-items: center; font-size: 14px; font-weight: 700">プライバシーポリシーを読む</a>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label style="min-height: 44px; display: flex; align-items: center; gap: 12px; font-size: 15px; cursor: pointer">
+          <input type="checkbox" aria-describedby="agree-error" onChange="{{ onAgree }}" style="width: 22px; height: 22px; margin: 0; accent-color: #1F1F1D">
+          利用規約とプライバシーポリシーに同意します
+        </label>
+        <sc-if value="{{ agreeErrHas }}" hint-placeholder-val="{{ false }}"><p id="agree-error" style="margin: 0; font-size: 13px; color: #B42318">{{ agreeErr }}</p></sc-if>
+      </div>
+      <sc-if value="{{ notDone }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ submit }}" style="min-height: 52px; border-radius: 14px; border: none; background: #1F1F1D; color: #FFFFFF; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; text-decoration: none; width: 100%">同意してはじめる</button></sc-if>
+      <sc-if value="{{ done }}" hint-placeholder-val="{{ false }}">
+        <div role="status" style="display: flex; flex-direction: column; gap: 8px">
+          <span style="font-size: 13px; line-height: 1.6; color: #57574F">入力チェックに成功しました(プロトタイプ)</span>
+          <a href="Day.dc.html" style="min-height: 52px; border-radius: 14px; border: none; background: #1F1F1D; color: #FFFFFF; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; text-decoration: none">記録をはじめる</a>
+        </div>
+      </sc-if>
+      <button type="button" style="align-self: center; min-height: 44px; border: none; background: transparent; font-size: 14px; color: #1F1F1D; text-decoration: underline; cursor: pointer">同意せずにログアウトする</button>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { agree: false, tried: false, done: false, showPw: false, resent: false };
+  }
+  rules() {
+    return {
+      agree: (v) => v ? '' : '続けるには同意が必要です'
+    };
+  }
+  renderVals() {
+    const R = this.rules();
+    const out = {
+      agreeErr: this.state.tried ? R.agree(this.state.agree) : ''
+    };
+    out.agreeErrHas = out.agreeErr !== ''; out.agreeErrInvalid = out.agreeErr !== '' ? 'true' : 'false';
+    const keys = Object.keys(R);
+    return Object.assign(out, {
+      onEmail: (e) => this.setState({ email: e.target.value }),
+      onPassword: (e) => this.setState({ password: e.target.value }),
+      onCode: (e) => this.setState({ code: e.target.value.replace(/[^0-9]/g, '') }),
+      onAgree: (e) => this.setState({ agree: e.target.checked }),
+      submit: () => {
+        const ok = keys.every((k) => R[k](this.state[k]) === '');
+        this.setState({ tried: true, done: ok });
+      },
+      done: this.state.done,
+      notDone: !this.state.done,
+      pwType: this.state.showPw ? 'text' : 'password',
+      pwShown: this.state.showPw ? 'true' : 'false',
+      pwLabel: this.state.showPw ? '隠す' : '表示',
+      togglePw: () => this.setState({ showPw: !this.state.showPw }),
+      resent: this.state.resent,
+      resend: () => this.setState({ resent: true })
+    });
+  }
+}
+</script>
+</body>
+</html>

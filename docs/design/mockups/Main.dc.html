@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>shukanlog デザインの基本</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;family=Zen+Maru+Gothic:wght@500;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Sans",sans-serif;background:#F5F5F3;color:#1F1F1D}
+a{color:#1F1F1D}a:hover{color:#57574F}
+</style>
+</helmet>
+<div style="width: 880px; height: 960px; box-sizing: border-box; padding: 48px; display: flex; flex-direction: column; gap: 28px; background: #F5F5F3; font-family: 'Zen Kaku Gothic New', 'Hiragino Sans', sans-serif; color: #1F1F1D">
+  <div style="display: flex; align-items: baseline; justify-content: space-between">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 32px; letter-spacing: 0.01em">shukanlog</span>
+      <span style="display: flex; gap: 4px; align-items: center">
+        <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="2.6"></circle></svg>
+        <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3 L17.5 16.5 L2.5 16.5 Z" fill="none" stroke="#D97706" stroke-width="2.4" stroke-linejoin="round"></path></svg>
+        <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5 L15 15 M15 5 L5 15" fill="none" stroke="#71717A" stroke-width="2.4" stroke-linecap="round"></path></svg>
+      </span>
+    </div>
+    <span style="font-size: 14px; color: #57574F">デザインの基本</span>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-size: 18px; font-weight: 700">記録の状態</h2>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+        <svg width="32" height="32" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="2.6"></circle></svg>
+        <div style="font-size: 16px; font-weight: 700">達成</div>
+        <div style="font-size: 13px; color: #57574F">青 #2563EB · 白に対して 5.17:1</div>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+        <svg width="32" height="32" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3 L17.5 16.5 L2.5 16.5 Z" fill="none" stroke="#D97706" stroke-width="2.4" stroke-linejoin="round"></path></svg>
+        <div style="font-size: 16px; font-weight: 700">一部達成</div>
+        <div style="font-size: 13px; color: #57574F">琥珀 #D97706 · 白に対して 3.19:1</div>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+        <svg width="32" height="32" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5 L15 15 M15 5 L5 15" fill="none" stroke="#71717A" stroke-width="2.4" stroke-linecap="round"></path></svg>
+        <div style="font-size: 16px; font-weight: 700">未達成</div>
+        <div style="font-size: 13px; color: #57574F">グレー #71717A · 白に対して 4.83:1</div>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+        <div style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #E3E2DC"></div>
+        <div style="font-size: 16px; font-weight: 700">未記録</div>
+        <div style="font-size: 13px; color: #57574F">記号なし(空欄)</div>
+      </div>
+    </div>
+    <div style="font-size: 13px; color: #57574F">状態の記号は必ず白い面(#FFFFFF)の上に置く。琥珀は背景色 #F5F5F3 の上では 2.92:1 となり基準を下回る。</div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-size: 18px; font-weight: 700">色</h2>
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 56px; border-radius: 10px; background: #F5F5F3; border: 1px solid #E3E2DC"></div><div style="font-size: 13px; font-weight: 700">背景</div><div style="font-size: 12px; color: #57574F">#F5F5F3</div></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 56px; border-radius: 10px; background: #FFFFFF; border: 1px solid #E3E2DC"></div><div style="font-size: 13px; font-weight: 700">面</div><div style="font-size: 12px; color: #57574F">#FFFFFF</div></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 56px; border-radius: 10px; background: #1F1F1D"></div><div style="font-size: 13px; font-weight: 700">文字・操作</div><div style="font-size: 12px; color: #57574F">#1F1F1D</div></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 56px; border-radius: 10px; background: #57574F"></div><div style="font-size: 13px; font-weight: 700">補足の文字</div><div style="font-size: 12px; color: #57574F">#57574F</div></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 56px; border-radius: 10px; background: #E3E2DC"></div><div style="font-size: 13px; font-weight: 700">区切り線</div><div style="font-size: 12px; color: #57574F">#E3E2DC</div></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 56px; border-radius: 10px; background: #B45309"></div><div style="font-size: 13px; font-weight: 700">琥珀の文字</div><div style="font-size: 12px; color: #57574F">#B45309</div></div>
+    </div>
+    <div style="font-size: 13px; color: #57574F">色(青・琥珀)は記録の状態にだけ使う。ボタン・選択中のタブなどの操作は文字色 #1F1F1D で表す。</div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-size: 18px; font-weight: 700">文字</h2>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 8px">
+        <div style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 28px">9月25日(金) 1,240</div>
+        <div style="font-size: 13px; color: #57574F">Zen Maru Gothic · 見出し・日付・数字</div>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 8px">
+        <div style="font-size: 16px; line-height: 1.7">毎日の記録を、あとから振り返る。</div>
+        <div style="font-size: 13px; color: #57574F">Zen Kaku Gothic New · 本文・ラベル(最小 12px)</div>
+      </div>
+    </div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-size: 18px; font-weight: 700">アイコン</h2>
+    <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; gap: 20px">
+      <span style="display: flex; gap: 14px">
+        <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#1F1F1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#1F1F1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#1F1F1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#1F1F1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+      </span>
+      <span style="font-size: 13px; line-height: 1.6; color: #57574F">汎用アイコンは Lucide(lucide-react)の settings · chevron-left · chevron-right · plus を使用。◯△×の状態記号は StatusIcon コンポーネントにまとめる。</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

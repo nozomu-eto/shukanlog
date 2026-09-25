@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>週タブ(PC)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;family=Zen+Maru+Gothic:wght@500;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Sans",sans-serif;background:#F5F5F3;color:#1F1F1D}
+a{color:#1F1F1D}a:hover{color:#57574F}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; box-sizing: border-box; background: #F5F5F3; display: flex; flex-direction: column; font-family: 'Zen Kaku Gothic New', 'Hiragino Sans', sans-serif; color: #1F1F1D">
+  <header style="height: 72px; box-sizing: border-box; padding: 0 40px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; border-bottom: 1px solid #E3E2DC">
+    <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 22px">shukanlog</span>
+    <nav aria-label="表示期間" style="justify-self: center; width: 300px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #E9E8E3; border-radius: 14px">
+      <a href="DayPC.dc.html" style="height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 15px; font-weight: 500; color: #57574F; text-decoration: none">日</a>
+      <a href="WeekPC.dc.html" aria-current="page" style="height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 15px; font-weight: 700; color: #FFFFFF; background: #1F1F1D; text-decoration: none">週</a>
+      <a href="MonthPC.dc.html" style="height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 15px; font-weight: 500; color: #57574F; text-decoration: none">月</a>
+    </nav>
+    <a href="SettingsPC.dc.html" style="justify-self: end; min-height: 44px; padding: 0 12px; display: flex; align-items: center; gap: 8px; border-radius: 12px; font-size: 15px; text-decoration: none; color: #1F1F1D">
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#1F1F1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>設定
+    </a>
+  </header>
+
+  <main style="width: 1040px; margin: 0 auto; flex-grow: 1; display: flex; flex-direction: column; gap: 16px; padding: 24px 0; box-sizing: border-box">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 48px">
+      <button type="button" aria-label="前の週" onClick="{{ prev }}" style="width: 44px; height: 44px; border: 1px solid #E3E2DC; background: #FFFFFF; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#1F1F1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg></button>
+      <h1 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 26px">{{ periodLabel }}</h1>
+      <button type="button" aria-label="次の週" aria-disabled="{{ nextDisabled }}" onClick="{{ next }}" style="width: 44px; height: 44px; border: 1px solid #E3E2DC; background: #FFFFFF; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="{{ nextStroke }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></button>
+      <sc-if value="{{ notToday }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ goToday }}" style="min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid #1F1F1D; background: #FFFFFF; font-size: 14px; font-weight: 700; color: #1F1F1D; cursor: pointer">今日に戻る</button></sc-if>
+    </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 12px; padding: 10px 16px; display: flex; gap: 16px; font-size: 13px; color: #57574F">
+        <span style="display: flex; align-items: center; gap: 4px"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="2.6"></circle></svg>達成</span>
+        <span style="display: flex; align-items: center; gap: 4px"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3 L17.5 16.5 L2.5 16.5 Z" fill="none" stroke="#D97706" stroke-width="2.4" stroke-linejoin="round"></path></svg>一部達成</span>
+        <span style="display: flex; align-items: center; gap: 4px"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5 L15 15 M15 5 L5 15" fill="none" stroke="#71717A" stroke-width="2.4" stroke-linecap="round"></path></svg>未達成</span>
+        <span>空欄 未記録</span>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 24px; align-items: start">
+      <section style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-size: 19px; font-weight: 700">習慣</h2>
+        <div style="display: grid; grid-template-columns: 56px repeat(7, minmax(0, 1fr)); gap: 8px; font-size: 13px; color: #57574F; text-align: center">
+          <span></span><span>月 21</span><span>火 22</span><span>水 23</span><span>木 24</span><span>金 25</span><span>土 26</span><span>日 27</span>
+        </div>
+        <sc-for list="{{ rows }}" as="row" hint-placeholder-count="2">
+          <div style="display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px">
+            <div style="display: grid; grid-template-columns: 56px repeat(7, minmax(0, 1fr)); gap: 8px; align-items: center">
+              <span style="font-size: 15px; font-weight: 700">{{ row.name }}</span>
+              <sc-for list="{{ row.cells }}" as="cell" hint-placeholder-count="7">
+                <sc-if value="{{ cell.future }}" hint-placeholder-val="{{ false }}">
+                  <span aria-label="{{ cell.aria }}" style="height: 56px; border-radius: 12px; border: 1px dashed #D6D5CF; opacity: 0.55"></span>
+                </sc-if>
+                <sc-if value="{{ cell.past }}" hint-placeholder-val="{{ true }}">
+                  <a href="DayPC.dc.html" aria-label="{{ cell.aria }}" style="{{ cell.boxStyle }}">
+                    <sc-if value="{{ cell.isO }}" hint-placeholder-val="{{ true }}"><svg width="24" height="24" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="2.6"></circle></svg></sc-if>
+                    <sc-if value="{{ cell.isT }}" hint-placeholder-val="{{ false }}"><svg width="24" height="24" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3 L17.5 16.5 L2.5 16.5 Z" fill="none" stroke="#D97706" stroke-width="2.4" stroke-linejoin="round"></path></svg></sc-if>
+                    <sc-if value="{{ cell.isX }}" hint-placeholder-val="{{ false }}"><svg width="24" height="24" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5 L15 15 M15 5 L5 15" fill="none" stroke="#71717A" stroke-width="2.4" stroke-linecap="round"></path></svg></sc-if>
+                  </a>
+                </sc-if>
+              </sc-for>
+            </div>
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; font-size: 14px; color: #57574F">
+              <span style="display: flex; align-items: center; gap: 4px"><svg width="15" height="15" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="2.8"></circle></svg>{{ row.o }}</span>
+              <sc-if value="{{ row.hasT }}" hint-placeholder-val="{{ false }}"><span style="display: flex; align-items: center; gap: 4px"><svg width="15" height="15" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3 L17.5 16.5 L2.5 16.5 Z" fill="none" stroke="#D97706" stroke-width="2.6" stroke-linejoin="round"></path></svg>{{ row.t }}</span></sc-if>
+              <span>/ {{ row.days }}日</span>
+            </div>
+          </div>
+        </sc-for>
+      </section>
+
+      <section style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: baseline; justify-content: space-between">
+          <h2 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-size: 19px; font-weight: 700">カロリー</h2>
+          <span style="font-size: 14px; color: #57574F">平均 <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 22px; color: #1F1F1D">1,718</span> kcal(記録 5日)</span>
+        </div>
+        <div role="list" aria-label="日別の合計カロリー" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; align-items: end; height: 220px">
+          <sc-for list="{{ bars }}" as="bar" hint-placeholder-count="7">
+            <div role="listitem" aria-label="{{ bar.aria }}" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; height: 100%">
+              <span style="font-size: 12px; color: #57574F">{{ bar.value }}</span>
+              <div style="{{ bar.barStyle }}"></div>
+              <span style="font-size: 13px; color: #57574F">{{ bar.day }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { offset: 0 };
+  }
+  baseVals() {
+    const days = ['月', '火', '水', '木', '金', '土', '日'];
+    const dates = [21, 22, 23, 24, 25, 26, 27];
+    const todayIndex = 4;
+    const labels = { o: '達成', t: '一部達成', x: '未達成', '': '未記録' };
+    const makeCells = (name, states) => states.map((s, i) => {
+      const future = i > todayIndex;
+      const today = i === todayIndex;
+      return {
+        future: future,
+        past: !future,
+        isO: s === 'o', isT: s === 't', isX: s === 'x',
+        aria: '9月' + dates[i] + '日 ' + name + ' ' + (future ? '未来の日' : labels[s]),
+        boxStyle: 'height: 56px; border-radius: 12px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-sizing: border-box; ' + (today ? 'border: 2px solid #1F1F1D' : 'border: 1px solid #E3E2DC')
+      };
+    });
+    const kcal = [1950, 1700, 2100, 1600, 1240, 0, 0];
+    return {
+      rows: [
+        { name: '服薬', cells: makeCells('服薬', ['o', 'o', 'x', 'o', 'o', '', '']), o: 4, hasT: false, t: 0, days: 5 },
+        { name: '運動', cells: makeCells('運動', ['t', 'o', 'x', 't', 'o', '', '']), o: 2, hasT: true, t: 2, days: 5 }
+      ],
+      bars: kcal.map((v, i) => ({
+        day: days[i],
+        value: v ? v.toLocaleString('ja-JP') : '',
+        aria: '9月' + dates[i] + '日 ' + (v ? v.toLocaleString('ja-JP') + 'kcal' : '記録なし'),
+        barStyle: 'width: 100%; max-width: 36px; border-radius: 8px 8px 4px 4px; background: ' + (v ? '#57574F' : 'transparent') + '; height: ' + Math.round(v / 2200 * 160) + 'px'
+      }))
+    };
+  }
+  periodVals() {
+    const off = this.state.offset;
+    const w = ['日', '月', '火', '水', '木', '金', '土'];
+    const s = new Date(2026, 8, 21 + off * 7);
+    const e = new Date(2026, 8, 27 + off * 7);
+    const withYear = s.getFullYear() !== 2026 || e.getFullYear() !== 2026;
+    const f = (d) => (withYear ? d.getFullYear() + '/' : '') + (d.getMonth() + 1) + '/' + d.getDate() + '(' + w[d.getDay()] + ')';
+    return this.nav(off, f(s) + '〜' + f(e));
+  }
+  nav(off, label) {
+    return {
+      periodLabel: label,
+      notToday: off !== 0,
+      nextDisabled: off === 0 ? 'true' : 'false',
+      nextStroke: off === 0 ? '#B9B8B1' : '#1F1F1D',
+      prev: () => this.setState({ offset: off - 1 }),
+      next: () => { if (off < 0) this.setState({ offset: off + 1 }); },
+      goToday: () => this.setState({ offset: 0 })
+    };
+  }
+  renderVals() {
+    return Object.assign({}, this.baseVals(), this.periodVals());
+  }
+}
+</script>
+</body>
+</html>

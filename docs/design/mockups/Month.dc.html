@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>月タブ</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;family=Zen+Maru+Gothic:wght@500;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Sans",sans-serif;background:#F5F5F3;color:#1F1F1D}
+a{color:#1F1F1D}a:hover{color:#57574F}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F5F3; display: flex; flex-direction: column; font-family: 'Zen Kaku Gothic New', 'Hiragino Sans', sans-serif; color: #1F1F1D">
+  <header style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0 20px; height: 56px; box-sizing: border-box">
+    <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 20px">shukanlog</span>
+    <a href="Settings.dc.html" aria-label="設定" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#1F1F1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    </a>
+  </header>
+  <nav aria-label="表示期間" style="margin: 8px 20px 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #E9E8E3; border-radius: 14px">
+    <a href="Day.dc.html" style="height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 15px; font-weight: 500; color: #57574F; text-decoration: none">日</a>
+    <a href="Week.dc.html" style="height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 15px; font-weight: 500; color: #57574F; text-decoration: none">週</a>
+    <a href="Month.dc.html" aria-current="page" style="height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 15px; font-weight: 700; color: #FFFFFF; background: #1F1F1D; text-decoration: none">月</a>
+  </nav>
+
+  <div style="display: flex; align-items: flex-start; justify-content: space-between; padding: 12px 12px 4px">
+    <button type="button" aria-label="前の月" onClick="{{ prev }}" style="width: 44px; height: 44px; border: none; background: transparent; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#1F1F1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg></button>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; justify-content: center">
+      <h1 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 20px">{{ periodLabel }}</h1>
+      <sc-if value="{{ notToday }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ goToday }}" style="min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid #1F1F1D; background: #FFFFFF; font-size: 14px; font-weight: 700; color: #1F1F1D; cursor: pointer">今日に戻る</button></sc-if>
+    </div>
+    <button type="button" aria-label="次の月" aria-disabled="{{ nextDisabled }}" onClick="{{ next }}" style="width: 44px; height: 44px; border: none; background: transparent; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="{{ nextStroke }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></button>
+  </div>
+
+  <main style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px; padding: 0 16px 14px">
+    <section style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 16px; padding: 10px 8px; display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; justify-content: flex-end; gap: 10px; padding: 0 4px; font-size: 12px; color: #57574F">
+        <span>マス内 左:服薬 右:運動 下:kcal</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; font-size: 12px; color: #57574F; text-align: center">
+        <span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span><span>日</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px">
+        <sc-for list="{{ cells }}" as="c" hint-placeholder-count="35">
+          <sc-if value="{{ c.blank }}" hint-placeholder-val="{{ false }}"><span style="height: 62px"></span></sc-if>
+          <sc-if value="{{ c.future }}" hint-placeholder-val="{{ false }}">
+            <span aria-label="{{ c.aria }}" style="height: 62px; border-radius: 8px; border: 1px dashed #D6D5CF; opacity: 0.55; box-sizing: border-box; padding: 4px 5px; font-size: 12px; color: #57574F">{{ c.d }}</span>
+          </sc-if>
+          <sc-if value="{{ c.past }}" hint-placeholder-val="{{ true }}">
+            <a href="Day.dc.html" aria-label="{{ c.aria }}" style="{{ c.boxStyle }}">
+              <span style="font-size: 12px; line-height: 1; font-weight: 500">{{ c.d }}</span>
+              <span style="display: flex; gap: 3px; height: 14px">
+                <span style="width: 14px; height: 14px; display: flex">
+                  <sc-if value="{{ c.mO }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="3"></circle></svg></sc-if>
+                  <sc-if value="{{ c.mX }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5 L15 15 M15 5 L5 15" fill="none" stroke="#71717A" stroke-width="3" stroke-linecap="round"></path></svg></sc-if>
+                </span>
+                <span style="width: 14px; height: 14px; display: flex">
+                  <sc-if value="{{ c.eO }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="3"></circle></svg></sc-if>
+                  <sc-if value="{{ c.eT }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3 L17.5 16.5 L2.5 16.5 Z" fill="none" stroke="#D97706" stroke-width="2.8" stroke-linejoin="round"></path></svg></sc-if>
+                  <sc-if value="{{ c.eX }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5 L15 15 M15 5 L5 15" fill="none" stroke="#71717A" stroke-width="3" stroke-linecap="round"></path></svg></sc-if>
+                </span>
+              </span>
+              <span style="font-size: 11px; line-height: 1; color: #57574F; font-family: 'Zen Maru Gothic', sans-serif; font-weight: 500">{{ c.kcal }}</span>
+            </a>
+          </sc-if>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 13px; font-weight: 700">服薬</span>
+        <span style="display: flex; align-items: center; gap: 4px; font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 18px"><svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="3"></circle></svg>{{ medO }}</span>
+        <span style="font-size: 12px; color: #57574F">/ {{ days }}日</span>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 13px; font-weight: 700">運動</span>
+        <span style="display: flex; align-items: center; gap: 4px; font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 18px"><svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="3"></circle></svg>{{ exO }}<svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true" style="margin-left: 4px"><path d="M10 3 L17.5 16.5 L2.5 16.5 Z" fill="none" stroke="#D97706" stroke-width="2.8" stroke-linejoin="round"></path></svg>{{ exT }}</span>
+        <span style="font-size: 12px; color: #57574F">/ {{ days }}日</span>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 13px; font-weight: 700">平均kcal</span>
+        <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 18px">{{ avg }}</span>
+        <span style="font-size: 12px; color: #57574F">記録 {{ kcalDays }}日</span>
+      </div>
+    </section>
+
+    <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 12px; padding: 8px 14px; display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: #57574F">
+      <span style="display: flex; align-items: center; gap: 4px"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="2.6"></circle></svg>達成</span>
+      <span style="display: flex; align-items: center; gap: 4px"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3 L17.5 16.5 L2.5 16.5 Z" fill="none" stroke="#D97706" stroke-width="2.4" stroke-linejoin="round"></path></svg>一部達成</span>
+      <span style="display: flex; align-items: center; gap: 4px"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5 L15 15 M15 5 L5 15" fill="none" stroke="#71717A" stroke-width="2.4" stroke-linecap="round"></path></svg>未達成</span>
+      <span>空欄 未記録</span>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { offset: 0 };
+  }
+  baseVals() {
+    const today = 25;
+    const fixedMed = { 21: 'o', 22: 'o', 23: 'x', 24: 'o', 25: 'o' };
+    const fixedEx = { 21: 't', 22: 'o', 23: 'x', 24: 't', 25: 'o' };
+    const fixedKcal = { 21: 1950, 22: 1700, 23: 2100, 24: 1600, 25: 1240 };
+    const labels = { o: '達成', t: '一部達成', x: '未達成', '': '未記録' };
+    const cells = [{ blank: true, future: false, past: false }];
+    let medO = 0, exO = 0, exT = 0, kcalSum = 0, kcalDays = 0;
+    for (let d = 1; d <= 30; d++) {
+      if (d > today) {
+        cells.push({ blank: false, future: true, past: false, d: d, aria: '9月' + d + '日 未来の日' });
+        continue;
+      }
+      const med = fixedMed[d] ?? (d % 6 === 3 ? 'x' : d % 11 === 0 ? '' : 'o');
+      const ex = fixedEx[d] ?? (d % 4 === 0 ? 'x' : d % 3 === 0 ? 't' : d % 7 === 0 ? '' : 'o');
+      const kcal = fixedKcal[d] ?? (d % 5 === 2 ? 0 : 1500 + (d * 137) % 700);
+      if (med === 'o') medO++;
+      if (ex === 'o') exO++;
+      if (ex === 't') exT++;
+      if (kcal) { kcalSum += kcal; kcalDays++; }
+      const kcalText = kcal ? String(kcal) : '';
+      cells.push({
+        blank: false, future: false, past: true, d: d,
+        mO: med === 'o', mX: med === 'x',
+        eO: ex === 'o', eT: ex === 't', eX: ex === 'x',
+        kcal: kcalText,
+        aria: '9月' + d + '日 服薬 ' + labels[med] + ' 運動 ' + labels[ex] + (kcal ? ' ' + kcal + 'kcal' : ' カロリー記録なし'),
+        boxStyle: 'height: 62px; border-radius: 8px; box-sizing: border-box; padding: 5px 4px 5px 5px; display: flex; flex-direction: column; justify-content: space-between; text-decoration: none; color: #1F1F1D; background: #FFFFFF; ' + (d === today ? 'border: 2px solid #1F1F1D' : 'border: 1px solid #ECEBE6')
+      });
+    }
+    return {
+      cells: cells,
+      medO: medO, exO: exO, exT: exT, days: today,
+      avg: kcalDays ? Math.round(kcalSum / kcalDays).toLocaleString('ja-JP') : '記録なし',
+      kcalDays: kcalDays
+    };
+  }
+  periodVals() {
+    const off = this.state.offset;
+    const d = new Date(2026, 8 + off, 1);
+    return this.nav(off, d.getFullYear() + '年' + (d.getMonth() + 1) + '月');
+  }
+  nav(off, label) {
+    return {
+      periodLabel: label,
+      notToday: off !== 0,
+      nextDisabled: off === 0 ? 'true' : 'false',
+      nextStroke: off === 0 ? '#B9B8B1' : '#1F1F1D',
+      prev: () => this.setState({ offset: off - 1 }),
+      next: () => { if (off < 0) this.setState({ offset: off + 1 }); },
+      goToday: () => this.setState({ offset: 0 })
+    };
+  }
+  renderVals() {
+    return Object.assign({}, this.baseVals(), this.periodVals());
+  }
+}
+</script>
+</body>
+</html>

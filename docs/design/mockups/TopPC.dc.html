@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>トップページ(PC)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;family=Zen+Maru+Gothic:wght@500;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Sans",sans-serif;background:#F5F5F3;color:#1F1F1D}
+a{color:#1F1F1D}a:hover{color:#57574F}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; box-sizing: border-box; background: #F5F5F3; display: flex; flex-direction: column; font-family: 'Zen Kaku Gothic New', 'Hiragino Sans', sans-serif; color: #1F1F1D">
+  <header style="height: 72px; box-sizing: border-box; padding: 0 48px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #E3E2DC">
+    <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 22px">shukanlog</span>
+    <nav aria-label="アカウント" style="display: flex; align-items: center; gap: 8px">
+      <a href="LoginPC.dc.html" style="min-height: 44px; padding: 0 16px; display: flex; align-items: center; font-size: 15px; font-weight: 700; text-decoration: none; color: #1F1F1D">ログイン</a>
+      <a href="SignupPC.dc.html" style="min-height: 44px; padding: 0 20px; border-radius: 12px; background: #1F1F1D; color: #FFFFFF; display: flex; align-items: center; font-size: 15px; font-weight: 700; text-decoration: none">無料ではじめる</a>
+    </nav>
+  </header>
+
+  <main style="flex-grow: 1; width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px; padding-top: 64px; box-sizing: border-box">
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 56px; align-items: center">
+      <div style="display: flex; flex-direction: column; gap: 24px">
+        <h1 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 38px; line-height: 1.45">カロリーと習慣を<br>シンプルに記録するアプリです</h1>
+        <p style="margin: 0; font-size: 16px; line-height: 1.8; color: #57574F">個人向けの健康習慣記録サービスです。</p>
+        <div style="display: flex; gap: 12px">
+          <a href="SignupPC.dc.html" style="min-height: 52px; padding: 0 28px; border-radius: 14px; background: #1F1F1D; color: #FFFFFF; display: flex; align-items: center; font-size: 16px; font-weight: 700; text-decoration: none">無料ではじめる</a>
+          <a href="LoginPC.dc.html" style="min-height: 52px; padding: 0 28px; border-radius: 14px; border: 1.5px solid #1F1F1D; background: #FFFFFF; color: #1F1F1D; display: flex; align-items: center; font-size: 16px; font-weight: 700; text-decoration: none">ログイン</a>
+        </div>
+      </div>
+
+      <div aria-label="週のふりかえり画面の例" style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 18px">今週のふりかえり</span>
+          <span style="font-size: 13px; color: #57574F">画面の例</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 52px repeat(7, minmax(0, 1fr)); gap: 6px; font-size: 13px; color: #57574F; text-align: center">
+          <span></span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span><span>日</span>
+        </div>
+        <sc-for list="{{ rows }}" as="row" hint-placeholder-count="2">
+          <div style="display: grid; grid-template-columns: 52px repeat(7, minmax(0, 1fr)); gap: 6px; align-items: center">
+            <span style="font-size: 15px; font-weight: 700">{{ row.name }}</span>
+            <sc-for list="{{ row.cells }}" as="cell" hint-placeholder-count="7">
+              <span style="height: 48px; border-radius: 10px; border: 1px solid #E3E2DC; display: flex; align-items: center; justify-content: center">
+                <sc-if value="{{ cell.isO }}" hint-placeholder-val="{{ true }}"><svg width="22" height="22" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#2563EB" stroke-width="2.6"></circle></svg></sc-if>
+                <sc-if value="{{ cell.isT }}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3 L17.5 16.5 L2.5 16.5 Z" fill="none" stroke="#D97706" stroke-width="2.4" stroke-linejoin="round"></path></svg></sc-if>
+                <sc-if value="{{ cell.isX }}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5 L15 15 M15 5 L5 15" fill="none" stroke="#71717A" stroke-width="2.4" stroke-linecap="round"></path></svg></sc-if>
+              </span>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <section style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 15px; color: #57574F">1</span>
+        <span style="font-size: 16px; font-weight: 700">1日1回、記号をえらぶだけ</span>
+        <span style="font-size: 14px; line-height: 1.7; color: #57574F">服薬は◯×、運動は◯△×で記録します</span>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 15px; color: #57574F">2</span>
+        <span style="font-size: 16px; font-weight: 700">週・月でふりかえる</span>
+        <span style="font-size: 14px; line-height: 1.7; color: #57574F">カレンダーで、続いている日がひと目で分かります</span>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E2DC; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 15px; color: #57574F">3</span>
+        <span style="font-size: 16px; font-weight: 700">カロリーもいっしょに</span>
+        <span style="font-size: 14px; line-height: 1.7; color: #57574F">必要なければ設定でオフにできます</span>
+      </div>
+    </section>
+  </main>
+
+  <footer style="height: 64px; box-sizing: border-box; padding: 0 48px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #E3E2DC; font-size: 13px; color: #57574F">
+    <span>© 2026 shukanlog</span>
+    <nav aria-label="サイト情報" style="display: flex; gap: 20px; align-items: center">
+      <a href="#terms" style="color: #57574F; min-height: 44px; display: flex; align-items: center">利用規約</a>
+      <a href="#privacy" style="color: #57574F; min-height: 44px; display: flex; align-items: center">プライバシーポリシー</a>
+      <a href="mailto:info@shukanlog.com" style="color: #57574F; min-height: 44px; display: flex; align-items: center">お問い合わせ</a>
+    </nav>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const toCells = (states) => states.map((s) => ({ isO: s === 'o', isT: s === 't', isX: s === 'x' }));
+    return {
+      rows: [
+        { name: '服薬', cells: toCells(['o', 'o', 'x', 'o', 'o', '', '']) },
+        { name: '運動', cells: toCells(['t', 'o', 'x', 't', 'o', '', '']) }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

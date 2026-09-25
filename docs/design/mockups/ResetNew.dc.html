@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>新しいパスワードの設定</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;family=Zen+Maru+Gothic:wght@500;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Sans",sans-serif;background:#F5F5F3;color:#1F1F1D}
+a{color:#1F1F1D}a:hover{color:#57574F}
+button,input{font-family:inherit}
+input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid #1F1F1D;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F5F3; display: flex; flex-direction: column; font-family: 'Zen Kaku Gothic New', 'Hiragino Sans', sans-serif; color: #1F1F1D">
+  <header style="display: flex; align-items: center; gap: 4px; padding: 8px 12px 0; height: 56px; box-sizing: border-box">
+    <a href="ResetRequest.dc.html" aria-label="戻る" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#1F1F1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg></a>
+    <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 20px">shukanlog</span>
+  </header>
+  <main style="flex-grow: 1; display: flex; flex-direction: column; gap: 18px; padding: 20px 20px 24px; box-sizing: border-box">
+      <h1 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 24px; line-height: 1.4">新しいパスワードの設定</h1>
+      <p style="margin: 0; font-size: 15px; line-height: 1.8; color: #57574F">メールで届いた6桁のコードと、新しいパスワードを入力してください。</p>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="code" style="font-size: 14px; font-weight: 700">確認コード</label>
+        <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" aria-describedby="code-error" aria-invalid="{{ codeErrInvalid }}" onInput="{{ onCode }}" style="width: 100%; height: 48px; box-sizing: border-box; border-radius: 12px; border: 1px solid #8A8983; background: #FFFFFF; padding: 0 14px; font-size: 16px; color: #1F1F1D" maxlength="6">
+        <sc-if value="{{ codeErrHas }}" hint-placeholder-val="{{ false }}"><p id="code-error" style="margin: 0; font-size: 13px; color: #B42318">{{ codeErr }}</p></sc-if>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="password" style="font-size: 14px; font-weight: 700">新しいパスワード</label>
+        <span id="password-help" style="font-size: 13px; line-height: 1.6; color: #57574F">8文字以上</span>
+        <div style="display: flex; gap: 8px">
+          <input id="password" type="{{ pwType }}" autocomplete="new-password" aria-describedby="password-help password-error" aria-invalid="{{ pwErrInvalid }}" onInput="{{ onPassword }}" style="width: 100%; height: 48px; box-sizing: border-box; border-radius: 12px; border: 1px solid #8A8983; background: #FFFFFF; padding: 0 14px; font-size: 16px; color: #1F1F1D; flex: 1 1 auto; min-width: 0">
+          <button type="button" aria-pressed="{{ pwShown }}" onClick="{{ togglePw }}" style="flex-shrink: 0; min-width: 64px; height: 48px; border-radius: 12px; border: 1px solid #8A8983; background: #FFFFFF; font-size: 14px; color: #1F1F1D; cursor: pointer">{{ pwLabel }}</button>
+        </div>
+        <sc-if value="{{ pwErrHas }}" hint-placeholder-val="{{ false }}"><p id="password-error" style="margin: 0; font-size: 13px; color: #B42318">{{ pwErr }}</p></sc-if>
+      </div>
+      <sc-if value="{{ notDone }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ submit }}" style="min-height: 52px; border-radius: 14px; border: none; background: #1F1F1D; color: #FFFFFF; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; text-decoration: none; width: 100%">パスワードを変更する</button></sc-if>
+      <sc-if value="{{ done }}" hint-placeholder-val="{{ false }}">
+        <div role="status" style="display: flex; flex-direction: column; gap: 8px">
+          <span style="font-size: 13px; line-height: 1.6; color: #57574F">入力チェックに成功しました(プロトタイプ)</span>
+          <a href="Login.dc.html" style="min-height: 52px; border-radius: 14px; border: none; background: #1F1F1D; color: #FFFFFF; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; text-decoration: none">ログイン画面へ</a>
+        </div>
+      </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { code: '', password: '', tried: false, done: false, showPw: false, resent: false };
+  }
+  rules() {
+    return {
+      code: (v) => !/^[0-9]{6}$/.test(v) ? '6桁の数字を入力してください' : '',
+      password: (v) => !v ? 'パスワードを入力してください' : (v.length < 8 ? '8文字以上で入力してください' : '')
+    };
+  }
+  renderVals() {
+    const R = this.rules();
+    const out = {
+      codeErr: this.state.tried ? R.code(this.state.code) : '',
+      pwErr: this.state.tried ? R.password(this.state.password) : ''
+    };
+    out.codeErrHas = out.codeErr !== ''; out.codeErrInvalid = out.codeErr !== '' ? 'true' : 'false';
+    out.pwErrHas = out.pwErr !== ''; out.pwErrInvalid = out.pwErr !== '' ? 'true' : 'false';
+    const keys = Object.keys(R);
+    return Object.assign(out, {
+      onEmail: (e) => this.setState({ email: e.target.value }),
+      onPassword: (e) => this.setState({ password: e.target.value }),
+      onCode: (e) => this.setState({ code: e.target.value.replace(/[^0-9]/g, '') }),
+      onAgree: (e) => this.setState({ agree: e.target.checked }),
+      submit: () => {
+        const ok = keys.every((k) => R[k](this.state[k]) === '');
+        this.setState({ tried: true, done: ok });
+      },
+      done: this.state.done,
+      notDone: !this.state.done,
+      pwType: this.state.showPw ? 'text' : 'password',
+      pwShown: this.state.showPw ? 'true' : 'false',
+      pwLabel: this.state.showPw ? '隠す' : '表示',
+      togglePw: () => this.setState({ showPw: !this.state.showPw }),
+      resent: this.state.resent,
+      resend: () => this.setState({ resent: true })
+    });
+  }
+}
+</script>
+</body>
+</html>

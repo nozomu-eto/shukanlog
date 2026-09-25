@@ -16,7 +16,11 @@ export default defineConfig({
 			return {
 				wrangler: { configPath: path.join(dirname, "../../wrangler.json") },
 				miniflare: {
-					bindings: { TEST_MIGRATIONS: migrations },
+					bindings: {
+						TEST_MIGRATIONS: migrations,
+						// BETTER_AUTH_SECRETはwrangler secretで設定するシークレットのため、テストではここで補う
+						BETTER_AUTH_SECRET: "test-only-secret-do-not-use-in-production-32chars",
+					},
 				},
 			};
 		}),

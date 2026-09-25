@@ -2,6 +2,7 @@
 	"name": "shukanlog",
 	"description": "服薬・運動・カロリーを記録し、週・月で振り返る個人向けの健康習慣記録サービス",
 	"dependencies": {
+		"better-auth": "^1.7.6",
 		"drizzle-orm": "^0.45.3",
 		"hono": "4.11.1",
 		"react": "19.2.1",
@@ -19,6 +20,7 @@
 		"@types/react": "19.2.7",
 		"@types/react-dom": "19.2.3",
 		"@vitejs/plugin-react": "5.1.1",
+		"auth": "1.7.6",
 		"drizzle-kit": "^0.31.11",
 		"eslint": "9.39.2",
 		"eslint-plugin-react-hooks": "7.0.1",

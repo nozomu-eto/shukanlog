@@ -14,7 +14,7 @@
 - [x] T3: wranglerの設定と本番環境の分離
 - [x] T4: D1とdrizzle
 - [x] T5: メール送信
-- [ ] T6: Better Authの基本設定
+- [x] T6: Better Authの基本設定
 - [ ] T7: 確認コード(6桁)による確認・パスワード再設定
 - [ ] T8: 認証のレート制限
 - [ ] T9: 新規登録のbot対策(Turnstile)
@@ -66,3 +66,12 @@
 - Cloudflare公式ドキュメントを確認したところ、send_emailバインディングには生MIMEを組み立てる従来のEmailMessage方式に加え、`env.MAILER.send({ to, from, subject, text, html })` という構造化オブジェクトをそのまま渡せる新しいAPIがあることが分かったため、依存(mimetext)を増やさずに済むこちらを採用した
 - createMailerの引数型は、生成されたEnv型のMAIL_TRANSPORTがwrangler.jsonのvarsから導出されるリテラルユニオン("console"|"cloudflare")になっており"memory"を受け付けられないため、Mailer用に独自の最小限のMailerEnv型(MAIL_TRANSPORT: string)を定義して受け取るようにした。これによりテスト用の"memory"も型エラー無く渡せる
 - メモリ実装の送信記録は、モジュールスコープの配列に保持し、getSentMails/resetSentMailsで参照・初期化する方式にした(テストごとにbeforeEachでリセット)
+
+### T6
+
+- Better AuthのCLI(`@better-auth/cli`)はnpm上で「DEPRECATED」となっていた。現在の公式ドキュメントを確認したところ、CLIは`auth`という独立パッケージに移り、`npx auth generate --adapter drizzle --dialect sqlite`の形で使うことが分かったため、こちらを採用した。あわせて better-auth 本体もCLIと同じ1.7.6に揃えた
+- スキーマ生成専用に src/worker/auth/cli.config.ts を用意した。D1は実際のリクエスト時のバインディングでしか得られないため、CLI実行時は `drizzle({} as D1Database)` というダミーの接続でdrizzleAdapterの形だけを与えている(実際に接続はしない、生成のためだけの設定でありアプリのコードからは読み込まない)
+- Better Authのインスタンスは、Workerがリクエストごとに異なるenv(D1バインディング等)を受け取る都合上、モジュールスコープの単一インスタンスにはせず、`createAuth(env)`という関数でリクエストごとに生成する方式にした(Hono統合ドキュメントの推奨パターンに沿った)
+- BETTER_AUTH_SECRETはwrangler.jsonのvarsではなく、シークレット(開発は.dev.vars、本番はwrangler secret)として扱うことにした。型は生成されたEnv型に無いため、src/worker/env.d.tsで global の `Env` と `Cloudflare.Env` の両方を拡張する必要があった(cloudflare:testの`env`はCloudflare.Env型、Honoの`Bindings`は素のEnv型を使っており、両方を拡張しないと型エラーになった)。あわせて、この拡張がテスト用のtsconfig(tsconfig.test.json)のコンパイル対象にも含まれるよう include を修正した(含まれていないと、テストの型チェックだけ別プログラム扱いになり拡張が効かなかった)
+- requireEmailVerification: true を設定した状態で、メール確認用のコールバック(sendVerificationEmail)を何も設定せずに登録→ログインを試したところ、登録は成功しログインはエラーになることを実際にテストで確認した。確認コードでの確認・メールテンプレートの適用はT7で行う
+- 認証テーブル(user/session/account/verification)のマイグレーションは `npx auth generate` → `pnpm run db:generate` で生成した(migrations/0000_equal_daredevil.sql)

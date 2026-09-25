@@ -20,7 +20,7 @@
 - [x] T9: 新規登録のbot対策(Turnstile)
 - [x] T10: セキュリティヘッダとキャッシュ
 - [x] T11: デザインの基礎(色・文字)
-- [ ] T12: アイコンとStatusIcon
+- [x] T12: アイコンとStatusIcon
 - [ ] T13: 画面の骨組み(ルーティング)
 - [ ] T14: ドキュメント
 - [ ] T15: PRの作成
@@ -111,3 +111,10 @@
 - 色・文字のCSS変数は docs/design.md 2章・3章の表をそのままstyles/tokens.cssの変数にした(T1で作った空の器を埋める形)
 - Fontsourceは、パッケージ内に太さごとの個別CSSファイル(400.css/500.css/700.css)が用意されていることを確認し、必要な太さ(Zen Maru Gothic: 500,700 / Zen Kaku Gothic New: 400,500,700)だけをmain.tsxでインポートした(全体をまとめて読み込むファイルは使っていない)
 - フォーカス表示は `:focus-visible` に対して outline 2px 実線・オフセット2pxを指定した(指示の色 #1F1F1D は --color-text と同じ値のため変数を使った)
+
+### T12
+
+- StatusIconの形(円の半径・三角のパス・バツの線)は、docs/design/mockups/Main.dc.htmlに実際に書かれているSVGのpath/circleの値をそのまま採用した(viewBox 0 0 20 20、円は r=7 stroke-width 2.6、三角・バツは stroke-width 2.4)
+- lucide-reactは指示通りインストールしたのみで、実際の画面での使用(Settings・ChevronLeft・ChevronRight・Plus)はステップ3以降で各画面を作るときに使う側で個別にimportする方針とした(このステップでは使う画面自体が無いため)
+- StatusIconコンポーネントと読み上げ用ラベル関数(getStatusLabel)を同じファイルに置いたため、ESLintのreact-refresh/only-export-componentsが警告(warning)を出す。指示で「同じファイルからexportする」と明記されていたためこの構成のままにし、警告はエラーではないためlintは通ることを確認した
+- test/frontend/vitest.config.tsのsetupFilesのパスが `./test/frontend/setup.ts` になっており、実際にはプロジェクトルートが test/frontend であるため `test/frontend/test/frontend/setup.ts` を探しにいってしまうバグがあった(T2の時点でテストファイルが無かったため気づかなかった)。StatusIconのテストを追加して初めて発覚したため、`./setup.ts` に修正した

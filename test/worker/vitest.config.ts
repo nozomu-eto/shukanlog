@@ -20,6 +20,8 @@ export default defineConfig({
 						TEST_MIGRATIONS: migrations,
 						// BETTER_AUTH_SECRETはwrangler secretで設定するシークレットのため、テストではここで補う
 						BETTER_AUTH_SECRET: "test-only-secret-do-not-use-in-production-32chars",
+						// テストではメール送信を実際には行わず、内容を記録するmemory実装を使う
+						MAIL_TRANSPORT: "memory",
 					},
 				},
 			};

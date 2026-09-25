@@ -15,7 +15,7 @@
 - [x] T4: D1とdrizzle
 - [x] T5: メール送信
 - [x] T6: Better Authの基本設定
-- [ ] T7: 確認コード(6桁)による確認・パスワード再設定
+- [x] T7: 確認コード(6桁)による確認・パスワード再設定
 - [ ] T8: 認証のレート制限
 - [ ] T9: 新規登録のbot対策(Turnstile)
 - [ ] T10: セキュリティヘッダとキャッシュ
@@ -75,3 +75,11 @@
 - BETTER_AUTH_SECRETはwrangler.jsonのvarsではなく、シークレット(開発は.dev.vars、本番はwrangler secret)として扱うことにした。型は生成されたEnv型に無いため、src/worker/env.d.tsで global の `Env` と `Cloudflare.Env` の両方を拡張する必要があった(cloudflare:testの`env`はCloudflare.Env型、Honoの`Bindings`は素のEnv型を使っており、両方を拡張しないと型エラーになった)。あわせて、この拡張がテスト用のtsconfig(tsconfig.test.json)のコンパイル対象にも含まれるよう include を修正した(含まれていないと、テストの型チェックだけ別プログラム扱いになり拡張が効かなかった)
 - requireEmailVerification: true を設定した状態で、メール確認用のコールバック(sendVerificationEmail)を何も設定せずに登録→ログインを試したところ、登録は成功しログインはエラーになることを実際にテストで確認した。確認コードでの確認・メールテンプレートの適用はT7で行う
 - 認証テーブル(user/session/account/verification)のマイグレーションは `npx auth generate` → `pnpm run db:generate` で生成した(migrations/0000_equal_daredevil.sql)
+
+### T7
+
+- emailOTPプラグインのオプションは、公式ドキュメントとインストール済みパッケージの型/実装(node_modules/better-auth/dist/plugins/email-otp/routes.mjs)を直接確認して決めた。otpLength: 6、expiresIn: 600(秒、10分)、allowedAttempts: 3(誤り試行の上限)、overrideDefaultEmailVerification: true(リンク方式をコード方式に置き換える公式オプション)を設定した
+- **メールアドレスの変更をコードで行えるかの調査結果**: 行える。emailOTPプラグインは同じプラグイン内に `changeEmail: { enabled: true, verifyCurrentEmail?: boolean }` というオプションを持ち、有効化すると `POST /api/auth/email-otp/request-email-change`(ログイン中のユーザーが新しいメールアドレス宛にコードを送る。currentEmailの確認を必須にするかはverifyCurrentEmailで選べる)と `POST /api/auth/email-otp/change-email`(コードで確定する)の2つのエンドポイントが使えるようになることを、実装コード(requestEmailChangeEmailOTP/changeEmailEmailOTP、sensitiveSessionMiddleware付き)で確認した。今回のT7では`changeEmail`オプションは有効化していない(画面の実装は指示によりステップ4で行うため)。ステップ4でこのオプションを`true`にし、対応する画面・APIを実装すればよい
+- パスワード再設定エンドポイント(/email-otp/reset-password)は、成功時に未確認だったメールアドレスも自動的にemailVerified: trueにする実装になっていた(実装コードで確認)。これはBetter Auth側の挙動であり、こちらで追加の対応は不要だった
+- 送信するメールの件名・本文は docs/legacy/email-templates.md の文面をそのまま使い、有効期限だけ元々10分表記だったのでそのまま踏襲した(書き換え不要だった)
+- emailOTPプラグインを追加しても、verification テーブルを再利用する実装のため、drizzleのスキーマ・マイグレーションに差分は発生しなかった(`npx auth generate`後にdiffなしを確認済み)

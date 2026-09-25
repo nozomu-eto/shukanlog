@@ -16,7 +16,7 @@
 - [x] T5: メール送信
 - [x] T6: Better Authの基本設定
 - [x] T7: 確認コード(6桁)による確認・パスワード再設定
-- [ ] T8: 認証のレート制限
+- [x] T8: 認証のレート制限
 - [ ] T9: 新規登録のbot対策(Turnstile)
 - [ ] T10: セキュリティヘッダとキャッシュ
 - [ ] T11: デザインの基礎(色・文字)
@@ -83,3 +83,11 @@
 - パスワード再設定エンドポイント(/email-otp/reset-password)は、成功時に未確認だったメールアドレスも自動的にemailVerified: trueにする実装になっていた(実装コードで確認)。これはBetter Auth側の挙動であり、こちらで追加の対応は不要だった
 - 送信するメールの件名・本文は docs/legacy/email-templates.md の文面をそのまま使い、有効期限だけ元々10分表記だったのでそのまま踏襲した(書き換え不要だった)
 - emailOTPプラグインを追加しても、verification テーブルを再利用する実装のため、drizzleのスキーマ・マイグレーションに差分は発生しなかった(`npx auth generate`後にdiffなしを確認済み)
+
+### T8
+
+- customRulesのキーはBetter Authのエンドポイントのパス(例: "/sign-in/email")で、値は `{ window, max }`(秒・回数)であることを公式ドキュメントで確認した。指示にあった各制限を次のパスに割り当てた: ログイン→"/sign-in/email"(60/5)、新規登録→"/sign-up/email"(60/3)、確認コードの送信・再送→"/email-otp/send-verification-otp"(60/1)、コードの検証→"/email-otp/verify-email"(60/5)、パスワード再設定の要求→"/email-otp/request-password-reset"(300/3)
+- 指示に無かった判断として、パスワード再設定を確定するエンドポイント("/email-otp/reset-password")にもコード検証と同じ60秒5回の制限を追加した(このエンドポイント自体がOTP検証を兼ねているため、検証と同水準の制限が必要と判断した)
+- IPアドレスの取得は、rateLimitオプションではなくトップレベルの`advanced.ipAddress.ipAddressHeaders`で設定することをドキュメントで確認し、`["cf-connecting-ip"]`を指定した(既知の落とし穴2)
+- rateLimit.storage: "database" にしたことで rate_limit テーブルが追加になったため、`npx auth generate` → `pnpm run db:generate` を再実行し、新しいマイグレーション(migrations/0001_white_stepford_cuckoos.sql)を生成した
+- テストは、同一IPから6回連続でログイン失敗を試み、6回目が429になること、そして制限に達した後でも別IPからの試行は429にならないことを確認する形にした

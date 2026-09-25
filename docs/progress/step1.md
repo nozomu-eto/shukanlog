@@ -21,7 +21,7 @@
 - [x] T10: セキュリティヘッダとキャッシュ
 - [x] T11: デザインの基礎(色・文字)
 - [x] T12: アイコンとStatusIcon
-- [ ] T13: 画面の骨組み(ルーティング)
+- [x] T13: 画面の骨組み(ルーティング)
 - [ ] T14: ドキュメント
 - [ ] T15: PRの作成
 
@@ -118,3 +118,11 @@
 - lucide-reactは指示通りインストールしたのみで、実際の画面での使用(Settings・ChevronLeft・ChevronRight・Plus)はステップ3以降で各画面を作るときに使う側で個別にimportする方針とした(このステップでは使う画面自体が無いため)
 - StatusIconコンポーネントと読み上げ用ラベル関数(getStatusLabel)を同じファイルに置いたため、ESLintのreact-refresh/only-export-componentsが警告(warning)を出す。指示で「同じファイルからexportする」と明記されていたためこの構成のままにし、警告はエラーではないためlintは通ることを確認した
 - test/frontend/vitest.config.tsのsetupFilesのパスが `./test/frontend/setup.ts` になっており、実際にはプロジェクトルートが test/frontend であるため `test/frontend/test/frontend/setup.ts` を探しにいってしまうバグがあった(T2の時点でテストファイルが無かったため気づかなかった)。StatusIconのテストを追加して初めて発覚したため、`./setup.ts` に修正した
+
+### T13
+
+- /app配下の認可ガード(RequireAuth)は、GET /api/auth/get-session を叩いてセッションの有無だけを見て /login へ振り分ける最小限の実装にした(利用規約への同意状況による振り分けはステップ3で追加すると指示にあったため、ここでは行っていない)
+- /app?tab=... は1つのルート(indexルート)にまとめ、タブの切り替え自体(クエリパラメータの解釈)はステップ3以降で実装する。h1は仮に「記録」とした(実際の日付・期間の表示は中身を作るときに差し替える)
+- パスワード再設定の2画面(/reset, /reset/new)は、design.md上は1つの名前(「パスワード再設定」)でまとまっているため、両方のh1を同じ文言にした
+- 404ページの文言・リンク(「記録画面へ」→/app、「トップページへ」→/)は docs/design/mockups/NotFound.dc.html の文言をそのまま使った
+- `wrangler dev`を実際に起動し、/・存在しないパス・/app のいずれもSPAのシェル(index.html)が200で返り、クライアント側のReact Routerがルーティングを処理できる状態になっていることを確認した

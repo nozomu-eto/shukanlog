@@ -130,7 +130,7 @@ shukanlog(Cloudflare版)のAPI(`/api/`配下)の一覧です。エラーレス�
     "accountCreatedDate": "YYYY-MM-DD"
   }
   ```
-  - `days[].calories` はカロリー記録を無効にしている利用者には常に `null`
+  - `days[].calories` は、カロリー記録が無効な利用者には常に `null`。有効な利用者は、その日の記録が1件も無ければ `null`、1件以上あれば合計(0kcalの記録も含む)を返す(「記録が無い日」と「0kcalを記録した日」を区別するため)
   - `totals.habits[habitId].eligibleDays` は、期間内で「アカウント作成日以降」かつ「今日以前」の日数
   - `totals.calories.average` は記録がある日だけで算出した平均。カロリー記録を無効にしている利用者、または記録が1日も無い場合は `null`
 

@@ -54,7 +54,8 @@ describe("GET /api/summary", () => {
 		await db.insert(calorieLog).values([
 			{ id: crypto.randomUUID(), userId, recordDate: "2026-09-24", calories: 1000 },
 			{ id: crypto.randomUUID(), userId, recordDate: "2026-09-25", calories: 2000 },
-			// 9/26は記録なし。平均の計算から除外されるべき
+			// 9/26は0kcalを記録した日(記録はある)。9/23は記録が無い日。両者は区別される
+			{ id: crypto.randomUUID(), userId, recordDate: "2026-09-26", calories: 0 },
 		]);
 
 		const weekRes = await getSummary(cookie, "2026-09-21", "2026-09-27");
@@ -75,6 +76,12 @@ describe("GET /api/summary", () => {
 		expect(day24?.results[medication.id]).toBe("completed");
 		expect(day24?.calories).toBe(1000);
 
+		// 9/26は0kcalを記録した日なので0、9/23は記録が無い日なのでnullになる(区別できる)
+		const day26 = week.days.find((d) => d.date === "2026-09-26");
+		expect(day26?.calories).toBe(0);
+		const day23 = week.days.find((d) => d.date === "2026-09-23");
+		expect(day23?.calories).toBeNull();
+
 		// 分母(eligibleDays)は「アカウント作成日以降かつ今日以前」の日数。
 		// テスト実行時点の実際の「今日」を使って期待値を独立に計算し、実装と突き合わせる
 		const expectedEligibleDays = countEligibleDays(
@@ -86,9 +93,10 @@ describe("GET /api/summary", () => {
 		expect(week.totals.habits[medication.id].notCompleted).toBe(1);
 		expect(week.totals.habits[medication.id].eligibleDays).toBe(expectedEligibleDays);
 
-		// カロリーの平均は記録がある日(9/24, 9/25)だけで算出: (1000+2000)/2 = 1500
-		expect(week.totals.calories.recordedDays).toBe(2);
-		expect(week.totals.calories.average).toBe(1500);
+		// カロリーの平均は記録がある日(9/24, 9/25, 9/26)だけで算出: (1000+2000+0)/3 = 1000
+		// 0kcalの日も「記録がある日」として平均の計算に含まれる
+		expect(week.totals.calories.recordedDays).toBe(3);
+		expect(week.totals.calories.average).toBe(1000);
 
 		// 月の集計(2026年9月)でも同じ記録が含まれる
 		const monthRes = await getSummary(cookie, "2026-09-01", "2026-09-30");

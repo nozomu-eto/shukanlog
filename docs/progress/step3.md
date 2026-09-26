@@ -9,7 +9,7 @@
 
 ## タスク一覧
 
-- [ ] T1: 集計APIで「記録なし」と「0kcal」を区別する
+- [x] T1: 集計APIで「記録なし」と「0kcal」を区別する
 - [ ] T2: テストの新規登録の回数制限を外す
 - [ ] T3: 画面の土台(データ取得・認証クライアント・API クライアント)
 - [ ] T4: 共通の部品
@@ -35,3 +35,9 @@
 - git status確認: 未コミットの変更なし。stash不要
 - `git fetch origin` 後、origin/main(2f8adf5)に docs/progress/step2.md・docs/api.md が含まれることを確認した(ステップ2の内容を含む)
 - worktree のため `main` ブランチ自体をチェックアウトできなかった(他のworktreeでロック中)。ステップ2と同じ対応方針で `git checkout -b feat/ui-day origin/main` を実行した
+
+### T1
+
+- GET /api/summary の `days[].calories` は、`caloriesByDate`(Map)に日付ごとの合計を積む際、その日にカロリー記録が1件でもあれば(合計が0でも)キーが作られる性質を利用し、`caloriesByDate.has(date)` で「記録が1件以上ある日」かどうかを判定するように変更した。記録が無い日は `null`、0kcalを含む記録がある日はその合計(0を含む)を返す
+- 平均の計算(`totals.calories.average`)はもともと「記録がある日(calorie_logが1件以上ある日)」だけで算出する実装のままで変更不要だった。0kcalの日もこの「記録がある日」に含まれるため、平均計算に反映されることをテストで確認した
+- GET /api/days/:date の `calories`(`{ total, items }` 形式)は、items が空配列かどうかで「記録なし」を判別できる別の形なので、このタスクの対象外(T1の指示にある「現在は0を返している」という問題はsummaryのみに存在していたため)と判断した

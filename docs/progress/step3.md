@@ -18,7 +18,7 @@
 - [x] T7: 新規登録(/signup)と Turnstile
 - [x] T8: 確認コードの入力(/verify)
 - [x] T9: パスワードの再設定(/reset、/reset/new)
-- [ ] T10: 画面の振り分け
+- [x] T10: 画面の振り分け
 - [ ] T11: 利用規約への同意(/consent)
 - [ ] T12: アプリの枠(ヘッダー・日週月の切り替え)
 - [ ] T13: 日タブ(記録の表示と保存)
@@ -104,3 +104,10 @@
 
 - requestPasswordResetEmailOTPの実装(routes.mjs)を確認し、登録されていないメールアドレスでも常に`{success:true}`を返す(内部でuserが見つからなければ検証用の行を消して早期returnするだけで、エラーにはしない)ことを確認した。そのためフロントエンド側は結果を分岐せず、常に/reset/newへ進める実装にした
 - /reset/newで成功したら、react-routerのstateで「パスワードを変更しました」を渡して/loginへ移動する。ログイン画面(T6で実装済み)は既にstate.messageを見出しの上に表示する仕組みを持っているため、そのまま再利用できた
+
+### T10
+
+- /app配下はRequireAuth(既存のGET /api/auth/get-session直接fetch方式から、authClient.useSession() + react-queryのGET /api/me取得に置き換えた)、/consentはConsentGuard、/login・/signup・/verify・/reset・/reset/newはRedirectIfAuthenticatedの3つのガードコンポーネントに分けた
+- RedirectIfAuthenticatedはパスを持たない「レイアウトルート」(react-routerの公式パターン)にし、子ルートのpathは先頭のスラッシュを付けない相対パス("login"等)にした。先頭に"/"を付けた絶対パスを子ルートに書くと、react-routerの解決規則上ネストの意図が伝わらない・警告が出る可能性があるため、公式ドキュメントのレイアウトルートの書き方に合わせた
+- 判定中(セッション確認・GET /api/me取得)は画面のちらつきを避けるため何も表示しない(null)。GET /api/meの取得に失敗した場合は、振り分けをブロックせずそのまま子ルートを表示し、エラー表示は各画面自身のデータ取得に委ねる設計にした
+- テストはauthClient・api/meモジュールをvi.mockでモックし、未ログイン・未同意・同意済みの3パターンをMemoryRouter上で確認した(test/frontend/routes/require-auth.test.tsx、consent-guard.test.tsx、redirect-if-authenticated.test.tsx)

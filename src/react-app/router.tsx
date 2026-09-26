@@ -6,6 +6,8 @@ import { VerifyRoute } from "./routes/verify";
 import { ResetRequestRoute } from "./routes/reset-request";
 import { ResetNewRoute } from "./routes/reset-new";
 import { ConsentRoute } from "./routes/consent";
+import { ConsentGuard } from "./routes/consent-guard";
+import { RedirectIfAuthenticated } from "./routes/redirect-if-authenticated";
 import { TermsRoute } from "./routes/terms";
 import { PrivacyRoute } from "./routes/privacy";
 import { LicensesRoute } from "./routes/licenses";
@@ -17,15 +19,27 @@ import { SettingsEmailRoute } from "./routes/app/settings-email";
 import { SettingsPasswordRoute } from "./routes/app/settings-password";
 import { SettingsWithdrawRoute } from "./routes/app/settings-withdraw";
 
-// 画面のルーティング定義。URLはdocs/design.md 8章に合わせている
+// 画面のルーティング定義。URLはdocs/design.md 8章に合わせている。
+// ログインと同意の状態による振り分け(T10)は、それぞれのガード(RedirectIfAuthenticated・
+// ConsentGuard・RequireAuth)がOutletの手前で行う
 export const router = createBrowserRouter([
 	{ path: "/", element: <TopRoute /> },
-	{ path: "/login", element: <LoginRoute /> },
-	{ path: "/signup", element: <SignupRoute /> },
-	{ path: "/verify", element: <VerifyRoute /> },
-	{ path: "/reset", element: <ResetRequestRoute /> },
-	{ path: "/reset/new", element: <ResetNewRoute /> },
-	{ path: "/consent", element: <ConsentRoute /> },
+	{
+		// パスを持たない層(レイアウトルート)にすることで、子は/からの相対パスとして解決される
+		element: <RedirectIfAuthenticated />,
+		children: [
+			{ path: "login", element: <LoginRoute /> },
+			{ path: "signup", element: <SignupRoute /> },
+			{ path: "verify", element: <VerifyRoute /> },
+			{ path: "reset", element: <ResetRequestRoute /> },
+			{ path: "reset/new", element: <ResetNewRoute /> },
+		],
+	},
+	{
+		path: "/consent",
+		element: <ConsentGuard />,
+		children: [{ index: true, element: <ConsentRoute /> }],
+	},
 	{ path: "/terms", element: <TermsRoute /> },
 	{ path: "/privacy", element: <PrivacyRoute /> },
 	{ path: "/licenses", element: <LicensesRoute /> },

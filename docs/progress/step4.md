@@ -18,7 +18,7 @@
 - [x] T7: 設定画面(/app/settings)
 - [x] T8: メールアドレスの変更(/app/settings/email)
 - [x] T9: パスワードの変更(/app/settings/password)
-- [ ] T10: 退会の仕組み(サーバー)
+- [x] T10: 退会の仕組み(サーバー)
 - [ ] T11: 退会の画面(/app/settings/withdraw)
 - [ ] T12: 退会から30日後の完全削除(定期処理)
 - [ ] T13: メール未確認ユーザーの削除(定期処理)
@@ -104,3 +104,12 @@
 - 現在のパスワードが誤っている場合は`INVALID_PASSWORD`(Better Auth本体のBASE_ERROR_CODES)が返るため、T6で使ったものと同じ`getAuthErrorCode()`で判定した
 - 画面(settings-password.tsx)はdocs/design/mockups/PasswordChange.dc.html・PasswordChangePC.dc.htmlの2ステップ(入力→完了)構成をそのまま実装した
 - テスト(test/worker/account-password-change.test.ts)は、同じ利用者で2つ目のセッション(別端末を想定)を作ってから変更し、他の端末のセッションが無効になること・今の端末は変更時の新しいCookieでログインしたままなこと・新しいパスワードでログインできて古いパスワードでは失敗することを確認した。フロントエンドのテスト(settings-password.test.tsx)はauthClientをモックし、revokeOtherSessions:trueで呼び出されること・エラー表示を確認した
+
+### T10
+
+- 退会の申請を記録するテーブル`account_deletion`(user_id、requested_at、purge_after、canceled_at)を追加し、マイグレーション(0003)を生成した
+- `POST /api/account/withdraw`は、T8・T9で使ったのと同じ`verifyCurrentPassword`(Better Auth本体のパスワード照合処理)で現在のパスワードを確認したうえで、`account_deletion`に1行追加し(purge_afterは申請から30日後)、Better Authの`internalAdapter.deleteUserSessions(userId)`でその利用者のすべてのセッションを無効にする(即時ログアウト)。データそのものはこの時点では削除しない
+- ログイン時の取り消しは、Better Authの`databaseHooks.session.create.after`フック(セッションが新規作成されるたびに呼ばれる)で実装した。ログイン(`/sign-in/email`)以外(パスワード変更時の再発行等)でも呼ばれるが、`cancelPendingWithdrawal`は「取り消されておらず、まだ物理削除の期限を過ぎていない申請」が無ければ何もしないため問題ない
+- 新規登録で退会申請中の同じメールアドレスを使った場合は、そのユーザーの行自体をまだ削除していない(物理削除は定期処理(T12)まで行わない)ため、Better Auth本体の既存の「登録済み」エラー(USER_ALREADY_EXISTS)がそのまま返る。画面の文言で「取り消すにはログインするよう」案内するのはT11で行う
+- `GET /api/me`に`justCanceledWithdrawal`(直前10分以内に取り消された場合true)を追加した。「1回だけ表示する」という要件は、サーバー側で時間窓(10分)を設けるところまでを担い、実際に1回だけ見せる制御(表示済みかどうかの記録)はクライアント側(T11)に委ねる方針にした
+- テスト(test/worker/account-withdraw.test.ts)は、退会でセッションが無効になりデータ(userの行)は残ること、誤ったパスワードでは退会できないこと、30日以内に同じメールアドレス・パスワードでログインすると取り消されGET /api/meのjustCanceledWithdrawalで分かることを確認した

@@ -26,10 +26,12 @@ shukanlog(Cloudflare版)のAPI(`/api/`配下)の一覧です。エラーレス�
     "user": { "email": "string" },
     "accountCreatedDate": "YYYY-MM-DD",
     "profile": { "calorieTrackingEnabled": true } ,
-    "consent": { "currentVersion": "2026-09-25", "agreed": true }
+    "consent": { "currentVersion": "2026-09-25", "agreed": true },
+    "justCanceledWithdrawal": false
   }
   ```
   - `profile` はまだ同意しておらず初期データが無い場合は `null`
+  - `justCanceledWithdrawal` は、直前(10分以内)に退会の申請を取り消した場合に `true`。画面側で「退会を取り消しました」を1回だけ表示するために使う
 
 ## POST /api/consent
 
@@ -145,6 +147,16 @@ shukanlog(Cloudflare版)のAPI(`/api/`配下)の一覧です。エラーレス�
   - `currentPassword` が正しくない場合は400(`INVALID_PASSWORD`)
   - `newEmail` が既に使われている場合は400(`EMAIL_ALREADY_IN_USE`)
   - 60秒に1回を超えて呼び出した場合は429(`RATE_LIMITED`)
+- レスポンス: `{ "success": true }`
+
+## POST /api/account/withdraw
+
+退会を申請する。認証必須・同意必須。
+
+- リクエスト: `{ "currentPassword": "string" }`
+- 現在のパスワードを確認したうえで、即時に論理削除(退会の申請を記録し、その利用者のすべてのセッションを無効にする)する。データそのものはこの時点では削除しない(申請から30日後に定期処理で完全に削除する)
+- 申請から30日以内に同じメールアドレス・パスワードでログインすると、退会は自動的に取り消される(`GET /api/me` の `justCanceledWithdrawal` で分かる)
+- エラー: `currentPassword` が正しくない場合は400(`INVALID_PASSWORD`)
 - レスポンス: `{ "success": true }`
 
 ## エラーコード一覧

@@ -19,7 +19,7 @@ import { calorieLog, profile } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { patchProfileBodySchema } from "./profile";
 import { buildSummaryResponse, summaryQuerySchema, validateSummaryRange } from "./summary";
-import { requestEmailChange, requestEmailChangeBodySchema } from "./account";
+import { requestEmailChange, requestEmailChangeBodySchema, withdraw, withdrawBodySchema } from "./account";
 import { POLICY_VERSION } from "../../shared/policy";
 import { isFuture, isValidDateString, todayInTokyo } from "../../shared/domain/date";
 import type { AppEnv } from "../types";
@@ -258,6 +258,17 @@ apiRouter.post(
 		return c.json({ success: true });
 	},
 );
+
+// 退会の申請。現在のパスワードを確認したうえで、即時に論理削除(全セッションの無効化)する。
+// データそのものはこの時点では削除しない(30日後の物理削除は定期処理(T12)で行う)
+apiRouter.post("/account/withdraw", validate("json", withdrawBodySchema), async (c) => {
+	const { currentPassword } = c.req.valid("json");
+	const result = await withdraw(c.env, c.get("userId"), currentPassword);
+	if (!result.ok) {
+		return c.json({ error: { code: result.code, message: result.message } }, result.status);
+	}
+	return c.json({ success: true });
+});
 
 // 週・月タブの集計を返す(習慣の記録・カロリー記録をまとめて1回のレスポンスで返す)
 apiRouter.get("/summary", validate("query", summaryQuerySchema), async (c) => {

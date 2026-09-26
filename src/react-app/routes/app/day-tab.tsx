@@ -14,6 +14,7 @@ import { useToast } from "../../components/Toast";
 import { CalorieForm } from "./calorie-form";
 import { todayInTokyo, isValidDateString, isFuture, formatDateForDisplay } from "../../../shared/domain/date";
 import { getPreviousPeriodDate, getNextPeriodDate, canGoToNextPeriod, canReturnToToday, getPeriodRange } from "../../../shared/domain/period";
+import { hrefForTab } from "../../lib/tab-links";
 import type { HabitLogResult } from "../../../shared/types";
 import styles from "./day-tab.module.css";
 
@@ -40,8 +41,7 @@ function resolveDate(rawDate: string | null, today: string): string {
 }
 
 function hrefForDate(date: string): string {
-	const params = new URLSearchParams({ tab: "day", date });
-	return `/app?${params.toString()}`;
+	return hrefForTab("day", date);
 }
 
 type CalorieDialogState = { mode: "new" } | { mode: "edit"; item: DayCalorieItem };

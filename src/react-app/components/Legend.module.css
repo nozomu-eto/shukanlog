@@ -1,0 +1,25 @@
+/* 週・月タブ共通の凡例(達成・一部達成・未達成・空欄 未記録)。docs/week-month-tabs.md 1.6 */
+.legend {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 12px;
+	padding: 10px 14px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 14px;
+	font-size: 13px;
+	color: var(--color-text-muted);
+}
+
+.item {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+@media (min-width: 1024px) {
+	.legend {
+		gap: 16px;
+		font-size: 14px;
+	}
+}

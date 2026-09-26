@@ -245,5 +245,3 @@ apiRouter.get("/summary", validate("query", summaryQuerySchema), async (c) => {
 	);
 	return c.json(body);
 });
-
-// 各APIのハンドラは、この後のタスク(T17以降)でこのルーターに追加していく

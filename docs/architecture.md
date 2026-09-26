@@ -6,9 +6,9 @@ shukanlog(Cloudflare版)の技術的な構成と、実装上の決定事項を�
 
 - Cloudflareの`vite-react-template`(React + Vite + Hono + Workers)をベースにしています
 - 1つのWorkerが、APIと静的ファイル(SPA)の両方を配信します
-  - `/api/` から始まるパスは Hono のAPI
-  - それ以外のパスは静的ファイル(ビルドしたReactアプリ)。存在しないパスは `index.html` を返し、クライアント側のReact Routerが404ページを表示する
-- `wrangler.json` の `assets.run_worker_first` を `true` にして、すべてのリクエストが必ずWorkerを通るようにしている。これは、静的ファイルの配信にもセキュリティヘッダを付けるための対応(後述)
+  - `/api/` から始まるパスは Hono のAPI(Workerが処理する)
+  - それ以外のパスは静的ファイル(ビルドしたReactアプリ)。Cloudflareのアセット配信がWorkerを経由せず直接返す。存在しないパスは `index.html` を返し、クライアント側のReact Routerが404ページを表示する
+- `wrangler.json` の `assets.run_worker_first` は `["/api/*"]` にしている。`/api/` 配下だけWorkerを必ず通し、静的ファイルはWorkerを経由しない(日本語フォントなど細かいファイルを含む1回の画面表示でWorkerが何十回も動いてしまうのを避けるため)。静的ファイルのヘッダーは`public/_headers`で付ける(後述)
 
 ### ディレクトリ
 
@@ -67,7 +67,7 @@ Workers Rate Limitingバインディング(`ratelimits`)は10秒か60秒しか�
 
 ## セキュリティヘッダ
 
-`hono/secure-headers`で、全レスポンスに以下を付けています。
+`/api/`配下は`hono/secure-headers`(`src/worker/middleware/security-headers.ts`)、それ以外の静的ファイルは`public/_headers`で、それぞれ以下のヘッダーを付けています。値は`src/shared/security-headers.ts`に一元化しており、`test/frontend/security-headers-file.test.ts`で`public/_headers`の内容がこの値と一致することを確認しています。
 
 - `Strict-Transport-Security: max-age=31536000; includeSubDomains`
 - `X-Content-Type-Options: nosniff`
@@ -75,7 +75,7 @@ Workers Rate Limitingバインディング(`ratelimits`)は10秒か60秒しか�
 - `X-Frame-Options: DENY`
 - `Content-Security-Policy-Report-Only`(`default-src 'self'`。Turnstileの読み込み元のみ許可。本適用は違反状況を見てから)
 
-静的ファイル(ASSETSバインディング)から返るレスポンスはヘッダーを直接変更できないため、`new Response(assetResponse.body, assetResponse)`で複製してから付けています。ビルドで出力されるハッシュ付きファイル(`/assets/*`)には`Cache-Control: public, max-age=31536000, immutable`も付けています。
+ビルドで出力されるハッシュ付きファイル(`/assets/*`)には`public/_headers`で`Cache-Control: public, max-age=31536000, immutable`も付けています。
 
 ## 日付の扱い
 
@@ -87,7 +87,7 @@ Workers Rate Limitingバインディング(`ratelimits`)は10秒か60秒しか�
 
 1. **`compatibility_date`が古いと未処理のPromise拒否が誤検知される**: Better Authのログイン失敗時に発生する既知の問題(Better Auth issue #10658)。`compatibility_date`を作業日の日付にすることで、互換性フラグ`unhandled_rejection_after_microtask_checkpoint`が有効になり解消する
 2. **Better Authのレート制限が実質効かない**: 既定のメモリ保存はWorkerのisolateごとにカウンタが分かれるため。`storage: "database"`にし、IPアドレスは`cf-connecting-ip`から取得する
-3. **静的ファイルのレスポンスにヘッダーを付けられない**: ASSETSバインディングから返るレスポンスは直接変更できないため、複製してから付ける
+3. **静的ファイルにWorker経由でヘッダーを付けると無料枠の消費が早い**: ステップ1では`assets.run_worker_first: true`にしてすべてのリクエストをWorker経由にし、ASSETSバインディングのレスポンスを複製してヘッダーを付けていたが、日本語フォントなど細かいファイルを含む1回の画面表示でWorkerが何十回も動いてしまう問題があった。ステップ2で`run_worker_first: ["/api/*"]`に戻し、静的ファイルのヘッダーは`public/_headers`で付ける方式に変更した(`/api/*`のヘッダーは引き続き`securityHeadersMiddleware`で付ける)。両方の値がずれないよう、`src/shared/security-headers.ts`に値を一元化し、`test/frontend/security-headers-file.test.ts`で`public/_headers`の内容と一致することを確認している
 4. **本番でconsole/memoryのメール送信が使われる**: 確認コードが届かない上、ログに平文で残る。本番URL(https://)でconsole/memoryが指定されたら例外を投げる安全装置を入れている
 5. **Workers Rate Limitingバインディングのperiodは10秒か60秒のみ**: 長い期間の制限はBetter Auth側のcustomRulesで行う
 6. **D1を使うテストでマイグレーションが未適用**: `@cloudflare/vitest-plugin`の`readD1Migrations`/`applyD1Migrations`を、テストのセットアップファイル(`test/worker/apply-migrations.ts`)で呼び出している

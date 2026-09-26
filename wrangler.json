@@ -16,11 +16,10 @@
 	"upload_source_maps": true,
 	"assets": {
 		"directory": "./dist/client",
-		// ASSETSバインディング経由でWorkerから静的ファイルを取得できるようにする(セキュリティヘッダ付与のため)
-		"binding": "ASSETS",
-		// 常にWorkerを先に実行する。静的ファイルはWorker側でASSETSバインディングを呼んで取得し、
-		// レスポンスにセキュリティヘッダを付けてから返す(既知の落とし穴3)
-		"run_worker_first": true,
+		// /api/ 配下のみWorkerを先に実行する。それ以外の静的ファイル(日本語フォントなど細かいファイルを含む)は
+		// Workerを経由せず直接配信する(1回の画面表示でWorkerが何十回も動くのを避け、無料枠の消費を抑える)。
+		// 静的ファイルのヘッダーは public/_headers で付ける(既知の落とし穴3)
+		"run_worker_first": ["/api/*"],
 		"not_found_handling": "single-page-application"
 	},
 

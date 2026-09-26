@@ -10,7 +10,7 @@
 ## タスク一覧
 
 - [x] T1: 本番のメール送信先の制限を外す
-- [ ] T2: 静的ファイルのヘッダを_headersで付ける
+- [x] T2: 静的ファイルのヘッダを_headersで付ける
 - [ ] T3: CSPのスタイルの方針を決める
 - [ ] T4: 使わないコードだけのログインの入口を閉じる
 - [ ] T5: react-routerに一本化する
@@ -40,3 +40,14 @@
 ### T1
 
 - Cloudflare公式ドキュメント(node_modules/wrangler/config-schema.json)で`send_email`バインディングのプロパティを確認した。`destination_address`は「1つの検証済みアドレスに制限する」ためのものであり、指定するとそのアドレスにしか送れなくなる。指示通り削除し、`allowed_sender_addresses: ["noreply@shukanlog.com"]`で送信元だけを限定する設定に変更した
+
+### T2
+
+- ヘッダーの値を`src/shared/security-headers.ts`に一元化し、`src/worker/middleware/security-headers.ts`(/api/*向け)と`public/_headers`(静的ファイル向け)の両方から使う形にした。`public/_headers`はビルド成果物ではなく手書きのファイルのため、値が食い違わないことを`test/frontend/security-headers-file.test.ts`でファイル内容と`buildCspReportOnlyHeaderValue()`等の戻り値を突き合わせて確認する方式にした
+- 不要になった`src/worker/routes/assets.ts`と`ASSETSバインディング`(wrangler.jsonの`assets.binding`)を削除した。`assets.run_worker_first`を`["/api/*"]`に戻したことで、静的ファイルはWorkerを経由せずCloudflareのアセット配信が直接返すようになったため
+- 既存のセキュリティヘッダテスト(test/worker/security-headers.test.ts)は、静的ファイル向けのパス(`/`、`/no-such-page`、`/assets/*`)がもはやWorkerを通らなくなったため、`/api/health`のみを確認する内容に書き換えた
+- `wrangler dev`(ポート18787)を起動し、curlで以下を確認した(すべて意図通り)
+  - `GET /`: 200、HSTS・X-Content-Type-Options・Referrer-Policy・X-Frame-Options・CSP Report-Onlyが付与される(Cache-Controlは`public, max-age=0, must-revalidate`でmax-age=31536000ではない。index.htmlは`/assets/*`に該当しないため意図通り)
+  - `GET /assets/<ビルド後のファイル名>`: 200、上記セキュリティヘッダに加え`Cache-Control: public, max-age=31536000, immutable`が付与される
+  - `GET /no-such-page`(存在しないパス): 200でindex.htmlが返り(SPAのフォールバック)、セキュリティヘッダが付与される
+  - `GET /api/health`: 200のJSON、`hono/secure-headers`によるセキュリティヘッダ(HSTS・CSP Report-Only・Referrer-Policy・X-Content-Type-Options・X-Frame-Optionsなど)が付与される

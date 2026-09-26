@@ -15,8 +15,9 @@ import {
 	patchCalorieLogBodySchema,
 } from "./calorie-logs";
 import { getDb } from "../db/client";
-import { calorieLog } from "../db/schema";
+import { calorieLog, profile } from "../db/schema";
 import { eq } from "drizzle-orm";
+import { patchProfileBodySchema } from "./profile";
 import { POLICY_VERSION } from "../../shared/policy";
 import { isFuture, isValidDateString, todayInTokyo } from "../../shared/domain/date";
 import type { AppEnv } from "../types";
@@ -211,4 +212,18 @@ apiRouter.delete("/calorie-logs/:id", async (c) => {
 	return c.body(null, 204);
 });
 
-// 各APIのハンドラは、この後のタスク(T15以降)でこのルーターに追加していく
+// カロリー記録の有効・無効を切り替える。無効にしても既存の記録は削除しない(再度有効にすれば表示される)
+apiRouter.patch("/profile", validate("json", patchProfileBodySchema), async (c) => {
+	const userId = c.get("userId");
+	const { calorieTrackingEnabled } = c.req.valid("json");
+
+	const db = getDb(c.env);
+	await db
+		.update(profile)
+		.set({ calorieTrackingEnabled, updatedAt: Date.now() })
+		.where(eq(profile.userId, userId));
+
+	return c.json({ calorieTrackingEnabled });
+});
+
+// 各APIのハンドラは、この後のタスク(T16以降)でこのルーターに追加していく

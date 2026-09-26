@@ -9,7 +9,7 @@
 
 ## タスク一覧
 
-- [ ] T1: 本番のメール送信先の制限を外す
+- [x] T1: 本番のメール送信先の制限を外す
 - [ ] T2: 静的ファイルのヘッダを_headersで付ける
 - [ ] T3: CSPのスタイルの方針を決める
 - [ ] T4: 使わないコードだけのログインの入口を閉じる
@@ -36,3 +36,7 @@
 - git remote(origin)は設定済みで、origin/main は d4ade05(ステップ1のマージ済み内容)を指している。origin/feat/foundation(37b50c9)は main を1つ余分にマージしたコミットが乗っているだけでツリーの差分は無いことを`git diff d4ade05 37b50c9 --stat`で確認した(main が feat/foundation の内容を含むことの確認)
 - 未コミットの変更は無かったため stash は行っていない
 - 作業ディレクトリは git worktree であり、リポジトリ本体側で `main` ブランチがロックされていたため、`main` をこのworktreeでチェックアウトすることはできなかった。そのため `git checkout -b feat/data-api origin/main` で、ブランチ名 `main` を経由せず直接 origin/main の内容から feat/data-api を作成した(結果は指示にある「main をチェックアウトしてから分岐する」場合と同じコミットになる)
+
+### T1
+
+- Cloudflare公式ドキュメント(node_modules/wrangler/config-schema.json)で`send_email`バインディングのプロパティを確認した。`destination_address`は「1つの検証済みアドレスに制限する」ためのものであり、指定するとそのアドレスにしか送れなくなる。指示通り削除し、`allowed_sender_addresses: ["noreply@shukanlog.com"]`で送信元だけを限定する設定に変更した

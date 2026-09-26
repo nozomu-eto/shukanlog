@@ -7,8 +7,9 @@
 `wrangler.json`の`env.production`内にある、次の値を実際の値に置き換える。
 
 - `d1_databases[].database_id`(`REPLACE_WITH_PRODUCTION_D1_DATABASE_ID`)
-- `send_email[].destination_address`(`REPLACE_WITH_VERIFIED_DESTINATION_ADDRESS`。実際の送信先ポリシーに応じて`allowed_destination_addresses`への変更も検討する)
 - `ratelimits[].namespace_id`(実際のnamespace_idを払い出して置き換える)
+
+`send_email[].allowed_sender_addresses`は`noreply@shukanlog.com`に設定済み(destination_addressは指定していない。指定すると検証済みの1つの宛先にしか送れなくなり、利用者への送信ができなくなるため)。
 
 ## 2. 本番D1データベースの作成
 

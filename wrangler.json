@@ -68,7 +68,9 @@
 			"send_email": [
 				{
 					"name": "MAILER",
-					"destination_address": "REPLACE_WITH_VERIFIED_DESTINATION_ADDRESS"
+					// 送信元をnoreply@shukanlog.comのみに限定する(destination_addressは指定しない。
+					// 指定すると検証済みの1つの宛先にしか送れなくなり、利用者への送信ができなくなるため)
+					"allowed_sender_addresses": ["noreply@shukanlog.com"]
 				}
 			],
 			"ratelimits": [

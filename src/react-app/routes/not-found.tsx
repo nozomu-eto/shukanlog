@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 // 存在しないURLに対する404ページ。文言はdocs/design/mockups/NotFound.dc.htmlに合わせている
 export function NotFoundRoute() {

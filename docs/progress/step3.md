@@ -11,7 +11,7 @@
 
 - [x] T1: 集計APIで「記録なし」と「0kcal」を区別する
 - [x] T2: テストの新規登録の回数制限を外す
-- [ ] T3: 画面の土台(データ取得・認証クライアント・API クライアント)
+- [x] T3: 画面の土台(データ取得・認証クライアント・API クライアント)
 - [ ] T4: 共通の部品
 - [ ] T5: トップページ(/)
 - [ ] T6: ログイン(/login)
@@ -47,3 +47,14 @@
 - test/worker/support/auth.ts の signUpAndSignIn に、呼び出しごとに10.x.x.xの範囲でランダムな一意のIPアドレスを発行する randomTestIp() を追加し、新規登録・メール確認・ログインのすべてのリクエストに cf-connecting-ip ヘッダーとして付けるようにした。レート制限のカウンタ自体はIPアドレスごとに分かれる実装(T8で確認済み)のため、利用者ごとに別IPにすることでカウンタが共有されなくなる
 - auth-rate-limit.test.ts は指示通り変更していない(同じIP・固定値のままレート制限に達すること・別IPは影響を受けないことを確認し続ける)
 - 各テストファイルに残っていた「新規登録レート制限に抵触しないよう呼び出し回数を抑える」旨のコメントを、実態に合わせて整理した(テストの内容・呼び出し回数自体は変更していない)
+
+### T3
+
+- @tanstack/react-query を導入し、src/react-app/lib/query-client.ts に1つのQueryClientを用意した。既定でrefetchOnWindowFocus: true(画面に戻った時に最新の記録を見せるため)、retry: false(失敗はエラー表示・再読み込みボタンで伝える方針のため)にした
+- Better Authのクライアントは better-auth/react の createAuthClient と better-auth/client/plugins の emailOTPClient を使い、src/react-app/lib/auth-client.ts に用意した。node_modules内の実装(client/proxy.mjs)を確認し、authClient.emailOtp.sendVerificationOtp/verifyEmail/requestPasswordReset/resetPasswordのようなメソッド名(パスをキャメルケース化したもの)でサーバーのemail-otpエンドポイントを呼び出せることを確認した
+- 新規登録のみ必要なTurnstileトークンは、authClientの各メソッドの第2引数(fetchOptions)にheadersとして渡せることをclient/proxy.mjsのコードで確認した(withTurnstileToken()ヘルパーを用意)
+- src/react-app/api/client.ts に共通のfetch処理(credentials: include、JSONの組み立て・解析、エラーレスポンスをApiErrorに変換)をまとめ、src/react-app/api/errors.ts にエラーコード→日本語文言の変換(toDisplayMessage)を用意した。VALIDATION_ERROR等のサーバー側messageは既にAPI側で日本語の文になっているため、基本はそのまま使い、message が無い場合だけコードごとの既定文言にfallbackする方針にした
+- docs/api.md の各APIに対応する関数・型を src/react-app/api/me.ts・days.ts・habit-logs.ts・calorie-logs.ts・profile.ts・summary.ts に用意した
+- Turnstileのサイトキーは .env.example に VITE_TURNSTILE_SITE_KEY として用意し、値はCloudflare公式のテスト用サイトキー(常に成功する 1x00000000000000000000AA)にした。実際にVITE_TURNSTILE_SITE_KEYを読んで使う実装(Turnstileウィジェット部品)はT7で行う
+- eslint-plugin-jsx-a11y を導入し、eslint.config.js に jsxA11y.flatConfigs.recommended を追加した
+- main.tsx にQueryClientProviderを追加した。トースト表示の仕組み(ToastProvider)はT4で作るため、main.tsxへの組み込みはT4のコミットで行う

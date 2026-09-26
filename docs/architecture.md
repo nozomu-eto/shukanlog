@@ -30,7 +30,7 @@ shukanlog(Cloudflare版)の技術的な構成と、実装上の決定事項を�
 
 - 有効期限: 10分(`expiresIn: 600`)
 - 誤り試行の上限: 3回(`allowedAttempts: 3`)
-- メールアドレスの変更もこのプラグインの`changeEmail`オプションで同じ仕組みが使えることを確認済み(有効化と画面の実装はステップ4で行う)
+- メールアドレスの変更もこのプラグインの`changeEmail`オプションで有効化している(詳細は後述の「設定・アカウントの操作」を参照)
 
 ### レート制限
 
@@ -87,7 +87,7 @@ Better Authの`emailOTP`プラグインを入れると、メールのコード�
 
 ## テーブル構成
 
-`src/worker/db/schema/`にdrizzleで定義しています。IDは`crypto.randomUUID()`で発行する文字列、日時はUNIXミリ秒の整数、日付は`YYYY-MM-DD`形式の文字列です。すべてのテーブルの`user_id`は`user.id`を参照し、`onDelete: "cascade"`にしているため、利用者を削除すると関連する行もすべて連動して削除されます(退会の物理削除の実装自体はステップ4)。
+`src/worker/db/schema/`にdrizzleで定義しています。IDは`crypto.randomUUID()`で発行する文字列、日時はUNIXミリ秒の整数、日付は`YYYY-MM-DD`形式の文字列です。すべてのテーブルの`user_id`は`user.id`を参照し、`onDelete: "cascade"`にしているため、利用者を削除すると関連する行もすべて連動して削除されます(退会の物理削除の実装はステップ4。定期処理の章を参照)。
 
 | テーブル | 内容 | 一意制約・索引 |
 |---|---|---|
@@ -96,6 +96,7 @@ Better Authの`emailOTP`プラグインを入れると、メールのコード�
 | `habit_log` | 習慣の日別の記録。未記録は行そのものが無い状態で表す | `(habit_id, record_date)`一意、`(user_id, record_date)`索引 |
 | `calorie_log` | カロリー記録。1日に複数件記録できる | `(user_id, record_date)`索引 |
 | `terms_agreement` | 利用規約・プライバシーポリシーへの同意 | `(user_id, policy_version)`一意 |
+| `account_deletion` | 退会の申請(`requested_at`・`purge_after`・`canceled_at`) | `(user_id)`索引 |
 
 初期データ(習慣2件・プロフィール1件)は、利用規約への同意時(`POST /api/consent`)に、`onConflictDoNothing`を使ったD1バッチ(`db.batch()`)で作成します。既にある行は無視されるため、同意を何度呼んでも重複作成せず、一部だけ欠けている状態でも欠けている分だけ補完されます。
 
@@ -132,10 +133,6 @@ APIの一覧は[api.md](api.md)を参照してください。
 - `eligibleDays`(分母)は、期間内で「アカウント作成日以降」かつ「今日以前」の日数(`src/shared/domain/period.ts`の`countEligibleDays`)
 - カロリーの平均は、記録がある日(その日にカロリー記録が1件以上ある日)だけで算出し、カロリー記録を無効にしている利用者には常に`null`を返す
 
-## 日付の扱い
-
-このサービスは「今日やったかどうか」を記録するものなので、日付は常に**日本時間(Asia/Tokyo)**基準で扱います。サーバー・クライアントの両方で、UTCのまま日付を丸めない(日本時間の日付境界で「今日」を判定する)ことを徹底します。具体的な実装(共通の日付関数)はステップ2以降で`src/shared/`に追加します。
-
 ## 画面の構成(フロントエンド)
 
 画面の見た目・操作のルールは[design.md](design.md)・[week-month-tabs.md](week-month-tabs.md)を参照。ここでは実装上の構成をまとめる。
@@ -150,7 +147,30 @@ APIの一覧は[api.md](api.md)を参照してください。
 
 いずれも`authClient.useSession()`(セッションの有無)と、必要な場合はreact-queryの`GET /api/me`(`["me"]`キャッシュ、`consent.agreed`)を見て判定する。判定中は画面のちらつきを避けるため何も描画しない(`null`を返す)。
 
-`/app`配下はさらに`AppShell`(`routes/app/app-shell.tsx`、パスを持たない層)を挟み、ヘッダー・日週月の切り替えを提供したうえで`Outlet`を描画する。
+`/app`配下はさらに`AppShell`(`routes/app/app-shell.tsx`、パスを持たない層)を挟み、ヘッダー・日週月の切り替えを提供したうえで`Outlet`を描画する。設定画面とそのサブページ(`/app/settings`以下)を表示しているときは、`location.pathname`を見て、スマホでは「戻る」+ページ名の見出しに、PCでは通常のヘッダー(設定リンクを選択中の見た目にする)に切り替える。DOMの親子構造は変えず、両方の要素を常に用意してCSSの`display`切り替えで出し分けている(AGENTS.mdの画面の実装ルール参照)。
+
+### 週タブ・月タブ
+
+日タブの期間の移動(前へ・次へ・今日に戻る、見出し)は`components/PeriodNav.tsx`に切り出し、週・月タブでも使う。前後の移動先・可否の計算は`src/shared/domain/period.ts`の関数(`getPreviousPeriodDate`・`getNextPeriodDate`・`canGoToNextPeriod`・`canReturnToToday`)を使い、日タブもstart===endの1日だけの期間(`PeriodUnit`の`"day"`)として扱うことでこれらの関数を共通利用できるようにしている。週・月タブ共通の凡例は`components/Legend.tsx`、タブ間のURL組み立て(`/app?tab=...&date=...`)は`lib/tab-links.ts`の`hrefForTab`に共通化している。
+
+集計は`GET /api/summary`(既にステップ2で実装済み)を使い、レイアウトはAGENTS.mdの方針通りDOMを変えずCSS Gridの`grid-template-areas`だけをブレークポイントで切り替える(`week-tab.module.css`・`month-tab.module.css`)。
+
+### 設定・アカウントの操作
+
+設定画面(`routes/app/settings.tsx`)は、カロリー記録の有効/無効のスイッチ(`PATCH /api/profile`)の成功時に`["me"]`・`["day"]`・`["summary"]`のキャッシュを無効化し、日・週・月タブに即時反映されるようにしている。
+
+- **メールアドレスの変更**(`settings-email.tsx`): 現在のパスワードの確認と、既に使われているメールアドレスの検出は、独自のサーバーAPI(`POST /api/account/email/request-change`、`src/worker/routes/account.ts`)で行う。確認コードの検証・変更の確定自体はBetter Auth標準のエンドポイントをフロントエンドから直接呼ぶ(`authClient.emailOtp.changeEmail()`)。現在のパスワードの確認は、Better Auth自身のchange-password処理が使っているのと同じ内部処理(`ctx.password.verify` / `ctx.internalAdapter.findCredentialAccount`、`auth.$context`経由でアクセスする、`src/worker/auth/verify-password.ts`)を使う
+- **パスワードの変更**(`settings-password.tsx`): Better Auth本体の`POST /change-password`(`authClient.changePassword()`)を`revokeOtherSessions: true`で呼ぶ。内部で対象利用者の全セッションを削除したうえでその場で新しいセッションを発行し直す実装のため、呼び出し元(今の端末)はそのレスポンスのCookieでログインしたままになり、他の端末は無効になる
+- **退会**(`settings-withdraw.tsx`): `POST /api/account/withdraw`(現在のパスワードを確認し、`account_deletion`テーブルに1行追加してその利用者の全セッションを無効にする)を呼んだ後、クライアント側の`authClient.signOut()`でセッションキャッシュも消してからトップページへ完了メッセージを渡す。30日以内に同じメールアドレス・パスワードでログインすると、Better Authの`databaseHooks.session.create.after`フック(`src/worker/auth/index.ts`)で退会が取り消される。取り消しは`GET /api/me`の`justCanceledWithdrawal`(直前10分以内の取り消しでtrue)で分かり、`routes/app/tabs.tsx`が`/app`に来たタイミングでトーストを1回だけ表示する(sessionStorageのフラグで制御)
+
+### 定期処理(退会の完全削除・メール未確認ユーザーの削除)
+
+`src/worker/index.ts`のデフォルトエクスポートに`scheduled`ハンドラを追加し、`src/worker/scheduled/purge.ts`の`runScheduledPurge`を呼ぶ。Cron Trigger(`wrangler.json`の`triggers.crons`、毎日1回 UTC 18:00 = 日本時間3:00)から実行される。
+
+- 退会が取り消されておらず、申請から30日(`account_deletion.purge_after`)を過ぎた利用者の`user`行を削除する
+- メールアドレスの確認が済まないまま、作成から30日を過ぎた利用者の`user`行を削除する
+- `user`行を削除すると、`user_id`を参照する各テーブル(`onDelete: "cascade"`)がD1の外部キー制約により連動して削除される(D1は既定でこの制約が有効になっており、明示的な削除コードは不要だった。`test/worker/scheduled-purge.test.ts`で実際に確認している)
+- 1回の処理で削除する件数には上限(100件)を設け、削除件数のみをログに出す(メールアドレス等の個人情報は出さない)
 
 ### データ取得と楽観的更新
 

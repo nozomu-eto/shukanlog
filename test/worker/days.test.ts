@@ -26,8 +26,7 @@ async function agreeToConsent(cookie: string) {
 	}
 }
 
-// Better Authの新規登録レート制限(60秒に3回)に抵触しないよう、
-// このファイル全体でsignUpAndSignInの呼び出しを2回に抑える構成にしている
+// signUpAndSignInは利用者ごとに別のIPアドレスを使うため、新規登録のレート制限に抵触せず呼び出せる
 describe("GET /api/days/:date", () => {
 	it("記録がある日・無い日を、同じ利用者の別々の日付で確認する", async () => {
 		const { email, cookie } = await signUpAndSignIn("days-a");

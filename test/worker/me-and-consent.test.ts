@@ -16,7 +16,7 @@ async function findUserIdByEmail(userEmail: string): Promise<string> {
 }
 
 // GET /api/me、POST /api/consent の挙動を確認する
-// (Better Authの新規登録レート制限に抵触しないよう、このファイルでのsignUpAndSignInの呼び出しは最小限にする)
+// signUpAndSignInは利用者ごとに別のIPアドレスを使うため、新規登録のレート制限に抵触せず呼び出せる
 describe("GET /api/me, POST /api/consent", () => {
 	it("同意前は profile が null・consent.agreed が false、同意すると初期データが作られ2回目以降も重複しない", async () => {
 		const { email, cookie } = await signUpAndSignIn("me-consent");

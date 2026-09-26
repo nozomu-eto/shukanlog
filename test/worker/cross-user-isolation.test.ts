@@ -28,7 +28,7 @@ async function agreeToConsent(cookie: string) {
 
 // 2人の利用者(A・B)を作り、Bが利用者Aの記録(習慣の記録・カロリー記録)に対して
 // 取得・更新・削除を試み、どれも成功しない(404、または自分のデータしか返らない)ことを確認する。
-// Better Authの新規登録レート制限(60秒に3回)に抵触しないよう、signUpAndSignInの呼び出しは2回のみ
+// 利用者Aと利用者Bの2人分、signUpAndSignInを呼び出す
 describe("他人のデータに触れないこと(横断テスト)", () => {
 	it("利用者Bは利用者Aの習慣の記録・カロリー記録を取得・更新・削除できない", async () => {
 		const { email: emailA, cookie: cookieA } = await signUpAndSignIn("isolation-a");

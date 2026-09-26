@@ -18,6 +18,7 @@ import { getDb } from "../db/client";
 import { calorieLog, profile } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { patchProfileBodySchema } from "./profile";
+import { buildSummaryResponse, summaryQuerySchema, validateSummaryRange } from "./summary";
 import { POLICY_VERSION } from "../../shared/policy";
 import { isFuture, isValidDateString, todayInTokyo } from "../../shared/domain/date";
 import type { AppEnv } from "../types";
@@ -226,4 +227,23 @@ apiRouter.patch("/profile", validate("json", patchProfileBodySchema), async (c) 
 	return c.json({ calorieTrackingEnabled });
 });
 
-// 各APIのハンドラは、この後のタスク(T16以降)でこのルーターに追加していく
+// 週・月タブの集計を返す(習慣の記録・カロリー記録をまとめて1回のレスポンスで返す)
+apiRouter.get("/summary", validate("query", summaryQuerySchema), async (c) => {
+	const { from, to } = c.req.valid("query");
+	const rangeError = validateSummaryRange(from, to);
+	if (rangeError) {
+		return c.json({ error: rangeError }, 400);
+	}
+
+	const body = await buildSummaryResponse(
+		c.env,
+		c.get("userId"),
+		from,
+		to,
+		c.get("accountCreatedDate"),
+		todayInTokyo(),
+	);
+	return c.json(body);
+});
+
+// 各APIのハンドラは、この後のタスク(T17以降)でこのルーターに追加していく

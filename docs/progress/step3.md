@@ -15,7 +15,7 @@
 - [x] T4: 共通の部品
 - [x] T5: トップページ(/)
 - [x] T6: ログイン(/login)
-- [ ] T7: 新規登録(/signup)と Turnstile
+- [x] T7: 新規登録(/signup)と Turnstile
 - [ ] T8: 確認コードの入力(/verify)
 - [ ] T9: パスワードの再設定(/reset、/reset/new)
 - [ ] T10: 画面の振り分け
@@ -83,3 +83,11 @@
 - レート制限(429)は better-auth のレスポンスに`code`が無く`{message}`のみなことをソース(rate-limiter/index.mjs)で確認したため、`error.status === 429`で判定する実装にした
 - 認証系フォーム共通のレイアウト(auth-form.module.css)を用意した。.stack(縦並び+gap)を<form>要素にも外側の.card(PCのみ視覚的な箱になる)にも使うことで、スマホでは1つのフラットな縦並びに、PCでは中央寄せのカードになるようにした
 - 入力チェックの共通関数(validateEmail・validatePasswordRequired・validateNewPassword・validateOtp)をsrc/react-app/lib/validators.tsにまとめ、T7以降の新規登録・パスワード再設定でも再利用する
+
+### T7
+
+- Cloudflare公式ドキュメント(WebFetchで取得)でexplicit renderingの方法を確認した。スクリプトは`?render=explicit`付きで1回だけ読み込み(モジュールスコープのPromiseで多重読み込みを防止)、`turnstile.render(container, { sitekey, callback, "error-callback", "expired-callback" })`でウィジェットを描画し、アンマウント時に`turnstile.remove(widgetId)`する実装にした。期限切れ(expired-callback)ではトークンをクリアしたうえで`turnstile.reset(widgetId)`を呼び、再チャレンジさせるようにした
+- サーバー側のturnstileMiddleware(src/worker/middleware/turnstile.ts)は、アプリの他のAPIと同じ`{ error: { code, message } }`の形でエラーを返すが、better-fetchはレスポンスのJSON本文をそのままerrorオブジェクトへspreadする実装(node_modules内のソースで確認)のため、Better Auth自身のエラー(フラットな`{code, message}`)とはerrorオブジェクトの形が異なってしまう(前者は`error.error.code`、後者は`error.code`)。ワーカー側は変更せず、フロントエンド側でどちらの形でも読み取れる`getAuthErrorCode()`ヘルパー(auth-client.ts)を用意して吸収した
+- 新規登録のsignUp.email()にはnameが必須(better-authの既定スキーマ)だが、モックアップ・仕様に氏名の入力欄が無いため、name には email の値をそのまま渡すことにした(利用者に別途名前を入力させない判断)
+- Turnstileのサイトキーは`import.meta.env.VITE_TURNSTILE_SITE_KEY`から読み、未設定時はCloudflare公式のテスト用サイトキーにfallbackする(T3で用意した.env.exampleの値と同じ)
+- 登録に成功したら、メールアドレスをsessionStorage(pending-email.ts)とreact-routerのstateの両方で/verifyへ渡す

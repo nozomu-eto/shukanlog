@@ -17,7 +17,7 @@
 - [x] T6: ログイン(/login)
 - [x] T7: 新規登録(/signup)と Turnstile
 - [x] T8: 確認コードの入力(/verify)
-- [ ] T9: パスワードの再設定(/reset、/reset/new)
+- [x] T9: パスワードの再設定(/reset、/reset/new)
 - [ ] T10: 画面の振り分け
 - [ ] T11: 利用規約への同意(/consent)
 - [ ] T12: アプリの枠(ヘッダー・日週月の切り替え)
@@ -99,3 +99,8 @@
 - 受け渡されたメールアドレスが無い場合(react-routerのstateにもsessionStorageにも無い)は/signupへ移動する
 - 「確認コードを再送する」は、押した瞬間に60秒のカウントダウンを開始し、0になるまでボタンをdisabledにする実装にした
 - emailOTPプラグインのエラーコード(EMAIL_OTP_ERROR_CODES)を確認し、INVALID_OTP(コードが正しくない)・OTP_EXPIRED(期限切れ)の2つだけが定義されていることを確認して、それぞれ個別の文言を出し分けるようにした
+
+### T9
+
+- requestPasswordResetEmailOTPの実装(routes.mjs)を確認し、登録されていないメールアドレスでも常に`{success:true}`を返す(内部でuserが見つからなければ検証用の行を消して早期returnするだけで、エラーにはしない)ことを確認した。そのためフロントエンド側は結果を分岐せず、常に/reset/newへ進める実装にした
+- /reset/newで成功したら、react-routerのstateで「パスワードを変更しました」を渡して/loginへ移動する。ログイン画面(T6で実装済み)は既にstate.messageを見出しの上に表示する仕組みを持っているため、そのまま再利用できた

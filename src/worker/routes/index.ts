@@ -6,7 +6,9 @@ import { validate } from "../lib/validation";
 import { buildMeResponse } from "./me";
 import { consentBodySchema } from "./consent";
 import { ensureConsentAndInitialData } from "../db/ensure-initial-data";
+import { buildDayResponse } from "./days";
 import { POLICY_VERSION } from "../../shared/policy";
+import { isFuture, isValidDateString, todayInTokyo } from "../../shared/domain/date";
 import type { AppEnv } from "../types";
 
 // 認証・同意の確認が必要なAPIをまとめるルーター。src/worker/index.tsから /api にマウントする。
@@ -65,4 +67,19 @@ apiRouter.post("/consent", validate("json", consentBodySchema), async (c) => {
 	return c.json(body);
 });
 
-// 各APIのハンドラは、この後のタスク(T12以降)でこのルーターに追加していく
+// 指定した日の記録(習慣の記録・カロリー記録)を返す。
+// dateが不正な形式、または日本時間の今日より後(未来)の場合は400にする
+apiRouter.get("/days/:date", async (c) => {
+	const date = c.req.param("date");
+	if (!isValidDateString(date) || isFuture(date, todayInTokyo())) {
+		return c.json(
+			{ error: { code: "VALIDATION_ERROR", message: "日付の指定が不正です" } },
+			400,
+		);
+	}
+
+	const body = await buildDayResponse(c.env, c.get("userId"), date);
+	return c.json(body);
+});
+
+// 各APIのハンドラは、この後のタスク(T13以降)でこのルーターに追加していく

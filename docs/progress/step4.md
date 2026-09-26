@@ -27,8 +27,17 @@
 - [x] T16: 旧資料の片付け
 - [x] T17: 画面の動作確認
 - [x] T18: ドキュメント
-- [ ] T19: ステップ5への持ち越し
+- [x] T19: ステップ5への持ち越し
 - [ ] T20: PRの作成
+
+## ステップ5への持ち越し
+
+- **設定画面のPCでの一覧項目の見た目**: docs/design/mockups/SettingsPC.dc.htmlでは、メールアドレス等の一覧項目の右端がスマホ(ChevronRightアイコン)と異なり「変更」という文字のみになっている。今回はスマホ・PC共通で常にChevronRightアイコンを表示する実装にした(視覚的な差異は小さく、機能上の問題は無いため優先度を下げた)。デザインの微修正として次のステップ以降で見た目をPCの仕様に合わせることを検討する
+- **メールアドレス変更の確認・確定エンドポイントの細かいレート制限**: `POST /email-otp/request-email-change`・`POST /email-otp/change-email`(Better Auth標準)は、`src/worker/auth/options.ts`の`customRules`に個別の制限を追加しておらず、emailOTPプラグインの既定値(60秒に3回)のままになっている。送信自体は独自のEMAIL_CHANGE_RATE_LIMITER(60秒に1回)で絞っているため実害は無いはずだが、他のcustomRulesと同じ考え方で明示的な設定を追加できないか検討する
+- **`--color-border-strong`(#C9C8C1)**: 退会ボタンの枠線・スイッチのオフ状態の地の色として追加したが、docs/design.mdの色の表(2章)には載っていない。次にdesign.mdを更新する機会があれば、正式な色として表に追記する
+- **OGP・robots.txt・ファビコン・ホーム画面への追加、本番での確認、DNSの切り替え**: 指示通りステップ5で行う(このステップでは着手していない)
+- **利用規約・プライバシーポリシーの最終改定日**: 現在ステップ4の実装日(2026年9月27日)になっている。実際の公開日が別の日になる場合は、公開前に`src/react-app/routes/terms.tsx`・`privacy.tsx`の`revisedDate`と`src/shared/policy.ts`の`POLICY_VERSION`を実際の公開日に更新する(docs/production-verification.md 8章に記載済み)
+- **退会の完全削除(Cron Trigger)の本番での実際の動作確認**: ローカルのテスト(test/worker/scheduled-purge*.test.ts)では確認済みだが、本番環境でのCron Triggerの実行自体(Cloudflareダッシュボードでの登録・実行ログ)はまだ確認していない(docs/production-verification.md 9章に記載済み)
 
 ## 判断ログ
 

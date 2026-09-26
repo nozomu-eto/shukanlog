@@ -136,6 +136,46 @@ APIの一覧は[api.md](api.md)を参照してください。
 
 このサービスは「今日やったかどうか」を記録するものなので、日付は常に**日本時間(Asia/Tokyo)**基準で扱います。サーバー・クライアントの両方で、UTCのまま日付を丸めない(日本時間の日付境界で「今日」を判定する)ことを徹底します。具体的な実装(共通の日付関数)はステップ2以降で`src/shared/`に追加します。
 
+## 画面の構成(フロントエンド)
+
+画面の見た目・操作のルールは[design.md](design.md)・[week-month-tabs.md](week-month-tabs.md)を参照。ここでは実装上の構成をまとめる。
+
+### ルーティングと振り分け
+
+`src/react-app/router.tsx`(`createBrowserRouter`)がURL一覧(design.md 8章)を定義する。ログイン・同意の状態による振り分けは、3つのガードコンポーネントが担う。
+
+- **RedirectIfAuthenticated**(`routes/redirect-if-authenticated.tsx`): `/login`・`/signup`・`/verify`・`/reset`・`/reset/new`をまとめる、パスを持たない層(レイアウトルート)。ログイン済みなら`/app`へ
+- **ConsentGuard**(`routes/consent-guard.tsx`): `/consent`用。未ログインなら`/login`へ、同意済みなら`/app`へ
+- **RequireAuth**(`routes/app/require-auth.tsx`): `/app`配下用。未ログインなら`/login`へ、未同意なら`/consent`へ
+
+いずれも`authClient.useSession()`(セッションの有無)と、必要な場合はreact-queryの`GET /api/me`(`["me"]`キャッシュ、`consent.agreed`)を見て判定する。判定中は画面のちらつきを避けるため何も描画しない(`null`を返す)。
+
+`/app`配下はさらに`AppShell`(`routes/app/app-shell.tsx`、パスを持たない層)を挟み、ヘッダー・日週月の切り替えを提供したうえで`Outlet`を描画する。
+
+### データ取得と楽観的更新
+
+`@tanstack/react-query`の`QueryClient`(`react-app/lib/query-client.ts`)を`main.tsx`で1つだけ用意し、`QueryClientProvider`でアプリ全体に配線する。サーバーのデータ(`GET /api/me`・`GET /api/days/:date`等)は`useQuery`で取得し、クエリキーは`["me"]`・`["day", date]`のように用途ごとに分ける。
+
+記録ボタン(◯△×)・カロリーの記録は「押した瞬間に保存する」という仕様(design.md 7章)のため、`queryClient.setQueryData()`で画面を先に更新してから`PUT`/`POST`等を呼ぶ楽観的更新にしている(`routes/app/day-tab.tsx`の`handlePick`)。保存前の値は`getQueryData()`で退避しておき、失敗したら書き戻す。`useMutation`は使わず、素朴な`async`関数+`try/catch`にしている(処理の見通しを優先した)。
+
+### 認証クライアント
+
+Better Authのフロントエンド用クライアントは`better-auth/react`の`createAuthClient`と`better-auth/client/plugins`の`emailOTPClient`を`react-app/lib/auth-client.ts`にまとめている。`authClient.useSession()`はnanostoresベースのフックで、`emailOtp.verifyEmail()`等の呼び出し後に自動でセッションの状態を再取得する(`atomListeners`)。
+
+新規登録(`/api/auth/sign-up/email`)のみサーバー側でTurnstileトークンの検証(`turnstileMiddleware`)が入るため、`withTurnstileToken(token)`ヘルパーで`x-turnstile-token`ヘッダーを付けて呼び出す。このミドルウェアが返すエラーの形(`{ error: { code, message } }`、アプリの他のAPIと同じ形)は、Better Auth自身のエラーの形(フラットな`{ code, message }`)と異なるため、`getAuthErrorCode(error)`でどちらの形でも読み取れるようにしている。
+
+### APIクライアント
+
+`src/react-app/api/`に、`docs/api.md`の各エンドポイントに対応する関数と型を用意している。`client.ts`の`apiClient`が、`fetch`の共通処理(`credentials: "include"`、JSONの組み立て・解析)とエラーレスポンス(`{ error: { code, message } }`)の`ApiError`への変換をまとめており、`errors.ts`の`toDisplayMessage()`でエラーコードごとの日本語文言に変換する(サーバーの`message`は基本的にそのまま利用者向けの文になっているため、それを優先し、無ければコードごとの既定文言にfallbackする)。
+
+### 共通の部品
+
+`src/react-app/components/`に、ボタン(`Button`。`to`/`href`の有無でLink/a/buttonを描画し分ける)・入力欄(`TextField`/`PasswordField`)・トースト(`Toast`。Reactのcontext+`useToast()`)・スケルトン(`Skeleton`)・ダイアログ(`Dialog`。ネイティブの`<dialog>`+`showModal()`。フォーカスの往復は独自に保証している)をまとめている。
+
+### スタイルの書き方
+
+画面ごとに`*.module.css`(CSS Modules)を対応させ、色・文字は`styles/tokens.css`のCSS変数を参照する。固定の見た目(サイズ・色・余白等)はCSSクラスで書き、`style`属性は実行時にしか決まらない値(スケルトンの幅・高さ等)にのみ使う(AGENTS.md参照)。1024px以上のレイアウトはCSS Modules内の`@media (min-width: 1024px)`で切り替える。
+
 ## 既知の落とし穴と対策
 
 過去のプロジェクトで実際に起きた問題と、その対策です。

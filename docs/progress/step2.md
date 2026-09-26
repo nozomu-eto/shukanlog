@@ -27,7 +27,7 @@
 - [x] T16: 週・月の集計API
 - [x] T17: 他人のデータに触れないことの横断テスト
 - [x] T18: ドキュメント
-- [ ] T19: PRの作成
+- [x] T19: PRの作成
 
 ## 判断ログ
 
@@ -151,6 +151,12 @@
 
 - docs/api.mdは、実際にsrc/worker/routes/index.tsに実装したエンドポイントの一覧(メソッド・パス・認証/同意の要否・リクエスト・レスポンス・エラーコード)を一次情報として書いた
 - docs/architecture.mdに、テーブル構成(一覧表)、認証・同意が必要なAPIの共通の仕組み(requireSession/requireConsent/writeRateLimit)、日付の扱い(Intl.DateTimeFormatとUTC計算の使い分け)、GET /api/summaryの集計方法(クエリ回数を抑える設計)、CSPのスタイルの方針、使わないエンドポイントを閉じたことを追記した
+
+### T19
+
+- `gh` CLIが利用可能・認証済み(アカウント: n-eto-dev)であることを確認し、`gh pr create --base main --head feat/data-api`でPRを作成した
+- PR URL: https://github.com/n-eto-dev/shukanlog/pull/3
+- マージは行っていない
 
 ### T15
 

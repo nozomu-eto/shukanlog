@@ -10,7 +10,6 @@ export default tseslint.config(
 		ignores: [
 			"dist",
 			"docs/design/mockups",
-			"docs/legacy",
 			"worker-configuration.d.ts",
 		],
 	},

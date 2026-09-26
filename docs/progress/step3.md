@@ -23,7 +23,7 @@
 - [x] T12: アプリの枠(ヘッダー・日週月の切り替え)
 - [x] T13: 日タブ(記録の表示と保存)
 - [x] T14: カロリーの記録・編集
-- [ ] T15: 画面の動作確認
+- [x] T15: 画面の動作確認
 - [ ] T16: ドキュメント
 - [ ] T17: 持ち越し事項の整理
 - [ ] T18: PRの作成
@@ -143,3 +143,15 @@
 - 削除は「この記録を削除する」→確認文言+「やめる」「削除する」の2段階の確認にした(状態はCalorieForm内のconfirmingDeleteで管理)
 - 入力の検証(validateCalorieAmount・validateCalorieNote)はsrc/react-app/lib/validators.tsに追加し、src/shared/limits.tsのCALORIE_MIN・CALORIE_MAX・CALORIE_NOTE_MAX_LENGTHをサーバーと同じ値として使う
 - テストは、10001・小数の入力エラー、新規作成、編集、削除の2段階確認をCalorieFormコンポーネント単体で確認した(test/frontend/routes/calorie-form.test.tsx。api/calorie-logsをvi.mock)
+
+### T15
+
+- この環境にはブラウザを実際に操作できるツールが無かった(computer-use・ブラウザ自動化の類のツールが利用可能なツール一覧に含まれていなかった)。そのため、まず`docs/progress/step3-manual-check.md`に手動確認手順(スマホ幅・PC幅の両方の確認項目)を書いた
+- そのうえで、実際に`.dev.vars`を用意し`pnpm run db:migrate:local`でローカルD1にマイグレーションを適用し、`pnpm exec wrangler dev`を起動して、curlで一連の流れをAPIレベルで実際に確認した(画面のクリック操作の代わりに、画面が呼び出すAPIをそのまま叩いて確認した)
+  - 新規登録(POST /api/auth/sign-up/email、Turnstileはvalid-tokenで検証を通過)→ ログに出た確認コードで確認(POST /api/auth/email-otp/verify-email)→ レスポンスにSet-Cookieが付き、そのままログイン済みになる(autoSignInAfterVerificationが実際に効いていることを確認)
+  - GET /api/meで同意前はconsent.agreed=false → POST /api/consentで同意 → agreed=trueになり、プロフィール(calorieTrackingEnabled: true)が作成される
+  - GET /api/days/:今日で習慣2件(服薬・運動)が取得できる → PUT /api/habit-logsで記録(completed)→ もう一度result:nullで取り消し、両方とも200で意図通りの値が返る
+  - POST /api/calorie-logsで新規作成 → PATCH /api/calorie-logs/:idで編集 → DELETE /api/calorie-logs/:idで削除(204)→ GET /api/daysで消えていることを確認
+  - POST /api/auth/sign-out → その後のGET /api/meが401(UNAUTHORIZED)になる(ログアウトできている)→ POST /api/auth/sign-in/emailで再度ログインできる
+  - `/`・`/app`・存在しないパスのいずれもSPAのシェル(index.html)が200で返ることを確認した
+- 上記の確認で不具合は見つからなかった(コードの修正は無し)

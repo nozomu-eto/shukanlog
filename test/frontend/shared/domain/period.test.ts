@@ -8,6 +8,7 @@ import {
 	getMonthCalendarCells,
 	getMonthRange,
 	getNextPeriodDate,
+	getPeriodRange,
 	getPreviousPeriodDate,
 	getWeekRange,
 } from "../../../../src/shared/domain/period";
@@ -96,6 +97,23 @@ describe("移動先の日付", () => {
 
 	it("次への移動先が今日以前ならそのまま進める", () => {
 		expect(getNextPeriodDate("2026-08-01", "week", "2026-09-24")).toBe("2026-08-08");
+	});
+
+	it("日タブ(day)は1日ずつ移動する。次への移動先が今日より後になる場合は今日にする", () => {
+		expect(getPreviousPeriodDate("2026-09-24", "day")).toBe("2026-09-23");
+		expect(getNextPeriodDate("2026-09-24", "day", "2026-09-24")).toBe("2026-09-24");
+		expect(getNextPeriodDate("2026-09-23", "day", "2026-09-24")).toBe("2026-09-24");
+	});
+});
+
+describe("getPeriodRange", () => {
+	it("dayはその日1日だけの範囲になる", () => {
+		expect(getPeriodRange("2026-09-24", "day")).toEqual({ start: "2026-09-24", end: "2026-09-24" });
+	});
+
+	it("week・monthはgetWeekRange・getMonthRangeと同じ結果になる", () => {
+		expect(getPeriodRange("2026-09-24", "week")).toEqual(getWeekRange("2026-09-24"));
+		expect(getPeriodRange("2026-09-24", "month")).toEqual(getMonthRange("2026-09-24"));
 	});
 });
 

@@ -5,8 +5,8 @@ import { getWeekdayIndex, isFuture, shiftDays, shiftMonthsClamped } from "./date
 
 export type DateRange = { start: string; end: string };
 
-// 期間の単位(週タブ・月タブ)
-export type PeriodUnit = "week" | "month";
+// 期間の単位(日タブ・週タブ・月タブ)。日タブは start === end の1日だけの期間として扱う
+export type PeriodUnit = "day" | "week" | "month";
 
 // YYYY-MM-DD文字列から年・月・日を取り出す(period.ts内の計算用の簡易ヘルパー)
 function parseYearMonthDay(dateString: string): { year: number; month: number; day: number } {
@@ -104,13 +104,24 @@ export function canReturnToToday(period: DateRange, today: string): boolean {
 
 // 「前へ」ボタンを押したときの移動先の日付(常に押せる。移動先の上限は無い)
 export function getPreviousPeriodDate(dateString: string, unit: PeriodUnit): string {
+	if (unit === "day") {
+		return shiftDays(dateString, -1);
+	}
 	return unit === "week" ? shiftDays(dateString, -7) : shiftMonthsClamped(dateString, -1);
 }
 
 // 「次へ」ボタンを押したときの移動先の日付。移動先が今日より後になる場合は今日にする
 export function getNextPeriodDate(dateString: string, unit: PeriodUnit, today: string): string {
-	const next = unit === "week" ? shiftDays(dateString, 7) : shiftMonthsClamped(dateString, 1);
+	const next = unit === "day" ? shiftDays(dateString, 1) : unit === "week" ? shiftDays(dateString, 7) : shiftMonthsClamped(dateString, 1);
 	return isFuture(next, today) ? today : next;
+}
+
+// 指定日を含む「期間」の範囲を返す(日タブはその日1日だけの範囲として扱う)
+export function getPeriodRange(dateString: string, unit: PeriodUnit): DateRange {
+	if (unit === "day") {
+		return { start: dateString, end: dateString };
+	}
+	return unit === "week" ? getWeekRange(dateString) : getMonthRange(dateString);
 }
 
 // 週タブの期間表示(例: 9/21(月)〜9/27(日)、年をまたぐ・今年以外の場合は年も表示する)

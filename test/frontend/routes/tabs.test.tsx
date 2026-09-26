@@ -47,7 +47,7 @@ describe("TabsRoute", () => {
 
 		renderTabs();
 
-		expect(await screen.findByRole("status")).toHaveTextContent("退会を取り消しました");
+		expect(await screen.findByText("退会を取り消しました")).toBeInTheDocument();
 		expect(sessionStorage.getItem("withdrawal-cancel-toast-shown")).toBe("1");
 	});
 

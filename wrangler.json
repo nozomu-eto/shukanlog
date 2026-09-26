@@ -59,6 +59,12 @@
 		}
 	],
 
+	// 毎日1回、退会から30日後の完全削除・メール未確認のまま30日を過ぎた利用者の削除を行う(T12・T13)。
+	// UTC 18:00 = 日本時間3:00(深夜、利用者への影響が少ない時間帯)
+	"triggers": {
+		"crons": ["0 18 * * *"]
+	},
+
 	// 本番環境。バインディングは環境ごとに再定義が必要(トップレベルからは引き継がれない)
 	"env": {
 		"production": {
@@ -66,6 +72,9 @@
 				"BETTER_AUTH_URL": "https://shukanlog.com",
 				"MAIL_TRANSPORT": "cloudflare",
 				"MAIL_FROM_ADDRESS": "noreply@shukanlog.com"
+			},
+			"triggers": {
+				"crons": ["0 18 * * *"]
 			},
 			"d1_databases": [
 				{

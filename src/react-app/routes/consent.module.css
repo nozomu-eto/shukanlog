@@ -1,0 +1,52 @@
+/* 利用規約への同意画面。docs/design/mockups/Consent.dc.html・ConsentPC.dc.html に合わせる */
+.list {
+	margin: 0;
+	padding: 14px 16px 14px 32px;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 14px;
+	line-height: 1.7;
+}
+
+.policyLinks {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	align-items: flex-start;
+}
+
+.policyLink {
+	min-height: 44px;
+	display: flex;
+	align-items: center;
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--color-text);
+	text-decoration: none;
+}
+
+.checkboxRow {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.checkboxLabel {
+	min-height: 44px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-size: 15px;
+	cursor: pointer;
+}
+
+.checkbox {
+	width: 22px;
+	height: 22px;
+	margin: 0;
+	accent-color: var(--color-text);
+}

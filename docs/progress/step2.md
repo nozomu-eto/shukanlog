@@ -14,7 +14,7 @@
 - [x] T3: CSPのスタイルの方針を決める
 - [x] T4: 使わないコードだけのログインの入口を閉じる
 - [x] T5: react-routerに一本化する
-- [ ] T6: 共通の定数と型
+- [x] T6: 共通の定数と型
 - [ ] T7: 日本時間の日付の関数
 - [ ] T8: 週・月の期間の計算
 - [ ] T9: テーブル定義とマイグレーション
@@ -70,3 +70,8 @@
 ### T5
 
 - `pnpm remove react-router-dom` → `pnpm add react-router@7` で入れ替え、importを`react-router-dom`から`react-router`に書き換えた対象は`main.tsx`・`router.tsx`・`routes/not-found.tsx`・`routes/app/require-auth.tsx`の4ファイル。React Router v7の公式ドキュメントで、ライブラリモードでは`react-router`への一本化が推奨されていることを確認した(APIはreact-router-domと同じで、importの向き先のみ変わる)
+
+### T6
+
+- `src/shared/limits.ts`・`types.ts`・`policy.ts`・`initial-habits.ts`の4ファイルに分けて定義した(1ファイルに詰め込まず、種類ごとに分けた方が今後の見通しがよいと判断)
+- 記録の結果の型(`HabitLogResult`)には「未記録」を表す値を含めず、指示通り「未記録は記録そのものが無い状態」で表す方針にした。APIのレスポンスでは`result | null`のように`null`で未記録を表す

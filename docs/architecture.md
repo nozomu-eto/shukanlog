@@ -59,7 +59,7 @@ Workers Rate Limitingバインディング(`ratelimits`)は10秒か60秒しか�
 
 - `console`: 標準出力に表示するだけ(開発用)
 - `memory`: 配列に記録するだけ(テスト用)
-- `cloudflare`: Email Sendingの`send_email`バインディングで実際に送信する(本番用)
+- `cloudflare`: Email Sendingの`send_email`バインディングで実際に送信する(本番用)。バインディングは`destination_address`を指定せず(指定すると検証済みの1つの宛先にしか送れなくなる)、`allowed_sender_addresses: ["noreply@shukanlog.com"]`で送信元のみを限定している
 
 `MAIL_TRANSPORT`環境変数で切り替えます。**安全装置**として、`BETTER_AUTH_URL`が`https://`で始まる(=本番)状態で`MAIL_TRANSPORT`が`console`または`memory`の場合は例外を投げるようにしています。本番で開発用の実装が使われてしまうと、確認コードが届かず誰も登録できなくなる上、コードがログに平文で残ってしまうためです。
 

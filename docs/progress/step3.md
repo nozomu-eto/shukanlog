@@ -22,7 +22,7 @@
 - [ ] T11: 利用規約への同意(/consent)
 - [x] T12: アプリの枠(ヘッダー・日週月の切り替え)
 - [x] T13: 日タブ(記録の表示と保存)
-- [ ] T14: カロリーの記録・編集
+- [x] T14: カロリーの記録・編集
 - [ ] T15: 画面の動作確認
 - [ ] T16: ドキュメント
 - [ ] T17: 持ち越し事項の整理
@@ -134,3 +134,12 @@
 - 読み込み中はスケルトン(aria-hidden、読み上げ用に別途role="status"のテキストのみの要素)、取得失敗時は`role="alert"`のエラーカード+「再読み込み」ボタン(dayQuery.refetch())を表示する
 - 「次の日」は今日を表示中はリンクではなくaria-disabled="true"のspanにして、クリックしても遷移できないようにした(テストでtagNameがA(アンカー)でないことを確認)
 - テストはgetDay・putHabitLog・getMeをvi.mockし、保存→取り消し、保存失敗時の巻き戻し、今日は次の日へ進めないことを確認した(test/frontend/routes/day-tab.test.tsx)
+
+### T14
+
+- カロリーのカードは、GET /api/days/:dateのcaloriesがnull(カロリー記録を無効にしている利用者)の場合はカード自体を表示しない実装にした(T13のday-tab.tsxに追記する形にした)
+- CalorieForm(T4のDialogを使う)は、editingプロパティがnullなら新規作成(POST /api/calorie-logs)、値があれば編集(PATCH /api/calorie-logs/:id)にした。日ごとの記録のDayCalorieItem型(id・calories・noteのみ)をそのまま渡せるよう、CalorieLogResponse型ではなく最小限の独自の型を編集対象のpropsにした
+- 保存・削除に成功したら、呼び出し元(day-tab.tsx)のonSavedコールバックでダイアログを閉じ、`queryClient.invalidateQueries({queryKey: ["day", date]})`で日ごとの記録を再取得し、トーストを出す
+- 削除は「この記録を削除する」→確認文言+「やめる」「削除する」の2段階の確認にした(状態はCalorieForm内のconfirmingDeleteで管理)
+- 入力の検証(validateCalorieAmount・validateCalorieNote)はsrc/react-app/lib/validators.tsに追加し、src/shared/limits.tsのCALORIE_MIN・CALORIE_MAX・CALORIE_NOTE_MAX_LENGTHをサーバーと同じ値として使う
+- テストは、10001・小数の入力エラー、新規作成、編集、削除の2段階確認をCalorieFormコンポーネント単体で確認した(test/frontend/routes/calorie-form.test.tsx。api/calorie-logsをvi.mock)

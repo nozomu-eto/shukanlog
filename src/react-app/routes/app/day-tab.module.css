@@ -177,6 +177,82 @@
 	gap: 8px;
 }
 
+.calorieHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.recordButton {
+	min-height: 44px;
+	padding: 0 14px;
+	border-radius: 12px;
+	border: 1.5px solid var(--color-text);
+	background: var(--color-surface);
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--color-text);
+	cursor: pointer;
+	text-decoration: none;
+}
+
+.calorieTotal {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.calorieTotalValue {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 24px;
+}
+
+.calorieTotalUnit {
+	font-size: 13px;
+	font-weight: 500;
+	margin-left: 4px;
+}
+
+.calorieList {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.calorieItem {
+	width: 100%;
+	min-height: 48px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	border: none;
+	border-top: 1px solid var(--color-border-subtle);
+	background: transparent;
+	padding: 0 2px;
+	font-size: 15px;
+	color: var(--color-text);
+	box-sizing: border-box;
+	cursor: pointer;
+	text-align: left;
+}
+
+.calorieItemValue {
+	font-family: var(--font-heading);
+	font-weight: 500;
+}
+
+.calorieEmpty {
+	margin: 4px 0;
+	font-size: 14px;
+	color: var(--color-text-muted);
+}
+
 .disclaimer {
 	margin: auto 0 0;
 	font-size: 12px;

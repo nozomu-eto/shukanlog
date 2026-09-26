@@ -21,7 +21,7 @@
 - [x] T10: 退会の仕組み(サーバー)
 - [x] T11: 退会の画面(/app/settings/withdraw)
 - [x] T12: 退会から30日後の完全削除(定期処理)
-- [ ] T13: メール未確認ユーザーの削除(定期処理)
+- [x] T13: メール未確認ユーザーの削除(定期処理)
 - [ ] T14: 利用規約・プライバシーポリシーのページ(/terms、/privacy)
 - [ ] T15: ライセンスのページ(/licenses)
 - [ ] T16: 旧資料の片付け
@@ -128,3 +128,8 @@
 - D1が外部キーのON DELETE CASCADEを実際に有効にしているかどうかは、ドキュメントを読むだけでなく実際にテストで確認する必要があると判断し、test/worker/scheduled-purge.test.tsで退会済みユーザーのuser行を削除した後にsession・habit・calorie_log・account_deletionの行がすべて消えていることを確認した。結果、D1は既定でPRAGMA foreign_keys相当が有効になっており、明示的な削除コードは不要だった
 - テストで`worker.scheduled(controller, env, ctx)`を直接呼び出す(`createScheduledController()`・`createExecutionContext()`は`@cloudflare/vitest-plugin`が提供する)ため、`src/worker/index.ts`のexportを`ExportedHandler<Env>`型の変数として明示的に型付けした(オブジェクトリテラルのまま`export default`すると、実装した関数の引数の数(2つ)がexportの型として推論され、3引数で呼ぶテストが型エラーになったため)
 - 1回の定期処理で削除する件数に上限(100件)を設け、削除件数のみをログに出す(メールアドレス等は出さない)
+
+### T13
+
+- T12と同じ定期処理(src/worker/scheduled/purge.ts)に、メールアドレスの確認(emailVerified)が済まないまま作成から30日を過ぎた利用者を削除する処理を追加した(以前決めたデータ保持方針、ステップ1〜3の持ち越し事項)。退会の削除と同じ「1回の処理あたり最大100件」「user行の削除だけでD1の外部キー連動削除に任せる」方針をそのまま適用した
+- テスト(scheduled-purge-unverified.test.ts)は、30日を過ぎた未確認の利用者が削除され、確認済みの利用者・30日以内の未確認利用者は残ることを確認した

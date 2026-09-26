@@ -13,6 +13,7 @@ import { PrivacyRoute } from "./routes/privacy";
 import { LicensesRoute } from "./routes/licenses";
 import { NotFoundRoute } from "./routes/not-found";
 import { RequireAuth } from "./routes/app/require-auth";
+import { AppShell } from "./routes/app/app-shell";
 import { TabsRoute } from "./routes/app/tabs";
 import { SettingsRoute } from "./routes/app/settings";
 import { SettingsEmailRoute } from "./routes/app/settings-email";
@@ -47,11 +48,16 @@ export const router = createBrowserRouter([
 		path: "/app",
 		element: <RequireAuth />,
 		children: [
-			{ index: true, element: <TabsRoute /> },
-			{ path: "settings", element: <SettingsRoute /> },
-			{ path: "settings/email", element: <SettingsEmailRoute /> },
-			{ path: "settings/password", element: <SettingsPasswordRoute /> },
-			{ path: "settings/withdraw", element: <SettingsWithdrawRoute /> },
+			{
+				element: <AppShell />,
+				children: [
+					{ index: true, element: <TabsRoute /> },
+					{ path: "settings", element: <SettingsRoute /> },
+					{ path: "settings/email", element: <SettingsEmailRoute /> },
+					{ path: "settings/password", element: <SettingsPasswordRoute /> },
+					{ path: "settings/withdraw", element: <SettingsWithdrawRoute /> },
+				],
+			},
 		],
 	},
 	{ path: "*", element: <NotFoundRoute /> },

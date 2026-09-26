@@ -34,7 +34,7 @@ function putHabitLog(cookie: string, body: unknown) {
 	});
 }
 
-// Better Authの新規登録レート制限に抵触しないよう、このファイルでのsignUpAndSignInは2回に抑える
+// signUpAndSignInは利用者ごとに別のIPアドレスを使うため、新規登録のレート制限に抵触せず呼び出せる
 describe("PUT /api/habit-logs", () => {
 	it("作成・更新・取り消しができ、2段階の習慣にpartialを付けると400になる", async () => {
 		const { email, cookie } = await signUpAndSignIn("habit-logs-a");

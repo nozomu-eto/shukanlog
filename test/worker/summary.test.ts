@@ -32,7 +32,7 @@ function getSummary(cookie: string, from: string, to: string) {
 	return SELF.fetch(`https://example.com/api/summary?from=${from}&to=${to}`, { headers: { cookie } });
 }
 
-// Better Authの新規登録レート制限(60秒に3回)に抵触しないよう、このファイルでのsignUpAndSignInは2回に抑える
+// signUpAndSignInは利用者ごとに別のIPアドレスを使うため、新規登録のレート制限に抵触せず呼び出せる
 describe("GET /api/summary", () => {
 	it("週の集計・月の集計・アカウント作成日より前の分母除外・カロリー平均の計算ができる", async () => {
 		const { email, cookie } = await signUpAndSignIn("summary-a");

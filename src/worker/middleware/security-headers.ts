@@ -15,5 +15,7 @@ export const securityHeadersMiddleware = secureHeaders({
 		fontSrc: [...CSP_DIRECTIVES.fontSrc],
 		scriptSrc: [...CSP_DIRECTIVES.scriptSrc],
 		frameSrc: [...CSP_DIRECTIVES.frameSrc],
+		styleSrcElem: [...CSP_DIRECTIVES.styleSrcElem],
+		styleSrcAttr: [...CSP_DIRECTIVES.styleSrcAttr],
 	},
 });

@@ -11,7 +11,10 @@ export const SECURITY_HEADER_VALUES = {
 	xFrameOptions: "DENY",
 } as const;
 
-// CSP(Report-Only)の各ディレクティブの許可元
+// CSP(Report-Only)の各ディレクティブの許可元。
+// スタイルは、style要素・外部CSSは自分自身のみ(style-src-elem)、style属性は
+// 'unsafe-inline'で許可する(style-src-attr)。画面の実装では、固定の見た目はCSSのクラスで書き、
+// style属性はグラフの棒の高さのような計算で決まる値だけに使う方針(AGENTS.md参照)
 export const CSP_DIRECTIVES = {
 	defaultSrc: ["'self'"],
 	// Google Fontsなど外部フォントは使わずFontsourceで自前配信するため'self'のみ
@@ -19,6 +22,8 @@ export const CSP_DIRECTIVES = {
 	// Turnstileのウィジェットを読み込めるようにする
 	scriptSrc: ["'self'", "https://challenges.cloudflare.com"],
 	frameSrc: ["https://challenges.cloudflare.com"],
+	styleSrcElem: ["'self'"],
+	styleSrcAttr: ["'unsafe-inline'"],
 } as const;
 
 // CSPディレクティブ名(Honoのプロパティ名)から、ヘッダー値で使うkebab-caseの名前への対応表
@@ -27,6 +32,8 @@ const CSP_DIRECTIVE_NAMES: Record<keyof typeof CSP_DIRECTIVES, string> = {
 	fontSrc: "font-src",
 	scriptSrc: "script-src",
 	frameSrc: "frame-src",
+	styleSrcElem: "style-src-elem",
+	styleSrcAttr: "style-src-attr",
 };
 
 // Content-Security-Policy-Report-Only ヘッダーの値(1行の文字列)を組み立てる。

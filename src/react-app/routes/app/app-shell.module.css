@@ -37,8 +37,31 @@
 	text-decoration: none;
 }
 
+.settingsLinkActive {
+	color: var(--color-text);
+}
+
 .settingsText {
 	display: none;
+}
+
+/* 設定画面・サブページのスマホ向けヘッダー(戻る+ページ名)。PCでは常に非表示にする */
+.backButton {
+	width: 44px;
+	height: 44px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 12px;
+	color: var(--color-text);
+	text-decoration: none;
+}
+
+.mobileTitle {
+	margin: 0;
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 20px;
 }
 
 .tabs {
@@ -74,6 +97,28 @@
 	flex-grow: 1;
 }
 
+/* スマホでは、設定画面・サブページのヘッダーは「戻る」+ページ名だけにし、
+   通常時のブランド・日週月切り替え・設定リンクは隠す(PCでは元に戻す。下のmedia参照) */
+.headerSettings {
+	grid-template-columns: 44px 1fr;
+	grid-template-areas: "back title";
+	column-gap: 4px;
+}
+
+.headerSettings .brand,
+.headerSettings .tabs,
+.headerSettings .settingsLink {
+	display: none;
+}
+
+.backButton {
+	grid-area: back;
+}
+
+.mobileTitle {
+	grid-area: title;
+}
+
 @media (min-width: 1024px) {
 	.header {
 		grid-template-columns: 1fr 300px 1fr;
@@ -104,5 +149,31 @@
 
 	.tabs {
 		margin: 0;
+	}
+
+	/* PCでは設定画面・サブページでも常に通常のヘッダー(ブランド・日週月・設定リンク)を表示し、
+	   設定リンクだけ選択中の見た目にする(docs/design/mockups/SettingsPC.dc.html等) */
+	.headerSettings {
+		grid-template-columns: 1fr 300px 1fr;
+		grid-template-areas: "brand tabs settings";
+	}
+
+	.headerSettings .brand,
+	.headerSettings .settingsLink {
+		display: flex;
+	}
+
+	.headerSettings .tabs {
+		display: grid;
+	}
+
+	.backButton,
+	.mobileTitle {
+		display: none;
+	}
+
+	.settingsLinkActive {
+		background: var(--color-tab-background);
+		font-weight: 700;
 	}
 }

@@ -15,7 +15,7 @@
 - [x] T4: 週タブ
 - [x] T5: 月タブ
 - [x] T6: 日週月の切り替えの確認
-- [ ] T7: 設定画面(/app/settings)
+- [x] T7: 設定画面(/app/settings)
 - [ ] T8: メールアドレスの変更(/app/settings/email)
 - [ ] T9: パスワードの変更(/app/settings/password)
 - [ ] T10: 退会の仕組み(サーバー)
@@ -81,3 +81,11 @@
   1. 週・月タブのマスから日タブへのリンクが、react-routerの`Link`ではなく生の`<a href>`になっていた(T4・T5実装時の書き忘れ)。生の`<a>`だとブラウザのフルページ遷移になり、SPAとしての遷移(react-router側でのクライアントサイド遷移)にならないため、両タブとも`Link`に直した
   2. 日タブで記録(習慣の保存・カロリーの保存)をしても、react-queryの`["summary", from, to]`キャッシュを無効化していなかったため、記録直後に週・月タブを開いても古い集計が表示され続ける(再度画面をリロードするまで反映されない)問題があった。day-tab.tsxのpickMutationのonSettled・handleCalorieSavedの両方に`queryClient.invalidateQueries({ queryKey: ["summary"] })`を追加した(fromToを問わず前方一致で無効化する)
 - テストを追加した: app-shell.test.tsx(日週月の切り替えでdateクエリパラメータが保持されること、aria-current)、day-tab.test.tsx(記録の保存でsummaryクエリのキャッシュが無効化されること)。週・月タブから日タブへのリンク(Linkのhref)は既存のweek-tab.test.tsx・month-tab.test.tsxのテストでも確認できている
+
+### T7
+
+- docs/design/mockups/Settings.dc.htmlはスマホでは「戻る」+ページ名のヘッダー、docs/design/mockups/SettingsPC.dc.htmlではPCは通常のAppShellのヘッダー(ブランド・日週月・設定リンク、設定リンクを選択中の見た目にする)だった。設定画面とそのサブページ(メール・パスワード変更、退会)をAppShellの外に出す(レイアウトを作り直す)のではなく、AppShell自身がlocation.pathnameで設定系のページかどうかを判定し、スマホ向けの「戻る」ヘッダーとPC向けの通常ヘッダーの両方をDOMに用意してCSSの表示切り替え(display:none)で出し分ける実装にした(AGENTS.mdの「DOMの親子構造を条件分岐で変えない」方針を維持するため。ページごとの戻り先・見出しはAppShell内の小さな対応表で管理する)
+- カロリー記録のスイッチはrole="switch"・aria-checked・aria-labelledbyで実装し、PATCH /api/profileの成功時に["me"](スイッチの表示元)・["day"]・["summary"](カロリーの表示先)のキャッシュを無効化して、日・週・月タブに即時反映されるようにした
+- ログアウトはT3(ステップ3)の仮実装をそのまま流用した(確認なしで実行し、ログイン画面に「ログアウトしました」を表示)
+- 利用規約・プライバシーポリシーへのリンクはモックアップ通りreact-routerのLink(target="_blank")、お問い合わせはmailto:のaタグ、退会への導線はLinkにした
+- 「入力欄の枠線」等には無い#C9C8C1(退会ボタンの枠線・スイッチのオフ状態の地の色)を、styles/tokens.cssに`--color-border-strong`として追加した(docs/design.mdの色の表に無いが、モックアップに実在する色のため)

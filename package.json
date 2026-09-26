@@ -4,13 +4,15 @@
 	"dependencies": {
 		"@fontsource/zen-kaku-gothic-new": "^5.3.0",
 		"@fontsource/zen-maru-gothic": "^5.3.0",
+		"@hono/zod-validator": "^0.9.1",
 		"better-auth": "^1.7.6",
 		"drizzle-orm": "^0.45.3",
 		"hono": "4.11.1",
 		"lucide-react": "^1.48.0",
 		"react": "19.2.1",
 		"react-dom": "19.2.1",
-		"react-router": "^7.18.4"
+		"react-router": "^7.18.4",
+		"zod": "^4.6.5"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "1.52.1",

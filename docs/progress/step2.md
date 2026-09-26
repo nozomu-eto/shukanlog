@@ -19,7 +19,7 @@
 - [x] T8: 週・月の期間の計算
 - [x] T9: テーブル定義とマイグレーション
 - [x] T10: 認証が必要なAPIの共通の仕組み
-- [ ] T11: 自分の情報と同意のAPI
+- [x] T11: 自分の情報と同意のAPI
 - [ ] T12: 日ごとの記録を取得するAPI
 - [ ] T13: 習慣の記録API
 - [ ] T14: カロリー記録のAPI
@@ -108,3 +108,10 @@
 - 未処理のエラーは`app.onError`で500(`INTERNAL_ERROR`)にし、`console.error(err)`でログにはスタックトレースを出すが、レスポンスには含めないようにした
 - ルーティングとミドルウェアの検証は、本番の`apiRouter`(まだ具体的なエンドポイントを持たない)に直接テスト用のルートを足すとプロダクションのルーターを汚してしまうため、`requireSession`・`requireConsent`・`writeRateLimit`の3つのミドルウェア関数を直接importした最小限のHonoアプリをテストファイル内に作り、Honoの`app.request(input, init, env)`(公式ドキュメントに「testingに便利なメソッド」と明記)でcloudflare:testの`env`を渡して検証する方式にした
 - 同一テストファイル内でBetter Authの新規登録(60秒に3回のcustomRule)に抵触しないよう、`signUpAndSignIn`の呼び出し回数を3回に抑える形にテストを構成した(test/worker/support/auth.tsに、サインアップ→メール確認→ログインをまとめて行うヘルパーを追加した。以降のタスクのテストからも再利用する)
+
+### T11
+
+- zod・@hono/zod-validatorをこのタスクで新規に導入した(package.jsonに未記載だったため)。入力の検証エラーはすべて`src/worker/lib/validation.ts`の共通関数`validate()`経由で400(`VALIDATION_ERROR`)にする方針にした
+- 初期データの作成(プロフィール1件・習慣2件)と同意の記録は、`db.batch()`で1つのD1バッチとしてまとめ、それぞれ`onConflictDoNothing()`を付けて実行するようにした。一意制約(T9)により、既にある行は無視され、欠けている行だけが作られるため、「同意を何度呼んでも重複しない」「初期データの一部が欠けていても補完される」の両方を1つの実装で満たせる
+- `policyVersion`が現在の`POLICY_VERSION`と一致しない場合のエラーコードは、指示に明記が無かったため、入力値の不正として扱い他の検証エラーと同じ`VALIDATION_ERROR`にした
+- GET /api/me・POST /api/consentの両方とも、`requireConsent`の対象外(apiRouterの`PATHS_WITHOUT_CONSENT_CHECK`)としつつ`requireSession`は必須のままにした(T10で設計した通り)

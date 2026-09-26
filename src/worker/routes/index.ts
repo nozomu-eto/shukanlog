@@ -2,6 +2,11 @@ import { Hono } from "hono";
 import { requireSession } from "../middleware/require-session";
 import { requireConsent } from "../middleware/require-consent";
 import { writeRateLimit } from "../middleware/write-rate-limit";
+import { validate } from "../lib/validation";
+import { buildMeResponse } from "./me";
+import { consentBodySchema } from "./consent";
+import { ensureConsentAndInitialData } from "../db/ensure-initial-data";
+import { POLICY_VERSION } from "../../shared/policy";
 import type { AppEnv } from "../types";
 
 // 認証・同意の確認が必要なAPIをまとめるルーター。src/worker/index.tsから /api にマウントする。
@@ -26,4 +31,38 @@ apiRouter.use("*", async (c, next) => {
 	return requireConsent(c, next);
 });
 
-// 各APIのハンドラは、この後のタスク(T11以降)でこのルーターに追加していく
+// 自分の情報(ログイン中の利用者のメールアドレス・アカウント作成日・プロフィール・同意状況)を返す。
+// requireConsentの対象外(まだ同意していない利用者も呼び出す必要があるため)
+apiRouter.get("/me", async (c) => {
+	const body = await buildMeResponse(
+		c.env,
+		c.get("userId"),
+		c.get("userEmail"),
+		c.get("accountCreatedDate"),
+	);
+	return c.json(body);
+});
+
+// 利用規約・プライバシーポリシーへの同意を記録する。同意していなければ初期データ(プロフィール・習慣)を作成する。
+// requireConsentの対象外(同意そのものを行うエンドポイントのため)
+apiRouter.post("/consent", validate("json", consentBodySchema), async (c) => {
+	const { policyVersion } = c.req.valid("json");
+	if (policyVersion !== POLICY_VERSION) {
+		return c.json(
+			{ error: { code: "VALIDATION_ERROR", message: "利用規約のバージョンが古いか不正です" } },
+			400,
+		);
+	}
+
+	await ensureConsentAndInitialData(c.env, c.get("userId"));
+
+	const body = await buildMeResponse(
+		c.env,
+		c.get("userId"),
+		c.get("userEmail"),
+		c.get("accountCreatedDate"),
+	);
+	return c.json(body);
+});
+
+// 各APIのハンドラは、この後のタスク(T12以降)でこのルーターに追加していく

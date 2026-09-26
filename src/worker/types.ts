@@ -3,6 +3,8 @@
 export type AppVariables = {
 	// ログイン中の利用者のID(user.id)
 	userId: string;
+	// ログイン中の利用者のメールアドレス
+	userEmail: string;
 	// 利用者のアカウント作成日(日本時間のYYYY-MM-DD)。集計の分母の計算に使う
 	accountCreatedDate: string;
 };

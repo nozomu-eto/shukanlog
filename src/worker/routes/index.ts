@@ -19,6 +19,7 @@ import { calorieLog, profile } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { patchProfileBodySchema } from "./profile";
 import { buildSummaryResponse, summaryQuerySchema, validateSummaryRange } from "./summary";
+import { requestEmailChange, requestEmailChangeBodySchema } from "./account";
 import { POLICY_VERSION } from "../../shared/policy";
 import { isFuture, isValidDateString, todayInTokyo } from "../../shared/domain/date";
 import type { AppEnv } from "../types";
@@ -226,6 +227,37 @@ apiRouter.patch("/profile", validate("json", patchProfileBodySchema), async (c) 
 
 	return c.json({ calorieTrackingEnabled });
 });
+
+// メールアドレスの変更の申請(新しいメールアドレスへ確認コードを送る)。
+// メール送信を伴うため、書き込み全般用のAPI_RATE_LIMITERより厳しいEMAIL_CHANGE_RATE_LIMITER
+// (60秒に1回、Better Auth側の確認コード送信customRulesと同じ考え方)を別途かける
+apiRouter.post(
+	"/account/email/request-change",
+	validate("json", requestEmailChangeBodySchema),
+	async (c) => {
+		const { success } = await c.env.EMAIL_CHANGE_RATE_LIMITER.limit({ key: c.get("userId") });
+		if (!success) {
+			return c.json(
+				{ error: { code: "RATE_LIMITED", message: "リクエストが多すぎます。しばらく待ってから再度お試しください" } },
+				429,
+			);
+		}
+
+		const { newEmail, currentPassword } = c.req.valid("json");
+		const result = await requestEmailChange(
+			c.env,
+			c.get("userId"),
+			c.get("userEmail"),
+			newEmail,
+			currentPassword,
+			c.req.raw.headers,
+		);
+		if (!result.ok) {
+			return c.json({ error: { code: result.code, message: result.message } }, result.status);
+		}
+		return c.json({ success: true });
+	},
+);
 
 // 週・月タブの集計を返す(習慣の記録・カロリー記録をまとめて1回のレスポンスで返す)
 apiRouter.get("/summary", validate("query", summaryQuerySchema), async (c) => {

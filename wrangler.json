@@ -16,11 +16,10 @@
 	"upload_source_maps": true,
 	"assets": {
 		"directory": "./dist/client",
-		// ASSETSバインディング経由でWorkerから静的ファイルを取得できるようにする(セキュリティヘッダ付与のため)
-		"binding": "ASSETS",
-		// 常にWorkerを先に実行する。静的ファイルはWorker側でASSETSバインディングを呼んで取得し、
-		// レスポンスにセキュリティヘッダを付けてから返す(既知の落とし穴3)
-		"run_worker_first": true,
+		// /api/ 配下のみWorkerを先に実行する。それ以外の静的ファイル(日本語フォントなど細かいファイルを含む)は
+		// Workerを経由せず直接配信する(1回の画面表示でWorkerが何十回も動くのを避け、無料枠の消費を抑える)。
+		// 静的ファイルのヘッダーは public/_headers で付ける(既知の落とし穴3)
+		"run_worker_first": ["/api/*"],
 		"not_found_handling": "single-page-application"
 	},
 
@@ -41,11 +40,12 @@
 	],
 	"ratelimits": [
 		{
-			// APIへの過度なアクセスを弾くための全体的なレート制限(period は 10 か 60 のみ指定可能)。
-			// ログイン試行回数などの細かい制限はBetter Auth側のcustomRulesで行う(既知の落とし穴5)
+			// 記録APIの書き込み(POST/PUT/PATCH/DELETE)にユーザーID単位でかけるレート制限(period は 10 か 60 のみ指定可能)。
+			// 60秒に300回は書き込み専用の制限としては大きすぎる(通常の利用では1分間にそこまで書き込まない)ため、
+			// 60秒に60回に見直した(T10)。ログイン試行回数などの細かい制限はBetter Auth側のcustomRulesで行う(既知の落とし穴5)
 			"name": "API_RATE_LIMITER",
 			"namespace_id": "1001",
-			"simple": { "limit": 300, "period": 60 }
+			"simple": { "limit": 60, "period": 60 }
 		}
 	],
 
@@ -68,14 +68,16 @@
 			"send_email": [
 				{
 					"name": "MAILER",
-					"destination_address": "REPLACE_WITH_VERIFIED_DESTINATION_ADDRESS"
+					// 送信元をnoreply@shukanlog.comのみに限定する(destination_addressは指定しない。
+					// 指定すると検証済みの1つの宛先にしか送れなくなり、利用者への送信ができなくなるため)
+					"allowed_sender_addresses": ["noreply@shukanlog.com"]
 				}
 			],
 			"ratelimits": [
 				{
 					"name": "API_RATE_LIMITER",
 					"namespace_id": "1002",
-					"simple": { "limit": 300, "period": 60 }
+					"simple": { "limit": 60, "period": 60 }
 				}
 			]
 		}

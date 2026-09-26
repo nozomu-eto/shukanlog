@@ -40,11 +40,12 @@
 	],
 	"ratelimits": [
 		{
-			// APIへの過度なアクセスを弾くための全体的なレート制限(period は 10 か 60 のみ指定可能)。
-			// ログイン試行回数などの細かい制限はBetter Auth側のcustomRulesで行う(既知の落とし穴5)
+			// 記録APIの書き込み(POST/PUT/PATCH/DELETE)にユーザーID単位でかけるレート制限(period は 10 か 60 のみ指定可能)。
+			// 60秒に300回は書き込み専用の制限としては大きすぎる(通常の利用では1分間にそこまで書き込まない)ため、
+			// 60秒に60回に見直した(T10)。ログイン試行回数などの細かい制限はBetter Auth側のcustomRulesで行う(既知の落とし穴5)
 			"name": "API_RATE_LIMITER",
 			"namespace_id": "1001",
-			"simple": { "limit": 300, "period": 60 }
+			"simple": { "limit": 60, "period": 60 }
 		}
 	],
 
@@ -76,7 +77,7 @@
 				{
 					"name": "API_RATE_LIMITER",
 					"namespace_id": "1002",
-					"simple": { "limit": 300, "period": 60 }
+					"simple": { "limit": 60, "period": 60 }
 				}
 			]
 		}

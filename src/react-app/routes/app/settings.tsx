@@ -95,6 +95,10 @@ export function SettingsRoute() {
 						プライバシーポリシー
 						<ChevronRight size={18} aria-hidden="true" className={styles.listItemArrow} />
 					</Link>
+					<Link to="/licenses" target="_blank" className={styles.listItem}>
+						ライセンス
+						<ChevronRight size={18} aria-hidden="true" className={styles.listItemArrow} />
+					</Link>
 					<a href="mailto:info@shukanlog.com" className={`${styles.listItem} ${styles.listItemTall}`}>
 						<span className={styles.listItemLabel}>
 							<span>お問い合わせ</span>

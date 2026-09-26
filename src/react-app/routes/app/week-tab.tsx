@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router";
+import { useSearchParams, Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getSummary, type SummaryDay, type SummaryHabit } from "../../api/summary";
 import { getMe } from "../../api/me";
@@ -92,14 +92,14 @@ export function WeekTabRoute() {
 		}
 
 		return (
-			<a
+			<Link
 				key={targetDate}
-				href={hrefForTab("day", targetDate)}
+				to={hrefForTab("day", targetDate)}
 				aria-label={label}
 				className={isToday ? `${styles.dayCell} ${styles.dayCellToday}` : styles.dayCell}
 			>
 				<StatusIcon status={result} size={20} />
-			</a>
+			</Link>
 		);
 	}
 

@@ -69,6 +69,8 @@ export function DayTabRoute() {
 	function handleCalorieSaved(message: string) {
 		setCalorieDialog(null);
 		queryClient.invalidateQueries({ queryKey: ["day", date] });
+		// 週・月タブの集計にもこの日の変更を反映させる(タブを切り替えたときに古い値のままにならないように)
+		queryClient.invalidateQueries({ queryKey: ["summary"] });
 		showToast(message);
 	}
 
@@ -116,6 +118,8 @@ export function DayTabRoute() {
 		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["day", date] });
+			// 週・月タブの集計にもこの日の変更を反映させる(タブを切り替えたときに古い値のままにならないように)
+			queryClient.invalidateQueries({ queryKey: ["summary"] });
 		},
 	});
 

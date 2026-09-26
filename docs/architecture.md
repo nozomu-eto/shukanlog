@@ -180,7 +180,7 @@ Better Authのフロントエンド用クライアントは`better-auth/react`�
 
 過去のプロジェクトで実際に起きた問題と、その対策です。
 
-1. **`compatibility_date`が古いと未処理のPromise拒否が誤検知される**: Better Authのログイン失敗時に発生する既知の問題(Better Auth issue #10658)。`compatibility_date`を作業日の日付にすることで、互換性フラグ`unhandled_rejection_after_microtask_checkpoint`が有効になり解消する
+1. **`compatibility_date`が古いと未処理のPromise拒否が誤検知される/新しすぎると`pnpm dev`が起動しない**: 古い日付だとBetter Authのログイン失敗時に発生する既知の問題(Better Auth issue #10658、互換性フラグ`unhandled_rejection_after_microtask_checkpoint`で解消)が起きる。一方、`pnpm dev`が使う`@cloudflare/vite-plugin`同梱のworkerdが対応していない新しい日付を指定すると、「This Worker requires compatibility date ..., but the newest date supported by this server binary is ...」で起動に失敗する(`wrangler dev`は別の新しい実行環境を持つため、`wrangler dev`での確認だけでは気づけない)。`compatibility_date`は2026-03-03以降、かつ`pnpm dev`の実行環境が対応している日付にし、依存パッケージ更新時に上げてよい。動作確認は`pnpm dev`(利用者が普段使う方法)で行う
 2. **Better Authのレート制限が実質効かない**: 既定のメモリ保存はWorkerのisolateごとにカウンタが分かれるため。`storage: "database"`にし、IPアドレスは`cf-connecting-ip`から取得する
 3. **静的ファイルにWorker経由でヘッダーを付けると無料枠の消費が早い**: ステップ1では`assets.run_worker_first: true`にしてすべてのリクエストをWorker経由にし、ASSETSバインディングのレスポンスを複製してヘッダーを付けていたが、日本語フォントなど細かいファイルを含む1回の画面表示でWorkerが何十回も動いてしまう問題があった。ステップ2で`run_worker_first: ["/api/*"]`に戻し、静的ファイルのヘッダーは`public/_headers`で付ける方式に変更した(`/api/*`のヘッダーは引き続き`securityHeadersMiddleware`で付ける)。両方の値がずれないよう、`src/shared/security-headers.ts`に値を一元化し、`test/frontend/security-headers-file.test.ts`で`public/_headers`の内容と一致することを確認している
 4. **本番でconsole/memoryのメール送信が使われる**: 確認コードが届かない上、ログに平文で残る。本番URL(https://)でconsole/memoryが指定されたら例外を投げる安全装置を入れている

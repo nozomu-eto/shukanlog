@@ -16,7 +16,7 @@
 - [x] T5: 月タブ
 - [x] T6: 日週月の切り替えの確認
 - [x] T7: 設定画面(/app/settings)
-- [ ] T8: メールアドレスの変更(/app/settings/email)
+- [x] T8: メールアドレスの変更(/app/settings/email)
 - [ ] T9: パスワードの変更(/app/settings/password)
 - [ ] T10: 退会の仕組み(サーバー)
 - [ ] T11: 退会の画面(/app/settings/withdraw)
@@ -89,3 +89,11 @@
 - ログアウトはT3(ステップ3)の仮実装をそのまま流用した(確認なしで実行し、ログイン画面に「ログアウトしました」を表示)
 - 利用規約・プライバシーポリシーへのリンクはモックアップ通りreact-routerのLink(target="_blank")、お問い合わせはmailto:のaタグ、退会への導線はLinkにした
 - 「入力欄の枠線」等には無い#C9C8C1(退会ボタンの枠線・スイッチのオフ状態の地の色)を、styles/tokens.cssに`--color-border-strong`として追加した(docs/design.mdの色の表に無いが、モックアップに実在する色のため)
+
+### T8
+
+- node_modules内のBetter Auth(1.7.6)のソース(plugins/email-otp/routes.mjs)を確認し、`requestEmailChangeEmailOTP`(`POST /email-otp/request-email-change`)には現在のパスワードを確認する仕組みが無い(`verifyCurrentEmail`はOTPで現在のメールアドレス側を確認するオプションで、パスワードとは無関係)ことと、変更先のメールアドレスが既に使われている場合は「存在の漏えい防止」のため確認コードを送らずに黙って`success:true`を返す(エラーにならない)ことを確認した。仕様(T8)では現在のパスワードの確認と「既に使われている」ことの明示的なエラー表示が必要なため、Better Auth本体を呼ぶ前にこの2つを独自に検証するサーバーの関数(`src/worker/routes/account.ts`の`requestEmailChange`)を追加し、`POST /api/account/email/request-change`として公開した
+- 現在のパスワードの確認は、公開APIとして用意されていなかったため「適切な方法が無い場合」に該当すると判断し、Better Auth自身のchange-password処理(`api/routes/update-user.mjs`)が使っているのと同じ内部処理(`ctx.internalAdapter.findCredentialAccount` + `ctx.password.verify`、`auth.$context`経由でアクセス可能なことを型定義(`@better-auth/core`のAuthContext)で確認した)を使う`src/worker/auth/verify-password.ts`を追加した。T10(退会)でも同じ関数を再利用する
+- コードの確認・変更の確定(`POST /email-otp/change-email`)自体は、独自の検証が不要なためBetter Authの標準エンドポイントをフロントエンドから直接呼び出す(`authClient.emailOtp.changeEmail()`)。この呼び出しは通常のfetch(Cookie送受信付き)を経由するため、成功時にBetter Auth側が発行するセッションの更新(新しいメールアドレスを反映したCookie)がそのままブラウザに反映される。これにより、サーバー側で新しいSet-Cookieを手動で転送する実装(`auth.api.X()`をasResponse付きで呼び出しCookieを付け替える等)を避けられた
+- 確認コードの送信は、書き込み全般用のAPI_RATE_LIMITER(60秒60回)では粗すぎる(既知の落とし穴5と同じ考え方、Better Auth側の確認コード送信customRulesは60秒に1回)ため、専用のWorkers Rate Limitingバインディング`EMAIL_CHANGE_RATE_LIMITER`(60秒に1回)を追加した
+- テスト(test/worker/account-email-change.test.ts)は、誤ったパスワードでは送信されない、既に使われているメールアドレスでは送信されずエラーになる、確認前は`GET /api/me`が元のメールアドレスのままで確認後に変わる、変更後は新しいメールアドレスでログインでき古いメールアドレスではログインできないことを確認した。`POST /api/auth/email-otp/change-email`の直接呼び出しにはOriginヘッダーが必須(Better Auth側のCSRF対策、BETTER_AUTH_URLと一致する必要がある)であることがテスト実行時のエラーから分かったため、テストのfetchにも付けた

@@ -111,3 +111,9 @@
 - RedirectIfAuthenticatedはパスを持たない「レイアウトルート」(react-routerの公式パターン)にし、子ルートのpathは先頭のスラッシュを付けない相対パス("login"等)にした。先頭に"/"を付けた絶対パスを子ルートに書くと、react-routerの解決規則上ネストの意図が伝わらない・警告が出る可能性があるため、公式ドキュメントのレイアウトルートの書き方に合わせた
 - 判定中(セッション確認・GET /api/me取得)は画面のちらつきを避けるため何も表示しない(null)。GET /api/meの取得に失敗した場合は、振り分けをブロックせずそのまま子ルートを表示し、エラー表示は各画面自身のデータ取得に委ねる設計にした
 - テストはauthClient・api/meモジュールをvi.mockでモックし、未ログイン・未同意・同意済みの3パターンをMemoryRouter上で確認した(test/frontend/routes/require-auth.test.tsx、consent-guard.test.tsx、redirect-if-authenticated.test.tsx)
+
+### T11
+
+- 利用規約・プライバシーポリシーのリンクは、モックアップでは`target="_blank"`のaタグ(別タブ)だったが、react-routerのLinkでも`target="_blank"`を指定でき別タブで開けるため、アプリ内ルート(/terms・/privacy)へのLinkにした
+- 同意後は`postConsent(POLICY_VERSION)`を呼び、react-queryの`["me"]`キャッシュを`invalidateQueries`で更新してから/appへ移動する(次にRequireAuthが評価するときに最新のconsent.agreed=trueを見られるようにするため)
+- 「同意せずにログアウトする」は確認なしで`authClient.signOut()`を呼び、「ログアウトしました」をstateで渡して/loginへ移動する

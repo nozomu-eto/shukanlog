@@ -2,10 +2,10 @@ import { Hono } from "hono";
 import { createAuth } from "./auth";
 import { turnstileMiddleware } from "./middleware/turnstile";
 import { securityHeadersMiddleware } from "./middleware/security-headers";
-import { serveAssets } from "./routes/assets";
 
-// Hono アプリのエントリーポイント。wrangler.json の assets.run_worker_first で
-// すべてのリクエストが必ずこのWorkerを通るようにしている(セキュリティヘッダを付けるため)
+// Hono アプリのエントリーポイント。wrangler.json の assets.run_worker_first を ["/api/*"] にしているため、
+// このWorkerが処理するのは /api/ 配下のリクエストのみ。それ以外の静的ファイル(SPA本体・画像・フォントなど)は
+// Workerを経由せずCloudflareのアセット配信が直接返す(ヘッダーは public/_headers で付ける)
 const app = new Hono<{ Bindings: Env }>();
 
 // 全レスポンスにセキュリティヘッダを付ける
@@ -20,8 +20,5 @@ app.on(["GET", "POST"], "/api/auth/*", (c) => createAuth(c.env).handler(c.req.ra
 
 // 死活監視用のエンドポイント
 app.get("/api/health", (c) => c.json({ status: "ok" }));
-
-// /api/ 以外はすべて静的ファイル(SPA)として返す
-app.get("*", serveAssets);
 
 export default app;

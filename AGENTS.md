@@ -108,3 +108,7 @@ shukanlog は、服薬・運動・カロリーを記録し、週・月で振り�
 7. Email Sending で、登録していない任意の宛先に送るには Workers Paid プランが必要。開発・テストでは console / memory のメール送信を使う
 8. Turnstile の検証は、フロントエンドにウィジェットを置くだけでは防御にならない。サーバー側で siteverify API を呼んで検証する。ローカル・テストでは Cloudflare 公式のテスト用キーを使う
 9. テストスクリプトが監視モードのままだと CI やエージェントからの実行が終了しない。`test` は 1 回だけ実行して終了する形にする
+
+## スタイルの方針(CSP)
+
+CSP は style 要素・外部CSS を `'self'` のみ許可し(`style-src-elem`)、style 属性だけ `'unsafe-inline'` で許可している(`style-src-attr`)。固定の見た目は必ず CSS のクラスで書き、style 属性はグラフの棒の高さのような、実行時の計算でしか決まらない値にのみ使う。

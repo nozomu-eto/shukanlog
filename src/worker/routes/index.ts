@@ -7,6 +7,7 @@ import { buildMeResponse } from "./me";
 import { consentBodySchema } from "./consent";
 import { ensureConsentAndInitialData } from "../db/ensure-initial-data";
 import { buildDayResponse } from "./days";
+import { habitLogBodySchema, putHabitLog } from "./habit-logs";
 import { POLICY_VERSION } from "../../shared/policy";
 import { isFuture, isValidDateString, todayInTokyo } from "../../shared/domain/date";
 import type { AppEnv } from "../types";
@@ -82,4 +83,21 @@ apiRouter.get("/days/:date", async (c) => {
 	return c.json(body);
 });
 
-// 各APIのハンドラは、この後のタスク(T13以降)でこのルーターに追加していく
+// 習慣の記録を作成・更新・取り消す(resultがnullなら取り消し=未記録に戻す)
+apiRouter.put("/habit-logs", validate("json", habitLogBodySchema), async (c) => {
+	const input = c.req.valid("json");
+	if (!isValidDateString(input.date) || isFuture(input.date, todayInTokyo())) {
+		return c.json(
+			{ error: { code: "VALIDATION_ERROR", message: "日付の指定が不正です" } },
+			400,
+		);
+	}
+
+	const result = await putHabitLog(c.env, c.get("userId"), input);
+	if (!result.ok) {
+		return c.json({ error: { code: result.code, message: result.message } }, result.status);
+	}
+	return c.json(result.body);
+});
+
+// 各APIのハンドラは、この後のタスク(T14以降)でこのルーターに追加していく

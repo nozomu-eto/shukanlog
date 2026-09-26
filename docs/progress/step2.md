@@ -21,7 +21,7 @@
 - [x] T10: 認証が必要なAPIの共通の仕組み
 - [x] T11: 自分の情報と同意のAPI
 - [x] T12: 日ごとの記録を取得するAPI
-- [ ] T13: 習慣の記録API
+- [x] T13: 習慣の記録API
 - [ ] T14: カロリー記録のAPI
 - [ ] T15: プロフィールのAPI
 - [ ] T16: 週・月の集計API
@@ -121,3 +121,10 @@
 - 習慣とその日の記録は、habitテーブルとhabit_logテーブルを`leftJoin`で結合する1クエリで取得し、日ごとに個別のクエリを発行しない実装にした(未記録の習慣はresultがnullのまま返る)
 - カロリー記録の無効判定は、profile行が無い(まだ同意していない、通常はrequireConsentで弾かれるため実運用では起きないが)場合のフォールバックとして既定値trueを使うようにした
 - このファイルでもBetter Authの新規登録レート制限に抵触しないよう、signUpAndSignInの呼び出しを2回に抑え、1人の利用者で複数の日付・観点(記録あり/なし/未来/不正な日付)をまとめて確認する構成にした
+
+### T13
+
+- 作成・更新は`onConflictDoUpdate({ target: [habitLog.habitId, habitLog.recordDate], set: {...} })`で1つのINSERT文にまとめた(T9の一意制約`habit_log_habit_record_date_unique`をconflict targetとして使う)
+- 「他人の習慣・存在しない習慣を区別させない」という指示に沿って、habitの取得条件に`userId`を含め(`and(eq(habit.id, habitId), eq(habit.userId, userId))`)、見つからない場合は理由を区別せず同じ404にした
+- 日付の未来チェックはT12と同様にルーター側(index.ts)で行い、habitの所有者チェックやpartialの妥当性チェックはハンドラの実装(habit-logs.ts)側で行う分担にした
+- このファイルでの新規登録は3回(自分の習慣の作成・更新・取り消し・partialの400・未来日の400を1人でまとめて確認、他人の習慣への404を確認する2人目、というテスト構成)で、Better Authのレート制限の上限(60秒に3回)ちょうどに収めた

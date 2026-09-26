@@ -20,7 +20,7 @@
 - [x] T9: パスワードの変更(/app/settings/password)
 - [x] T10: 退会の仕組み(サーバー)
 - [x] T11: 退会の画面(/app/settings/withdraw)
-- [ ] T12: 退会から30日後の完全削除(定期処理)
+- [x] T12: 退会から30日後の完全削除(定期処理)
 - [ ] T13: メール未確認ユーザーの削除(定期処理)
 - [ ] T14: 利用規約・プライバシーポリシーのページ(/terms、/privacy)
 - [ ] T15: ライセンスのページ(/licenses)
@@ -120,3 +120,11 @@
 - 成功後は、サーバー側で全セッションを無効化済みだが、クライアント側のBetter Authのセッションキャッシュが残っているとトップページ(/)がログイン済みと判定して/appへ戻してしまうため、`authClient.signOut()`を呼んでからトップページへ`state`でメッセージを渡して移動するようにした。トップページ(top.tsx)に、ログイン画面と同様の`location.state.message`表示(`role="status"`のバナー)を追加した
 - 「/appでトーストを1回だけ表示する」は、日週月タブの入り口であるTabsRoute(tabs.tsx)にGET /api/me(既にday-tab等でも使っているキャッシュキー`["me"]`)を見て、`justCanceledWithdrawal`がtrueならトーストを表示する実装にした。「1回だけ」は、ブラウザのタブを閉じるまでの間だけ有効なsessionStorageのフラグで制御する(サーバー側は10分の時間窓のみを保証し、実際に1回だけ見せる制御はクライアント側の責務、というT10での判断を実装した)
 - テスト(settings-withdraw.test.tsx、tabs.test.tsx)は、パスワード入力・送信でsignOut→トップページへの遷移、パスワード未入力では送信されないこと、justCanceledWithdrawalがtrueのときだけトーストが表示されることを確認した
+
+### T12
+
+- Workerのモジュール形式(export default { fetch, scheduled })で、`scheduled`ハンドラを追加した(src/worker/index.ts)。既存のHonoアプリ(app.fetch)はそのまま`fetch`に渡し、`scheduled`は新設の`src/worker/scheduled/purge.ts`の`runScheduledPurge`を呼ぶだけにした
+- wrangler.jsonに`triggers.crons: ["0 18 * * *"]`(UTC 18:00 = 日本時間3:00)を追加した。開発用(トップレベル)・本番(env.production)の両方に設定した(本番だけ設定すると、pnpm devでの動作確認ができないため)
+- D1が外部キーのON DELETE CASCADEを実際に有効にしているかどうかは、ドキュメントを読むだけでなく実際にテストで確認する必要があると判断し、test/worker/scheduled-purge.test.tsで退会済みユーザーのuser行を削除した後にsession・habit・calorie_log・account_deletionの行がすべて消えていることを確認した。結果、D1は既定でPRAGMA foreign_keys相当が有効になっており、明示的な削除コードは不要だった
+- テストで`worker.scheduled(controller, env, ctx)`を直接呼び出す(`createScheduledController()`・`createExecutionContext()`は`@cloudflare/vitest-plugin`が提供する)ため、`src/worker/index.ts`のexportを`ExportedHandler<Env>`型の変数として明示的に型付けした(オブジェクトリテラルのまま`export default`すると、実装した関数の引数の数(2つ)がexportの型として推論され、3引数で呼ぶテストが型エラーになったため)
+- 1回の定期処理で削除する件数に上限(100件)を設け、削除件数のみをログに出す(メールアドレス等は出さない)

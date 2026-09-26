@@ -1,38 +1,33 @@
-import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router";
+import { useQuery } from "@tanstack/react-query";
+import { authClient } from "../../lib/auth-client";
+import { getMe } from "../../api/me";
 
-type AuthState = "loading" | "authenticated" | "unauthenticated";
-
-// /app配下のページをまとめて保護するガード。ログインしていなければ/loginへ移動する。
-// 利用規約への同意状況による振り分けはステップ3で追加する
+// /app配下のページをまとめて保護するガード。
+// - ログインしていなければ/loginへ
+// - ログイン済みでも、現在の利用規約に未同意なら/consentへ(GET /api/meのconsent.agreedを見る)
+// 判定中(セッション確認・GET /api/me取得のどちらか)は、画面がちらつかないよう何も表示しない
 export function RequireAuth() {
-	const [authState, setAuthState] = useState<AuthState>("loading");
+	const { data: session, isPending: isSessionPending } = authClient.useSession();
 
-	useEffect(() => {
-		let cancelled = false;
+	const meQuery = useQuery({
+		queryKey: ["me"],
+		queryFn: getMe,
+		// セッションが確認できてから呼ぶ(未ログインの状態でGET /api/meを呼んでも401になるだけのため)
+		enabled: !!session,
+	});
 
-		fetch("/api/auth/get-session")
-			.then((res) => (res.ok ? res.json() : null))
-			.then((session) => {
-				if (cancelled) return;
-				setAuthState(session ? "authenticated" : "unauthenticated");
-			})
-			.catch(() => {
-				if (cancelled) return;
-				setAuthState("unauthenticated");
-			});
-
-		return () => {
-			cancelled = true;
-		};
-	}, []);
-
-	if (authState === "loading") {
+	if (isSessionPending) {
 		return null;
 	}
-
-	if (authState === "unauthenticated") {
+	if (!session) {
 		return <Navigate to="/login" replace />;
+	}
+	if (meQuery.isPending) {
+		return null;
+	}
+	if (meQuery.isSuccess && !meQuery.data.consent.agreed) {
+		return <Navigate to="/consent" replace />;
 	}
 
 	return <Outlet />;

@@ -1,0 +1,21 @@
+/* トースト。画面下部中央、塗り#1F1F1Dの丸い帯。docs/design.md 6章 */
+.container {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 32px;
+	display: flex;
+	justify-content: center;
+	pointer-events: none;
+	z-index: 100;
+}
+
+.toast {
+	background: var(--color-text);
+	color: #ffffff;
+	font-family: var(--font-body);
+	font-size: 14px;
+	font-weight: 500;
+	padding: 12px 20px;
+	border-radius: 999px;
+}

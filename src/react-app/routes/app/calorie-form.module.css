@@ -1,0 +1,62 @@
+/* カロリーの記録・編集ダイアログの中身。docs/design/mockups/CalorieForm.dc.html・CalorieFormPC.dc.html */
+.stack {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.dateLabel {
+	font-size: 13px;
+	line-height: 1.6;
+	color: var(--color-text-muted);
+}
+
+.kcalRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.kcalUnit {
+	font-size: 15px;
+	font-weight: 500;
+}
+
+.deleteSection {
+	border-top: 1px solid var(--color-border-subtle);
+	padding-top: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.deleteLink {
+	align-self: center;
+}
+
+.confirm {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.confirmText {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 700;
+}
+
+.confirmActions {
+	display: flex;
+	gap: 8px;
+}
+
+.confirmActions > * {
+	flex: 1 1 0;
+}
+
+.formError {
+	margin: 0;
+	font-size: 13px;
+	color: var(--color-error);
+}

@@ -1,0 +1,308 @@
+/* 日タブ。docs/design/mockups/Day.dc.html・DayPC.dc.html に合わせる */
+.periodBar {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	padding: 12px 12px 4px;
+}
+
+.navButton {
+	width: 44px;
+	height: 44px;
+	border: none;
+	background: transparent;
+	border-radius: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	color: var(--color-text);
+	text-decoration: none;
+}
+
+.navButton[aria-disabled="true"] {
+	color: var(--color-future-border);
+	cursor: default;
+	pointer-events: none;
+}
+
+.dateBlock {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	min-height: 44px;
+	justify-content: center;
+}
+
+.dateHeading {
+	margin: 0;
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 22px;
+}
+
+.todayLabel {
+	font-size: 12px;
+	color: var(--color-text-muted);
+}
+
+.todayButton {
+	min-height: 44px;
+	padding: 0 16px;
+	border-radius: 999px;
+	border: 1px solid var(--color-text);
+	background: var(--color-surface);
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--color-text);
+	cursor: pointer;
+}
+
+.body {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 4px 20px 16px;
+}
+
+.card {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 16px;
+	padding: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.cardHeader {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+}
+
+.cardTitle {
+	margin: 0;
+	font-family: var(--font-heading);
+	font-size: 17px;
+	font-weight: 700;
+}
+
+.cardHint {
+	font-size: 13px;
+	color: var(--color-text-muted);
+}
+
+.options {
+	display: flex;
+	gap: 8px;
+}
+
+.option {
+	flex: 1 1 0;
+	min-height: 52px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	border-radius: 12px;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	color: var(--color-text);
+}
+
+.optionCompleted {
+	background: var(--color-completed-bg);
+	border: 2px solid var(--color-completed-border);
+	color: var(--color-completed-text);
+	font-weight: 700;
+}
+
+.optionPartial {
+	background: var(--color-partial-bg);
+	border: 2px solid var(--color-partial-border);
+	color: var(--color-partial-text);
+	font-weight: 700;
+}
+
+.optionNotCompleted {
+	background: var(--color-not-completed-bg);
+	border: 2px solid var(--color-not-completed-border);
+	color: var(--color-not-completed-text);
+	font-weight: 700;
+}
+
+.welcomeCard {
+	gap: 6px;
+}
+
+.welcomeDesc {
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.7;
+	color: var(--color-text-muted);
+}
+
+.errorCard {
+	border: 1.5px solid var(--color-error);
+	gap: 10px;
+}
+
+.errorTitle {
+	margin: 0;
+	font-family: var(--font-heading);
+	font-size: 17px;
+	font-weight: 700;
+	color: var(--color-error);
+}
+
+.errorDesc {
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.7;
+}
+
+.skeletonCard {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.skeletonRow {
+	display: flex;
+	gap: 8px;
+}
+
+.calorieHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.recordButton {
+	min-height: 44px;
+	padding: 0 14px;
+	border-radius: 12px;
+	border: 1.5px solid var(--color-text);
+	background: var(--color-surface);
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--color-text);
+	cursor: pointer;
+	text-decoration: none;
+}
+
+.calorieTotal {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.calorieTotalValue {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 24px;
+}
+
+.calorieTotalUnit {
+	font-size: 13px;
+	font-weight: 500;
+	margin-left: 4px;
+}
+
+.calorieList {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.calorieItem {
+	width: 100%;
+	min-height: 48px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	border: none;
+	border-top: 1px solid var(--color-border-subtle);
+	background: transparent;
+	padding: 0 2px;
+	font-size: 15px;
+	color: var(--color-text);
+	box-sizing: border-box;
+	cursor: pointer;
+	text-align: left;
+}
+
+.calorieItemValue {
+	font-family: var(--font-heading);
+	font-weight: 500;
+}
+
+.calorieEmpty {
+	margin: 4px 0;
+	font-size: 14px;
+	color: var(--color-text-muted);
+}
+
+.disclaimer {
+	margin: auto 0 0;
+	font-size: 12px;
+	line-height: 1.7;
+	color: var(--color-text-muted);
+	text-align: center;
+}
+
+@media (min-width: 1024px) {
+	.body {
+		width: 1040px;
+		margin: 0 auto;
+		padding: 24px 0;
+	}
+
+	.periodBar {
+		width: 1040px;
+		margin: 0 auto;
+		padding: 24px 0 0;
+		gap: 12px;
+		justify-content: flex-start;
+	}
+
+	.navButton {
+		border: 1px solid var(--color-border);
+		background: var(--color-surface);
+	}
+
+	.dateHeading {
+		font-size: 26px;
+	}
+
+	.columns {
+		display: grid;
+		grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+		gap: 24px;
+		align-items: start;
+	}
+
+	.card {
+		border-radius: 18px;
+		padding: 20px;
+	}
+
+	.cardTitle {
+		font-size: 19px;
+	}
+
+	.option {
+		min-height: 60px;
+		font-size: 15px;
+	}
+}

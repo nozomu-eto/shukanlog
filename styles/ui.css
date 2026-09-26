@@ -32,3 +32,14 @@ h3 {
 	outline: 2px solid var(--color-text);
 	outline-offset: 2px;
 }
+
+/* 読み上げ専用(見た目には表示しない)テキスト。読み込み中の状態などをスクリーンリーダーにだけ伝える */
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+}

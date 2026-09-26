@@ -49,7 +49,7 @@ function deleteCalorieLog(cookie: string, id: string) {
 	});
 }
 
-// Better Authの新規登録レート制限(60秒に3回)に抵触しないよう、このファイルでのsignUpAndSignInは3回に抑える
+// signUpAndSignInは利用者ごとに別のIPアドレスを使うため、新規登録のレート制限に抵触せず呼び出せる
 describe("カロリー記録のAPI", () => {
 	it("作成・更新・削除ができ、入力上限の境界値を確認できる", async () => {
 		const { cookie } = await signUpAndSignIn("calorie-a");

@@ -1,0 +1,61 @@
+/* 入力欄。docs/design.md 6章(高さ48px、枠線1px、角丸12px、文字16px) */
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.label {
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.help {
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.6;
+	color: var(--color-text-muted);
+}
+
+.inputRow {
+	display: flex;
+	gap: 8px;
+}
+
+.input {
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 0;
+	flex: 1 1 auto;
+	height: 48px;
+	border-radius: 12px;
+	border: 1px solid var(--color-input-border);
+	background: var(--color-surface);
+	padding: 0 14px;
+	font-family: var(--font-body);
+	font-size: 16px;
+	color: var(--color-text);
+}
+
+.input[aria-invalid="true"] {
+	border-color: var(--color-error);
+}
+
+.toggle {
+	flex-shrink: 0;
+	min-width: 64px;
+	height: 48px;
+	border-radius: 12px;
+	border: 1px solid var(--color-input-border);
+	background: var(--color-surface);
+	font-family: var(--font-body);
+	font-size: 14px;
+	color: var(--color-text);
+	cursor: pointer;
+}
+
+.error {
+	margin: 0;
+	font-size: 13px;
+	color: var(--color-error);
+}

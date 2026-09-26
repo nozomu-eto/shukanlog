@@ -8,7 +8,7 @@
 	"main": "./src/worker/index.ts",
 	// compatibility_date は作業日の日付にする(既知の落とし穴1: 2026-03-03より前だと
 	// Better Authのログイン失敗時に「未処理のPromise拒否」が誤検知されテストが失敗する)
-	"compatibility_date": "2026-09-25",
+	"compatibility_date": "2026-08-18",
 	"compatibility_flags": ["nodejs_compat"],
 	"observability": {
 		"enabled": true

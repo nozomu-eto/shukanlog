@@ -1,0 +1,108 @@
+/* /app配下の共通の枠(ヘッダー・日週月の切り替え)。docs/design.md 5章 */
+.page {
+	min-height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.header {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	grid-template-areas: "brand settings" "tabs tabs";
+	align-items: center;
+	column-gap: 8px;
+	padding: 8px 12px 0 20px;
+	box-sizing: border-box;
+}
+
+.brand {
+	grid-area: brand;
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 20px;
+	height: 56px;
+	display: flex;
+	align-items: center;
+}
+
+.settingsLink {
+	grid-area: settings;
+	width: 44px;
+	height: 44px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 12px;
+	color: var(--color-text);
+	text-decoration: none;
+}
+
+.settingsText {
+	display: none;
+}
+
+.tabs {
+	grid-area: tabs;
+	margin: 8px 8px 0;
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 4px;
+	padding: 4px;
+	background: var(--color-tab-background);
+	border-radius: 14px;
+}
+
+.tab {
+	height: 44px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 10px;
+	font-size: 15px;
+	font-weight: 500;
+	color: var(--color-text-muted);
+	text-decoration: none;
+}
+
+.tabActive {
+	font-weight: 700;
+	color: #ffffff;
+	background: var(--color-text);
+}
+
+.main {
+	flex-grow: 1;
+}
+
+@media (min-width: 1024px) {
+	.header {
+		grid-template-columns: 1fr 300px 1fr;
+		grid-template-areas: "brand tabs settings";
+		height: 72px;
+		padding: 0 40px;
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.brand {
+		font-size: 22px;
+		height: auto;
+	}
+
+	.settingsLink {
+		justify-self: end;
+		width: auto;
+		min-height: 44px;
+		padding: 0 12px;
+		gap: 8px;
+		font-size: 15px;
+		font-weight: 500;
+	}
+
+	.settingsText {
+		display: inline;
+	}
+
+	.tabs {
+		margin: 0;
+	}
+}

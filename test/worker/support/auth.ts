@@ -20,6 +20,15 @@ function extractCookieHeader(res: Response): string {
 	return setCookie.split(";")[0];
 }
 
+// 利用者ごとに一意なIPアドレス(10.x.x.x の範囲)を発行する。
+// Better Authのレート制限はcf-connecting-ipヘッダーのIPアドレスごとにカウンタが分かれるため、
+// 呼び出しごとに別のIPアドレスを使うことで、レート制限自体は有効なまま
+// (auth-rate-limit.test.tsで別途確認済み)、テストの利用者同士が互いのカウンタに影響しないようにする
+function randomTestIp(): string {
+	const octet = () => Math.floor(Math.random() * 254) + 1;
+	return `10.${octet()}.${octet()}.${octet()}`;
+}
+
 // テスト用に、新規登録→メール確認→ログインまでを行い、セッションのCookieを取得する。
 // 認証・同意が必要なAPIのテストで、ログイン済みの状態を作るために使う
 export async function signUpAndSignIn(emailPrefix = "user"): Promise<{ email: string; cookie: string }> {
@@ -27,10 +36,17 @@ export async function signUpAndSignIn(emailPrefix = "user"): Promise<{ email: st
 	stubTurnstileSiteverify(true);
 	const email = `${emailPrefix}-${crypto.randomUUID()}@example.com`;
 	const password = "password123";
+	// この利用者専用のIPアドレスを使うことで、同じテストファイル内で何度呼び出しても
+	// 新規登録のレート制限(60秒に3回)に抵触しない
+	const ip = randomTestIp();
 
 	const signUpRes = await SELF.fetch("https://example.com/api/auth/sign-up/email", {
 		method: "POST",
-		headers: { "content-type": "application/json", "x-turnstile-token": "valid-token" },
+		headers: {
+			"content-type": "application/json",
+			"x-turnstile-token": "valid-token",
+			"cf-connecting-ip": ip,
+		},
 		body: JSON.stringify({ email, password, name: "テストユーザー" }),
 	});
 	if (signUpRes.status >= 400) {
@@ -46,7 +62,7 @@ export async function signUpAndSignIn(emailPrefix = "user"): Promise<{ email: st
 
 	const verifyRes = await SELF.fetch("https://example.com/api/auth/email-otp/verify-email", {
 		method: "POST",
-		headers: { "content-type": "application/json" },
+		headers: { "content-type": "application/json", "cf-connecting-ip": ip },
 		body: JSON.stringify({ email, otp: code }),
 	});
 	if (verifyRes.status >= 400) {
@@ -55,7 +71,7 @@ export async function signUpAndSignIn(emailPrefix = "user"): Promise<{ email: st
 
 	const signInRes = await SELF.fetch("https://example.com/api/auth/sign-in/email", {
 		method: "POST",
-		headers: { "content-type": "application/json" },
+		headers: { "content-type": "application/json", "cf-connecting-ip": ip },
 		body: JSON.stringify({ email, password }),
 	});
 	if (signInRes.status >= 400) {

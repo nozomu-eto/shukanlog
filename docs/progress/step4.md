@@ -9,7 +9,7 @@
 
 ## タスク一覧
 
-- [ ] T1: compatibility_date のルールを直す
+- [x] T1: compatibility_date のルールを直す
 - [ ] T2: 記録の楽観的更新を公式の書き方に揃える
 - [ ] T3: 期間の移動の共通部品
 - [ ] T4: 週タブ
@@ -37,3 +37,8 @@
 - git status確認: 未コミットの変更なし。stash不要
 - `git fetch origin` 後、origin/main(5ca5c0d)に docs/progress/step3.md・src/react-app/routes/app/day-tab.tsx が含まれること、wrangler.json の compatibility_date が 2026-08-18 であることを確認した
 - `git checkout -b feat/ui-settings origin/main` でブランチを作成した(worktreeの制約は今回発生しなかった)
+
+### T1
+
+- AGENTS.md・docs/architecture.md・wrangler.jsonのコメントを、「compatibility_dateは2026-03-03以降、かつpnpm devの実行環境が対応している日付にする(依存パッケージ更新時に上げてよい)」「動作確認はpnpm devで行う」に直した。現在の値(2026-08-18)はpnpm devで起動できることを確認済みのため変更していない
+- docs/progress/step3.mdのT11のチェックボックスを[x]に直した(判断ログには記載済みだったが付け忘れていた)

@@ -6,8 +6,10 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "shukanlog",
 	"main": "./src/worker/index.ts",
-	// compatibility_date は作業日の日付にする(既知の落とし穴1: 2026-03-03より前だと
-	// Better Authのログイン失敗時に「未処理のPromise拒否」が誤検知されテストが失敗する)
+	// compatibility_date は 2026-03-03 以降(既知の落とし穴1: それより前だとBetter Authの
+	// ログイン失敗時に「未処理のPromise拒否」が誤検知されテストが失敗する)、かつ pnpm dev の
+	// 実行環境(@cloudflare/vite-plugin同梱のworkerd)が対応している日付にする。依存パッケージを
+	// 更新したときに、より新しい日付に上げてよい(動作確認は pnpm dev で行う)
 	"compatibility_date": "2026-08-18",
 	"compatibility_flags": ["nodejs_compat"],
 	"observability": {

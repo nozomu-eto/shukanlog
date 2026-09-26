@@ -1,0 +1,5 @@
+/* 読み込み中のカードの形の灰色の枠。docs/design.md 6章 */
+.skeleton {
+	border-radius: 10px;
+	background: var(--color-skeleton);
+}

@@ -1,0 +1,57 @@
+/* 未ログイン向けの画面の枠(ヘッダー)。docs/design.md 5章 */
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 4px;
+	height: 56px;
+	padding: 8px 12px 0 20px;
+	box-sizing: border-box;
+}
+
+.brand {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.serviceName {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 20px;
+	text-decoration: none;
+	color: var(--color-text);
+}
+
+.back {
+	width: 44px;
+	height: 44px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 12px;
+	color: var(--color-text);
+}
+
+.loginLink {
+	min-height: 44px;
+	padding: 0 12px;
+	display: flex;
+	align-items: center;
+	font-size: 14px;
+	font-weight: 700;
+	text-decoration: none;
+	color: var(--color-text);
+}
+
+@media (min-width: 1024px) {
+	.header {
+		height: 72px;
+		padding: 0 40px;
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.serviceName {
+		font-size: 22px;
+	}
+}

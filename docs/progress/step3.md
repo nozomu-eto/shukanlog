@@ -12,7 +12,7 @@
 - [x] T1: 集計APIで「記録なし」と「0kcal」を区別する
 - [x] T2: テストの新規登録の回数制限を外す
 - [x] T3: 画面の土台(データ取得・認証クライアント・API クライアント)
-- [ ] T4: 共通の部品
+- [x] T4: 共通の部品
 - [ ] T5: トップページ(/)
 - [ ] T6: ログイン(/login)
 - [ ] T7: 新規登録(/signup)と Turnstile
@@ -58,3 +58,14 @@
 - Turnstileのサイトキーは .env.example に VITE_TURNSTILE_SITE_KEY として用意し、値はCloudflare公式のテスト用サイトキー(常に成功する 1x00000000000000000000AA)にした。実際にVITE_TURNSTILE_SITE_KEYを読んで使う実装(Turnstileウィジェット部品)はT7で行う
 - eslint-plugin-jsx-a11y を導入し、eslint.config.js に jsxA11y.flatConfigs.recommended を追加した
 - main.tsx にQueryClientProviderを追加した。トースト表示の仕組み(ToastProvider)はT4で作るため、main.tsxへの組み込みはT4のコミットで行う
+
+### T4
+
+- ボタン(Button.tsx)は、a要素として使う場合(to=アプリ内遷移、href=外部リンク・mailto)とbutton要素の両方を1つのコンポーネントで扱えるようにし、見た目(primary/secondary/danger/inline)はCSSクラスで共通化した。jsx-a11yのanchor-has-contentがrest展開のchildrenを静的解析できず誤検知したため、コメント付きで無効化した
+- 入力欄はTextField、パスワード欄は表示/隠すの切り替え(aria-pressed)を持つPasswordFieldとして分けた。どちらもuseIdでid/aria-describedby/aria-invalidを自動で組み立てる
+- トースト(Toast.tsx)はReact Contextで実装し、ToastProviderをmain.tsxでアプリ全体に1つだけ配置、useToast()でどこからでも呼び出せるようにした。2秒(TOAST_DURATION_MS)で自動的に消える
+- スケルトン(Skeleton.tsx)は幅・高さが呼び出し側ごとに異なる(グラフの棒と同様、あらかじめCSSクラスを用意しきれない値)ため、AGENTS.mdの例外(実行時にしか決まらない値)に該当すると判断し、style属性で幅・高さだけを指定する設計にした
+- ダイアログ(Dialog.tsx)はネイティブのdialog要素+showModal()を使い、openプロパティがfalseの間はdialog自体をDOMに置かない設計にした。フォーカスの復帰は、ブラウザ標準の挙動に加えて、開く前にフォーカスされていた要素を明示的に記録して閉じたときに自分でfocus()する実装にした(jsdomがshowModal()のフォーカス復帰を実装していないため、テストのためにも自前で保証する必要があった)
+- jsdomが`<dialog>`のshowModal()/close()、Escキーでのcancelイベントを実装していないため、test/frontend/setup.tsに最小限のポリフィルを追加した(実ブラウザの完全な再現ではなく、テストに必要な範囲のみ)
+- test.globalsを有効にしていないため、@testing-library/reactの自動cleanup(afterEachでのunmount)が効かないことに気づき、test/frontend/setup.tsに明示的なafterEach(cleanup)を追加した(1ファイル内で複数のitが同じ部品を描画するテストが増えるこのステップ以降で必要になるため)
+- 未ログイン向けの画面の枠(UnauthHeader.tsx)は、サービス名のみ・戻る矢印付き・「ログイン」リンク付きの組み合わせをprops(backTo, showLogin)で切り替えられるようにした

@@ -16,7 +16,7 @@
 - [x] T5: トップページ(/)
 - [x] T6: ログイン(/login)
 - [x] T7: 新規登録(/signup)と Turnstile
-- [ ] T8: 確認コードの入力(/verify)
+- [x] T8: 確認コードの入力(/verify)
 - [ ] T9: パスワードの再設定(/reset、/reset/new)
 - [ ] T10: 画面の振り分け
 - [ ] T11: 利用規約への同意(/consent)
@@ -91,3 +91,11 @@
 - 新規登録のsignUp.email()にはnameが必須(better-authの既定スキーマ)だが、モックアップ・仕様に氏名の入力欄が無いため、name には email の値をそのまま渡すことにした(利用者に別途名前を入力させない判断)
 - Turnstileのサイトキーは`import.meta.env.VITE_TURNSTILE_SITE_KEY`から読み、未設定時はCloudflare公式のテスト用サイトキーにfallbackする(T3で用意した.env.exampleの値と同じ)
 - 登録に成功したら、メールアドレスをsessionStorage(pending-email.ts)とreact-routerのstateの両方で/verifyへ渡す
+
+### T8
+
+- **確認後に自動でログインする方式にした**。better-authのソース(email-otp/routes.mjsのverifyEmailOTP、api/routes/email-verification.mjs)を確認し、`ctx.context.options.emailVerification?.autoSignInAfterVerification`がtrueの場合、確認コード検証の成功時にそのまま`internalAdapter.createSession()`→`setSessionCookie()`が呼ばれてログイン済みになる実装であることを確認した。src/worker/auth/options.tsに`emailVerification: { autoSignInAfterVerification: true }`を追加した(T3のコミット時点では保留にしていたオプション追加をこのT8でコミットする)
+- 上記により、/verifyで確認コードの検証に成功したら、そのまま/consentへ移動する実装にした(ログイン画面を経由しない)
+- 受け渡されたメールアドレスが無い場合(react-routerのstateにもsessionStorageにも無い)は/signupへ移動する
+- 「確認コードを再送する」は、押した瞬間に60秒のカウントダウンを開始し、0になるまでボタンをdisabledにする実装にした
+- emailOTPプラグインのエラーコード(EMAIL_OTP_ERROR_CODES)を確認し、INVALID_OTP(コードが正しくない)・OTP_EXPIRED(期限切れ)の2つだけが定義されていることを確認して、それぞれ個別の文言を出し分けるようにした

@@ -21,7 +21,7 @@
 - [x] T10: 画面の振り分け
 - [ ] T11: 利用規約への同意(/consent)
 - [x] T12: アプリの枠(ヘッダー・日週月の切り替え)
-- [ ] T13: 日タブ(記録の表示と保存)
+- [x] T13: 日タブ(記録の表示と保存)
 - [ ] T14: カロリーの記録・編集
 - [ ] T15: 画面の動作確認
 - [ ] T16: ドキュメント
@@ -125,3 +125,12 @@
 - 日・週・月の切り替えはLinkの`to`をhrefFor(tab)で組み立て、現在の`date`クエリパラメータがあればそのまま引き継ぐ。選択中のタブに`aria-current="page"`を付けている
 - tabが週・月の場合と/app/settingsは、指示通りステップ4まで見出しだけの仮ページのままにした。/app/settingsにはログアウトボタンを仮に置き、ログアウト後は「ログアウトしました」をstateで渡して/loginへ移動する動作を確認できるようにした
 - router.tsxで、RequireAuthの子にAppShell(パスを持たないレイアウトルート)を挟み、その子として日週月タブ・設定系のルートを並べる3階層構成にした
+
+### T13
+
+- 表示する日付は、URLのdateクエリパラメータをsrc/shared/domain/dateのisValidDateString・isFutureで検証し、無い・不正・未来ならtodayInTokyo()の今日にフォールバックする実装にした(前へ・次へ・今日に戻るのリンクは、この解決後の日付を基準に組み立てる)
+- 記録の保存はreact-queryの`queryClient.setQueryData(["day", date], ...)`で楽観的更新し、`putHabitLog`が失敗したら保存前のデータ(`getQueryData`で退避しておいたもの)に戻す実装にした。useMutationは使わず、素朴なasync関数+try/catchにした(テストのしやすさと処理の見通しを優先した判断)
+- 「今日の記録をはじめましょう」のバナーは、GET /api/me(react-queryの`["me"]`キャッシュ、T10のガードと共有)のaccountCreatedDateが今日、かつその日の全習慣のresultがnullの場合に、通常の習慣カードに加えて表示する(モックアップDayEmpty.dc.htmlの通り、カード自体は隠さない)
+- 読み込み中はスケルトン(aria-hidden、読み上げ用に別途role="status"のテキストのみの要素)、取得失敗時は`role="alert"`のエラーカード+「再読み込み」ボタン(dayQuery.refetch())を表示する
+- 「次の日」は今日を表示中はリンクではなくaria-disabled="true"のspanにして、クリックしても遷移できないようにした(テストでtagNameがA(アンカー)でないことを確認)
+- テストはgetDay・putHabitLog・getMeをvi.mockし、保存→取り消し、保存失敗時の巻き戻し、今日は次の日へ進めないことを確認した(test/frontend/routes/day-tab.test.tsx)

@@ -1,0 +1,11 @@
+# ローカル開発用の環境変数のサンプル。コピーして .dev.vars を作る
+# .dev.vars 自体は .gitignore で除外されているため、機密情報を直接ここに書かない
+
+BETTER_AUTH_URL="http://localhost:5173"
+BETTER_AUTH_SECRET="REPLACE_WITH_RANDOM_SECRET"
+MAIL_TRANSPORT="console"
+MAIL_FROM_ADDRESS="noreply@example.com"
+
+# Turnstileの公式テスト用シークレットキー(常に検証が成功する)。
+# 失敗を試したい場合は 2x0000000000000000000000000000000AA に差し替える
+TURNSTILE_SECRET_KEY="1x0000000000000000000000000000000AA"

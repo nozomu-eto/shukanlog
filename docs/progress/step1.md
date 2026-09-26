@@ -1,0 +1,178 @@
+# ステップ1 進捗管理
+
+## T0: 作業前の準備
+
+- [x] git status確認(未コミットの変更なし。stash不要)
+- [x] docs/design.md、docs/week-month-tabs.md、docs/design/mockups/、docs/legacy/ の存在確認
+- [x] feat/foundation ブランチを作成
+- [x] docs/progress/step1.md を作成
+
+## タスク一覧
+
+- [x] T1: 雛形を整える
+- [x] T2: テストとlintの準備
+- [x] T3: wranglerの設定と本番環境の分離
+- [x] T4: D1とdrizzle
+- [x] T5: メール送信
+- [x] T6: Better Authの基本設定
+- [x] T7: 確認コード(6桁)による確認・パスワード再設定
+- [x] T8: 認証のレート制限
+- [x] T9: 新規登録のbot対策(Turnstile)
+- [x] T10: セキュリティヘッダとキャッシュ
+- [x] T11: デザインの基礎(色・文字)
+- [x] T12: アイコンとStatusIcon
+- [x] T13: 画面の骨組み(ルーティング)
+- [x] T14: ドキュメント
+- [x] T15: PRの作成(手動作成が必要。詳細は判断ログのT15を参照)
+
+## 判断ログ
+
+### T0(記録の訂正)
+
+- 以前のコミットで作成された本ファイルに、このリポジトリ以外のリポジトリ(../mokuhyo-planner、../kyurl-link)を参照した記述が誤って含まれていた。指示の最重要ルール「このリポジトリ以外のリポジトリは参照しない」に反するため、該当の記述を削除し、タスク一覧・T0のログを指示内容に合わせて書き直した。
+
+### T1
+
+- tsconfig のテスト用設定(tsconfig.test.json)は、T1時点では test/ 配下に実ファイルが存在せず、include が空だと tsc がエラーになるため、T2でテストファイルと同時に追加することにした。T1では既存のフロントエンド用(tsconfig.app.json)・Worker用(tsconfig.worker.json)の分割のみを維持する
+- React Router は react-router-dom を採用した(SPA として使うための標準的な選択で、公式ドキュメント上もライブラリモードでの利用が案内されている)
+- ルーティングの本実装(design.md 8章のURL一覧)はT13で行うため、T1では最小限のプレースホルダー("/" のみ)を用意した
+- styles/tokens.css・styles/ui.css は空の器としてT1で作成し、内容はT11で定義する
+- git remote が未設定(origin なし)で push できなかったため、ユーザーに確認したところ「push せずローカルでコミットのみ進める」との指示を受けた。以降のタスクはローカルコミットのみ行い、pushとT15のPR作成は行わない(T15で改めて記録する)
+
+### T2
+
+- Worker用のテストランナーは、当初 `@cloudflare/vitest-pool-workers` を導入しようとしたが、Cloudflare公式ドキュメント(2026-09-25時点)を確認したところ `@cloudflare/vitest-plugin`(`cloudflareTest()`)が pool-workers を置き換える現行パッケージであることが判明したため、こちらを採用した(Vitest 4.1以上が必要)
+- Worker用テストとフロントエンド用テストは、実行環境(実際のWorkersランタイム vs jsdom)が異なり1つの設定に同居できないため、ルートの vitest.config.ts の `test.projects` で test/worker/vitest.config.ts と test/frontend/vitest.config.ts の2つを束ねる構成にした
+- tsconfig.test.json をT1で見送った分、ここで追加した(test/ 配下に実ファイルができたため)
+- D1マイグレーションの適用の仕組み(readD1Migrations/applyD1Migrations)は、D1バインディング自体がまだ無いためT4で行うことにし、T2では /api/health の最小テストのみ用意した
+
+### T3
+
+- Cloudflare公式ドキュメントを確認したところ、`assets`と`main`(Worker)を両方設定した場合、既定では静的アセットが優先され、Workerは静的ファイルに一致しないリクエストにのみ実行される仕様だった。これだと /api/health も(一致する静的ファイルが無いため)SPAのフォールバックでindex.htmlが返ってしまう。`assets.run_worker_first: ["/api/*"]` を指定することで /api/ 配下は常にWorkerが処理するようにした。`wrangler dev`を実際に起動し、`/api/health`が200のJSON、`/`がSPAのHTMLを返すことを確認した
+- Wranglerの環境(env.production)は、compatibility_date/compatibility_flags/assetsなど一部のキーはトップレベルから引き継がれるが、vars・d1_databases・send_email・ratelimits などのバインディング系キーは環境ごとに完全に再定義が必要という公式ドキュメントの記載を確認し、production環境側に同じ形でバインディングを書いた
+- 開発用D1のdatabase_idは、実際のD1データベース作成をT4で行うため、T3時点では "REPLACE_WITH_DEV_D1_DATABASE_ID" のプレースホルダーにした(ローカル実行のみなら実IDが無くても`wrangler dev`は起動できることを確認済み)
+- Workers Rate Limitingバインディング(ratelimits)は、ログイン等の細かい制限はBetter AuthのcustomRules(T8)で行う方針のため、ここではAPI全体への過度なアクセスを防ぐ粗い制限(60秒に300回)として`API_RATE_LIMITER`を1つ定義した。用途はT8以降で検討する
+- send_emailバインディングは、開発・テストではconsole/memory実装を使いCloudflareのEmail Sendingを使わないため、production環境にのみ定義した
+- deploy:productionスクリプトはタスク指示通り作成したが実行はしていない
+
+### T4
+
+- src/worker/db/schema/index.ts は、認証テーブル(T6)やドメインテーブル(ステップ2以降)をまだ持たない空のバレルファイルとして用意した。この時点でテーブルが無いため `drizzle-kit generate` は「No schema changes」で何も生成しない。migrations/ の仕組み自体(readD1Migrations→miniflareのbindingsに注入→apply-migrations.tsでapplyD1Migrations)が正しく動くことは、D1へ `SELECT 1` を投げるテスト(test/worker/db.test.ts)で確認した。実際のテーブル定義・マイグレーションはT6以降で追加する
+- cloudflare:test の `env` の型は `Cloudflare.Env`(worker-configuration.d.tsのnamespace)であり、素のグローバル`Env`とは別物だったため、テスト専用のTEST_MIGRATIONSバインディングの型は `declare global { namespace Cloudflare { interface Env {...} } }` で拡張する必要があった(最初グローバルEnvを拡張して失敗した)
+- migrations/ ディレクトリはgitで空ディレクトリを追跡できないため .gitkeep を置いた
+
+### T5
+
+- Cloudflare公式ドキュメントを確認したところ、send_emailバインディングには生MIMEを組み立てる従来のEmailMessage方式に加え、`env.MAILER.send({ to, from, subject, text, html })` という構造化オブジェクトをそのまま渡せる新しいAPIがあることが分かったため、依存(mimetext)を増やさずに済むこちらを採用した
+- createMailerの引数型は、生成されたEnv型のMAIL_TRANSPORTがwrangler.jsonのvarsから導出されるリテラルユニオン("console"|"cloudflare")になっており"memory"を受け付けられないため、Mailer用に独自の最小限のMailerEnv型(MAIL_TRANSPORT: string)を定義して受け取るようにした。これによりテスト用の"memory"も型エラー無く渡せる
+- メモリ実装の送信記録は、モジュールスコープの配列に保持し、getSentMails/resetSentMailsで参照・初期化する方式にした(テストごとにbeforeEachでリセット)
+
+### T6
+
+- Better AuthのCLI(`@better-auth/cli`)はnpm上で「DEPRECATED」となっていた。現在の公式ドキュメントを確認したところ、CLIは`auth`という独立パッケージに移り、`npx auth generate --adapter drizzle --dialect sqlite`の形で使うことが分かったため、こちらを採用した。あわせて better-auth 本体もCLIと同じ1.7.6に揃えた
+- スキーマ生成専用に src/worker/auth/cli.config.ts を用意した。D1は実際のリクエスト時のバインディングでしか得られないため、CLI実行時は `drizzle({} as D1Database)` というダミーの接続でdrizzleAdapterの形だけを与えている(実際に接続はしない、生成のためだけの設定でありアプリのコードからは読み込まない)
+- Better Authのインスタンスは、Workerがリクエストごとに異なるenv(D1バインディング等)を受け取る都合上、モジュールスコープの単一インスタンスにはせず、`createAuth(env)`という関数でリクエストごとに生成する方式にした(Hono統合ドキュメントの推奨パターンに沿った)
+- BETTER_AUTH_SECRETはwrangler.jsonのvarsではなく、シークレット(開発は.dev.vars、本番はwrangler secret)として扱うことにした。型は生成されたEnv型に無いため、src/worker/env.d.tsで global の `Env` と `Cloudflare.Env` の両方を拡張する必要があった(cloudflare:testの`env`はCloudflare.Env型、Honoの`Bindings`は素のEnv型を使っており、両方を拡張しないと型エラーになった)。あわせて、この拡張がテスト用のtsconfig(tsconfig.test.json)のコンパイル対象にも含まれるよう include を修正した(含まれていないと、テストの型チェックだけ別プログラム扱いになり拡張が効かなかった)
+- requireEmailVerification: true を設定した状態で、メール確認用のコールバック(sendVerificationEmail)を何も設定せずに登録→ログインを試したところ、登録は成功しログインはエラーになることを実際にテストで確認した。確認コードでの確認・メールテンプレートの適用はT7で行う
+- 認証テーブル(user/session/account/verification)のマイグレーションは `npx auth generate` → `pnpm run db:generate` で生成した(migrations/0000_equal_daredevil.sql)
+
+### T7
+
+- emailOTPプラグインのオプションは、公式ドキュメントとインストール済みパッケージの型/実装(node_modules/better-auth/dist/plugins/email-otp/routes.mjs)を直接確認して決めた。otpLength: 6、expiresIn: 600(秒、10分)、allowedAttempts: 3(誤り試行の上限)、overrideDefaultEmailVerification: true(リンク方式をコード方式に置き換える公式オプション)を設定した
+- **メールアドレスの変更をコードで行えるかの調査結果**: 行える。emailOTPプラグインは同じプラグイン内に `changeEmail: { enabled: true, verifyCurrentEmail?: boolean }` というオプションを持ち、有効化すると `POST /api/auth/email-otp/request-email-change`(ログイン中のユーザーが新しいメールアドレス宛にコードを送る。currentEmailの確認を必須にするかはverifyCurrentEmailで選べる)と `POST /api/auth/email-otp/change-email`(コードで確定する)の2つのエンドポイントが使えるようになることを、実装コード(requestEmailChangeEmailOTP/changeEmailEmailOTP、sensitiveSessionMiddleware付き)で確認した。今回のT7では`changeEmail`オプションは有効化していない(画面の実装は指示によりステップ4で行うため)。ステップ4でこのオプションを`true`にし、対応する画面・APIを実装すればよい
+- パスワード再設定エンドポイント(/email-otp/reset-password)は、成功時に未確認だったメールアドレスも自動的にemailVerified: trueにする実装になっていた(実装コードで確認)。これはBetter Auth側の挙動であり、こちらで追加の対応は不要だった
+- 送信するメールの件名・本文は docs/legacy/email-templates.md の文面をそのまま使い、有効期限だけ元々10分表記だったのでそのまま踏襲した(書き換え不要だった)
+- emailOTPプラグインを追加しても、verification テーブルを再利用する実装のため、drizzleのスキーマ・マイグレーションに差分は発生しなかった(`npx auth generate`後にdiffなしを確認済み)
+
+### T8
+
+- customRulesのキーはBetter Authのエンドポイントのパス(例: "/sign-in/email")で、値は `{ window, max }`(秒・回数)であることを公式ドキュメントで確認した。指示にあった各制限を次のパスに割り当てた: ログイン→"/sign-in/email"(60/5)、新規登録→"/sign-up/email"(60/3)、確認コードの送信・再送→"/email-otp/send-verification-otp"(60/1)、コードの検証→"/email-otp/verify-email"(60/5)、パスワード再設定の要求→"/email-otp/request-password-reset"(300/3)
+- 指示に無かった判断として、パスワード再設定を確定するエンドポイント("/email-otp/reset-password")にもコード検証と同じ60秒5回の制限を追加した(このエンドポイント自体がOTP検証を兼ねているため、検証と同水準の制限が必要と判断した)
+- IPアドレスの取得は、rateLimitオプションではなくトップレベルの`advanced.ipAddress.ipAddressHeaders`で設定することをドキュメントで確認し、`["cf-connecting-ip"]`を指定した(既知の落とし穴2)
+- rateLimit.storage: "database" にしたことで rate_limit テーブルが追加になったため、`npx auth generate` → `pnpm run db:generate` を再実行し、新しいマイグレーション(migrations/0001_white_stepford_cuckoos.sql)を生成した
+- テストは、同一IPから6回連続でログイン失敗を試み、6回目が429になること、そして制限に達した後でも別IPからの試行は429にならないことを確認する形にした
+
+### T9
+
+- 公式ドキュメントでTurnstileのテスト用キーを確認した。secretは常に成功する `1x0000000000000000000000000000000AA` を.dev.vars.exampleに設定した(失敗させたい場合は `2x0000000000000000000000000000000AA` に差し替える旨をコメントで残した)
+- siteverify APIのリクエストは `secret`・`response`・`remoteip` のフィールド名、レスポンスは `success` の真偽値であることを公式ドキュメントで確認して実装した
+- 新規登録にTurnstileを必須にしたことで、T6・T7で書いた既存のテスト(サインアップを行うもの)がトークン無しで失敗するようになったため、共通のテストヘルパー(test/worker/support/turnstile.ts の stubTurnstileSiteverify)を作り、該当テストにヘッダーとモックを追加して修正した
+- Turnstileの検証はHonoのミドルウェア(src/worker/middleware/turnstile.ts)として実装し、`app.use("/api/auth/sign-up/email", turnstileMiddleware)` で対象パスのみに適用した。他の認証エンドポイント(ログイン・コード確認等)には適用していない(指示通り新規登録のみ)
+
+### T10
+
+- T3で `assets.run_worker_first` を `["/api/*"]` にしていたため、/api/ 以外の静的ファイルはWorkerを経由せず配信されており、このままではセキュリティヘッダを付けられないことに気づいた。`run_worker_first: true` に変更し、すべてのリクエストがWorkerを通るようにした上で、/api/ 以外を処理する `app.get("*", serveAssets)` を追加し、その中で `c.env.ASSETS.fetch()` を呼んで静的ファイルを取得している(ASSETSバインディングを新設)
+- ASSETSから返るレスポンスはヘッダーを直接変更できないため、`new Response(assetResponse.body, assetResponse)` で複製してからCache-Controlを付けている(既知の落とし穴3)。Honoの`secureHeaders`ミドルウェアは`app.use("*", ...)`でルーティングの外側にかけており、ハンドラが返した(複製済みの)レスポンスに対して後からヘッダーを追加する形になるため、ASSETSの元レスポンスを直接書き換えようとする問題は起きない
+- `wrangler dev`を実際に起動し、/api/health・/ (index.html)・存在しないパス・/assets/配下のファイルの4パターンで、指定した全ヘッダー(HSTS・X-Content-Type-Options・Referrer-Policy・X-Frame-Options・CSP Report-Only)とアセットのCache-Controlが実際に付くことを確認した
+- CSPはReport-Onlyでの導入のみとし(指示通り)、違反を収集する仕組み(report-uri/report-to)はこのステップでは設定していない(将来必要になれば追加する)
+
+### T11
+
+- 色・文字のCSS変数は docs/design.md 2章・3章の表をそのままstyles/tokens.cssの変数にした(T1で作った空の器を埋める形)
+- Fontsourceは、パッケージ内に太さごとの個別CSSファイル(400.css/500.css/700.css)が用意されていることを確認し、必要な太さ(Zen Maru Gothic: 500,700 / Zen Kaku Gothic New: 400,500,700)だけをmain.tsxでインポートした(全体をまとめて読み込むファイルは使っていない)
+- フォーカス表示は `:focus-visible` に対して outline 2px 実線・オフセット2pxを指定した(指示の色 #1F1F1D は --color-text と同じ値のため変数を使った)
+
+### T12
+
+- StatusIconの形(円の半径・三角のパス・バツの線)は、docs/design/mockups/Main.dc.htmlに実際に書かれているSVGのpath/circleの値をそのまま採用した(viewBox 0 0 20 20、円は r=7 stroke-width 2.6、三角・バツは stroke-width 2.4)
+- lucide-reactは指示通りインストールしたのみで、実際の画面での使用(Settings・ChevronLeft・ChevronRight・Plus)はステップ3以降で各画面を作るときに使う側で個別にimportする方針とした(このステップでは使う画面自体が無いため)
+- StatusIconコンポーネントと読み上げ用ラベル関数(getStatusLabel)を同じファイルに置いたため、ESLintのreact-refresh/only-export-componentsが警告(warning)を出す。指示で「同じファイルからexportする」と明記されていたためこの構成のままにし、警告はエラーではないためlintは通ることを確認した
+- test/frontend/vitest.config.tsのsetupFilesのパスが `./test/frontend/setup.ts` になっており、実際にはプロジェクトルートが test/frontend であるため `test/frontend/test/frontend/setup.ts` を探しにいってしまうバグがあった(T2の時点でテストファイルが無かったため気づかなかった)。StatusIconのテストを追加して初めて発覚したため、`./setup.ts` に修正した
+
+### T13
+
+- /app配下の認可ガード(RequireAuth)は、GET /api/auth/get-session を叩いてセッションの有無だけを見て /login へ振り分ける最小限の実装にした(利用規約への同意状況による振り分けはステップ3で追加すると指示にあったため、ここでは行っていない)
+- /app?tab=... は1つのルート(indexルート)にまとめ、タブの切り替え自体(クエリパラメータの解釈)はステップ3以降で実装する。h1は仮に「記録」とした(実際の日付・期間の表示は中身を作るときに差し替える)
+- パスワード再設定の2画面(/reset, /reset/new)は、design.md上は1つの名前(「パスワード再設定」)でまとまっているため、両方のh1を同じ文言にした
+- 404ページの文言・リンク(「記録画面へ」→/app、「トップページへ」→/)は docs/design/mockups/NotFound.dc.html の文言をそのまま使った
+- `wrangler dev`を実際に起動し、/・存在しないパス・/app のいずれもSPAのシェル(index.html)が200で返り、クライアント側のReact Routerがルーティングを処理できる状態になっていることを確認した
+
+### T14
+
+- lucide-reactのLICENSEファイルを直接確認し、Feather Icons由来としてMITライセンス表記が付くアイコンの一覧に`chevron-left`・`chevron-right`・`plus`が含まれ、`settings`は含まれない(Lucide独自でISCのみ)ことを確認してdocs/licenses.mdに反映した
+- docs/architecture.mdは、T1〜T13で実際に判断・実装した内容(Better Authの構成、レート制限のルール表、メール送信の安全装置、セキュリティヘッダ、既知の落とし穴と対策)を一次情報として書いた。日付の扱い(日本時間基準)は指示に明記が無かったため、サービスの性質(「今日やったか」を記録する)から方針として明記した
+- docs/production-verification.mdは、指示にあった6項目(プレースホルダー置き換え・D1作成・secret登録・Email Sendingドメイン登録と実機確認・Turnstile本番キー・課金通知)に加え、リポジトリを公開する前のシークレットスキャンの項目を追加した(指示の「完了時の報告」欄にも同様の項目があったため)
+
+### T15
+
+- `gh` CLIは使用可能・認証済み(アカウント: n-eto-dev)だったが、このリポジトリには git remote(origin)が設定されておらず、T1の作業前にユーザーへ確認したところ「pushせずローカルでコミットのみ進める」との指示だったため、リモートリポジトリが存在しない状態のまま作業した。そのため `gh pr create` を実行できる状態になく、**PRは手動で作成する**。
+- また、git のコミット者情報(n-eto-hub)と `gh` の認証アカウント(n-eto-dev)が異なっている点も未確認のまま残っている。リモートを用意する際にどちらのアカウントを使うか、あわせて確認してほしい。
+- 以下はPRの本文として使う想定の下書き。
+
+```
+## 概要
+
+shukanlog(Cloudflare版)の基盤(ステップ1、T1〜T15)を実装した。
+
+- 雛形の整理・React Router導入(T1)
+- テスト(Worker用: @cloudflare/vitest-plugin、フロントエンド用: jsdom + Testing Library)・lint環境(T2)
+- wranglerの設定・本番環境の分離(T3)
+- D1・drizzleの設定(T4)
+- メール送信の仕組み(console/memory/cloudflareの3実装、本番での安全装置付き)(T5)
+- Better Authの基本設定(メールアドレス・パスワード、requireEmailVerification)(T6)
+- 6桁の確認コードによるメールアドレス確認・パスワード再設定(emailOTPプラグイン)(T7)
+- 認証エンドポイントのレート制限(Better Auth rateLimit、storage: database)(T8)
+- 新規登録へのTurnstile導入(T9)
+- セキュリティヘッダ・静的ファイルのキャッシュ設定(T10)
+- 色・文字のデザイントークン(T11)
+- 状態記号(StatusIcon)・アイコン(lucide-react)の導入(T12)
+- 画面のルーティングの骨組み(T13)
+- README・アーキテクチャ・公開前確認手順・ライセンスのドキュメント(T14)
+
+画面の中身(日・週・月タブ、設定画面、認証フォームなど)は指示によりこのステップの範囲外としており、実装していない。
+
+## 自分で判断した事項(抜粋。詳細はdocs/progress/step1.mdの判断ログを参照)
+
+- git remoteが無かったため、ユーザーの指示でpushせずローカルコミットのみで進めた
+- @cloudflare/vitest-pool-workersが現在は@cloudflare/vitest-pluginに置き換わっていることを公式ドキュメントで確認し、後者を採用した
+- Better AuthのCLIが@better-auth/cliから独立パッケージ`auth`に移っていたため、`npx auth generate`を使った
+- assets.run_worker_firstを`["/api/*"]`から`true`に変更し、静的ファイルもWorker経由でセキュリティヘッダを付けられるようにした
+
+## 次のステップに持ち越した事項
+
+- 画面の中身(日・週・月タブ、設定画面、認証フォームなど)全般
+- メールアドレス変更のOTPフロー(emailOTPプラグインの`changeEmail`オプションの有効化。仕組みは使えることを確認済み)
+- 利用規約への同意状況による/app配下の振り分け(現在はログイン有無のみで振り分けている)
+- 本番環境の実際のセットアップ(D1作成・secret登録・Turnstile本番キー・Email Sendingドメイン登録など。docs/production-verification.mdに手順を用意済み)
+```
+

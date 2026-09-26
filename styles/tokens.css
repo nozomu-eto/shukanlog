@@ -1,0 +1,36 @@
+/* デザイントークン(色・文字)の CSS 変数。docs/design.md 2章・3章の内容をそのまま変数にしたもの */
+:root {
+	/* 色 */
+	--color-background: #f5f5f3;
+	--color-surface: #ffffff;
+	--color-text: #1f1f1d;
+	--color-text-muted: #57574f;
+	--color-border: #e3e2dc;
+	--color-border-subtle: #eeede8;
+	--color-input-border: #8a8983;
+	--color-tab-background: #e9e8e3;
+	--color-future-border: #d6d5cf;
+	--color-skeleton: #ecebe6;
+
+	/* 記録の状態(◯△×) */
+	--color-status-completed: #2563eb;
+	--color-status-partial: #d97706;
+	--color-status-not-completed: #71717a;
+	--color-amber-text: #b45309;
+	--color-error: #b42318;
+
+	/* 記録ボタンが選択されているときの背景・枠線・文字 */
+	--color-completed-bg: #eef3fe;
+	--color-completed-border: #2563eb;
+	--color-completed-text: #1d4ed8;
+	--color-partial-bg: #fdf3e4;
+	--color-partial-border: #d97706;
+	--color-partial-text: #b45309;
+	--color-not-completed-bg: #f1f1ef;
+	--color-not-completed-border: #71717a;
+	--color-not-completed-text: #3f3f46;
+
+	/* 文字。フォールバックは "Hiragino Sans", sans-serif */
+	--font-heading: "Zen Maru Gothic", "Hiragino Sans", sans-serif;
+	--font-body: "Zen Kaku Gothic New", "Hiragino Sans", sans-serif;
+}

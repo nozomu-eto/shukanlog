@@ -94,10 +94,16 @@ export async function buildSummaryResponse(
 
 	const days: { date: string; results: Record<string, string>; calories: number | null }[] = [];
 	for (let date = from; date <= to; date = shiftDays(date, 1)) {
+		// カロリーは「記録が無い日」と「0kcalを記録した日」を区別する。
+		// カロリー記録が無効な利用者は常にnull、有効な場合は
+		// その日の記録が1件も無ければnull、1件以上あれば合計(0を含む)を返す
+		const calories = calorieTrackingEnabled
+			? (caloriesByDate.has(date) ? caloriesByDate.get(date)! : null)
+			: null;
 		days.push({
 			date,
 			results: resultsByDate.get(date) ?? {},
-			calories: calorieTrackingEnabled ? (caloriesByDate.get(date) ?? 0) : null,
+			calories,
 		});
 	}
 

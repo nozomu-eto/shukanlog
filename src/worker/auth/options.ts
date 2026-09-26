@@ -9,6 +9,11 @@ export const authOptions = {
 		requireEmailVerification: true,
 		minPasswordLength: 8,
 	},
+	emailVerification: {
+		// メール確認(確認コードの検証)に成功したら、そのままセッションを発行してログイン済みにする。
+		// 新規登録直後にログイン画面へ戻さず、そのまま利用規約への同意画面(/consent)へ進めるため
+		autoSignInAfterVerification: true,
+	},
 	// レート制限。メモリ保存だとWorkerのisolateごとにカウンタが分かれ実質効かないため、
 	// D1(database)に保存する(既知の落とし穴2)
 	rateLimit: {

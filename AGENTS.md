@@ -112,3 +112,12 @@ shukanlog は、服薬・運動・カロリーを記録し、週・月で振り�
 ## スタイルの方針(CSP)
 
 CSP は style 要素・外部CSS を `'self'` のみ許可し(`style-src-elem`)、style 属性だけ `'unsafe-inline'` で許可している(`style-src-attr`)。固定の見た目は必ず CSS のクラスで書き、style 属性はグラフの棒の高さのような、実行時の計算でしか決まらない値にのみ使う。
+
+## 画面の実装ルール
+
+- スタイルは CSS Modules(`*.module.css`)で書き、色・文字・余白は `styles/tokens.css` の CSS 変数を使う。固定の見た目を style 属性で書かない(style 属性は計算で決まる値だけ。上記CSPの方針と同じ)
+- レイアウトは画面幅 1024px 未満をスマホ(1列)、1024px 以上を PC(2列など)とし、CSS Modules 内の `@media (min-width: 1024px)` で切り替える。DOM の親子構造を条件分岐で変えず、CSS Grid の `grid-template-areas` 等で配置だけを切り替えられないか先に検討する(`routes/app/app-shell.module.css` 参照)
+- 画面の見た目は `docs/design/mockups/` のモックアップ(参照専用の HTML、そのままでは表示されない)を見て、構造・余白・文字サイズ・色・文言を確認したうえで、`docs/design.md` の規則に沿って React のコンポーネントとして作り直す。規則とモックアップが食い違う場合は `docs/design.md` を優先する。文言(見出し・ボタン・エラー文など)はモックアップのものをそのまま使う
+- 個人情報(メールアドレスなど)を URL のクエリに入れない。画面間で受け渡す必要がある場合は、React Router の `state` または `sessionStorage`(直接URLを開いた場合のフォールバック用)を使う(`react-app/lib/pending-email.ts` 参照)
+- API の呼び出しは `src/react-app/api/` のクライアント経由で行い、エラーレスポンス(`{ error: { code, message } }`)は `api/errors.ts` の `toDisplayMessage()` で画面の文言に変換する
+- サーバーから取得するデータは `@tanstack/react-query` で管理する。押した瞬間に保存する操作(記録ボタン等)は `queryClient.setQueryData()` による楽観的更新を行い、失敗したら `getQueryData()` で退避しておいた値に書き戻す

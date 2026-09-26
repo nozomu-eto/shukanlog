@@ -1,0 +1,238 @@
+/* トップページ。docs/design/mockups/Top.dc.html・TopPC.dc.html に合わせる */
+.page {
+	min-height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.main {
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	padding: 20px 20px 16px;
+}
+
+.hero {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.heading {
+	margin: 0;
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 26px;
+	line-height: 1.4;
+}
+
+.lead {
+	margin: 0;
+	font-size: 15px;
+	line-height: 1.8;
+	color: var(--color-text-muted);
+}
+
+.actions {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.exampleCard {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 16px;
+	padding: 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.exampleHeader {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+}
+
+.exampleTitle {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 15px;
+}
+
+.exampleNote {
+	font-size: 12px;
+	color: var(--color-text-muted);
+}
+
+.weekGrid {
+	display: grid;
+	grid-template-columns: 40px repeat(7, minmax(0, 1fr));
+	gap: 4px;
+	align-items: center;
+}
+
+.weekHeaderRow {
+	font-size: 12px;
+	color: var(--color-text-muted);
+	text-align: center;
+}
+
+.habitName {
+	font-size: 13px;
+	font-weight: 700;
+}
+
+.cell {
+	height: 36px;
+	border-radius: 8px;
+	border: 1px solid var(--color-border);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.features {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 16px;
+	padding: 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.feature {
+	display: flex;
+	gap: 12px;
+	align-items: flex-start;
+}
+
+.featureWithBorder {
+	border-top: 1px solid var(--color-border-subtle);
+	padding-top: 14px;
+}
+
+.featureNumber {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 15px;
+	width: 24px;
+	flex-shrink: 0;
+}
+
+.featureBody {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.featureTitle {
+	font-size: 15px;
+	font-weight: 700;
+}
+
+.featureDesc {
+	font-size: 13px;
+	line-height: 1.6;
+	color: var(--color-text-muted);
+}
+
+.footer {
+	padding: 12px 20px 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	border-top: 1px solid var(--color-border);
+}
+
+.footerNav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px 16px;
+	font-size: 13px;
+}
+
+.footerLink {
+	min-height: 44px;
+	display: flex;
+	align-items: center;
+	color: var(--color-text-muted);
+	text-decoration: none;
+}
+
+.copyright {
+	margin: 0;
+	font-size: 12px;
+	color: var(--color-text-muted);
+}
+
+@media (min-width: 1024px) {
+	.main {
+		width: 1040px;
+		margin: 0 auto;
+		padding: 64px 0 48px;
+		gap: 48px;
+	}
+
+	.hero {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 56px;
+		align-items: center;
+	}
+
+	.heroText {
+		display: flex;
+		flex-direction: column;
+		gap: 24px;
+	}
+
+	.heading {
+		font-size: 38px;
+		line-height: 1.45;
+	}
+
+	.lead {
+		font-size: 16px;
+	}
+
+	.actions {
+		flex-direction: row;
+	}
+
+	.actions > * {
+		width: auto;
+		flex: 1 1 0;
+	}
+
+	.exampleCard {
+		border-radius: 20px;
+		padding: 24px;
+		gap: 14px;
+	}
+
+	.features {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 20px;
+	}
+
+	.feature {
+		flex-direction: column;
+		gap: 6px;
+		border-top: none;
+		padding-top: 0;
+	}
+
+	.footer {
+		height: 64px;
+		box-sizing: border-box;
+		padding: 0 48px;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+	}
+}

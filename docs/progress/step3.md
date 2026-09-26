@@ -14,7 +14,7 @@
 - [x] T3: 画面の土台(データ取得・認証クライアント・API クライアント)
 - [x] T4: 共通の部品
 - [x] T5: トップページ(/)
-- [ ] T6: ログイン(/login)
+- [x] T6: ログイン(/login)
 - [ ] T7: 新規登録(/signup)と Turnstile
 - [ ] T8: 確認コードの入力(/verify)
 - [ ] T9: パスワードの再設定(/reset、/reset/new)
@@ -75,3 +75,11 @@
 - authClient.useSession()でログイン状態を判定し、isPendingの間は何も表示せず(画面のちらつき防止)、セッションがあれば/appへNavigateする実装にした
 - 週のふりかえりの例(今週のふりかえりカード)は、docs/design/mockups/Top.dc.htmlのサンプルデータ(服薬◯◯×◯◯、運動△◯×△◯)をそのままStatusIconで再現した
 - フッターの利用規約・プライバシーポリシーへのリンクは、アプリ内遷移のためreact-routerのLinkにした(モックアップは#terms等のプレースホルダーだが、実際のルート/terms・/privacyへのリンクにする判断をした)。お問い合わせはモックアップ通りmailto:のaタグのままにした
+
+### T6
+
+- authClient.signIn.email()の戻り値({data,error})でエラー判定する方式にした。better-fetchの型定義(node_modules内)を確認し、errorオブジェクトには`code`(BASE_ERROR_CODES、例: EMAIL_NOT_VERIFIED・INVALID_EMAIL_OR_PASSWORD)と`status`が含まれることを確認した
+- メール未確認でのログイン試行時、better-auth側の実装(sign-in.mjs)でsendVerificationEmailオプションを設定していない場合は403 EMAIL_NOT_VERIFIEDを返すことをソースで確認した。この場合はauthClient.emailOtp.sendVerificationOtp()で確認コードを再送し、メールアドレスをreact-routerのstate + sessionStorage(pending-email.ts、以降のT7〜T9でも共通利用)で受け渡して/verifyへ移動する実装にした
+- レート制限(429)は better-auth のレスポンスに`code`が無く`{message}`のみなことをソース(rate-limiter/index.mjs)で確認したため、`error.status === 429`で判定する実装にした
+- 認証系フォーム共通のレイアウト(auth-form.module.css)を用意した。.stack(縦並び+gap)を<form>要素にも外側の.card(PCのみ視覚的な箱になる)にも使うことで、スマホでは1つのフラットな縦並びに、PCでは中央寄せのカードになるようにした
+- 入力チェックの共通関数(validateEmail・validatePasswordRequired・validateNewPassword・validateOtp)をsrc/react-app/lib/validators.tsにまとめ、T7以降の新規登録・パスワード再設定でも再利用する

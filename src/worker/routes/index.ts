@@ -8,6 +8,15 @@ import { consentBodySchema } from "./consent";
 import { ensureConsentAndInitialData } from "../db/ensure-initial-data";
 import { buildDayResponse } from "./days";
 import { habitLogBodySchema, putHabitLog } from "./habit-logs";
+import {
+	createCalorieLogBodySchema,
+	findOwnCalorieLog,
+	isCalorieTrackingEnabled,
+	patchCalorieLogBodySchema,
+} from "./calorie-logs";
+import { getDb } from "../db/client";
+import { calorieLog } from "../db/schema";
+import { eq } from "drizzle-orm";
 import { POLICY_VERSION } from "../../shared/policy";
 import { isFuture, isValidDateString, todayInTokyo } from "../../shared/domain/date";
 import type { AppEnv } from "../types";
@@ -100,4 +109,106 @@ apiRouter.put("/habit-logs", validate("json", habitLogBodySchema), async (c) => 
 	return c.json(result.body);
 });
 
-// 各APIのハンドラは、この後のタスク(T14以降)でこのルーターに追加していく
+// カロリー記録を作成する
+apiRouter.post("/calorie-logs", validate("json", createCalorieLogBodySchema), async (c) => {
+	const userId = c.get("userId");
+	const input = c.req.valid("json");
+
+	if (!isValidDateString(input.date) || isFuture(input.date, todayInTokyo())) {
+		return c.json({ error: { code: "VALIDATION_ERROR", message: "日付の指定が不正です" } }, 400);
+	}
+	if (!(await isCalorieTrackingEnabled(c.env, userId))) {
+		return c.json(
+			{
+				error: {
+					code: "CALORIE_TRACKING_DISABLED",
+					message: "カロリー記録が無効になっています",
+				},
+			},
+			403,
+		);
+	}
+
+	const db = getDb(c.env);
+	const id = crypto.randomUUID();
+	await db.insert(calorieLog).values({
+		id,
+		userId,
+		recordDate: input.date,
+		calories: input.calories,
+		note: input.note ?? null,
+	});
+
+	return c.json({ id, date: input.date, calories: input.calories, note: input.note ?? null }, 201);
+});
+
+// カロリー記録を更新する
+apiRouter.patch("/calorie-logs/:id", validate("json", patchCalorieLogBodySchema), async (c) => {
+	const userId = c.get("userId");
+	const id = c.req.param("id");
+	const input = c.req.valid("json");
+
+	if (!(await isCalorieTrackingEnabled(c.env, userId))) {
+		return c.json(
+			{
+				error: {
+					code: "CALORIE_TRACKING_DISABLED",
+					message: "カロリー記録が無効になっています",
+				},
+			},
+			403,
+		);
+	}
+
+	const existing = await findOwnCalorieLog(c.env, userId, id);
+	if (!existing) {
+		return c.json({ error: { code: "NOT_FOUND", message: "カロリー記録が見つかりません" } }, 404);
+	}
+
+	const db = getDb(c.env);
+	await db
+		.update(calorieLog)
+		.set({
+			calories: input.calories ?? existing.calories,
+			note: input.note ?? existing.note,
+			updatedAt: Date.now(),
+		})
+		.where(eq(calorieLog.id, id));
+
+	return c.json({
+		id,
+		date: existing.recordDate,
+		calories: input.calories ?? existing.calories,
+		note: input.note ?? existing.note,
+	});
+});
+
+// カロリー記録を削除する
+apiRouter.delete("/calorie-logs/:id", async (c) => {
+	const userId = c.get("userId");
+	const id = c.req.param("id");
+
+	if (!(await isCalorieTrackingEnabled(c.env, userId))) {
+		return c.json(
+			{
+				error: {
+					code: "CALORIE_TRACKING_DISABLED",
+					message: "カロリー記録が無効になっています",
+				},
+			},
+			403,
+		);
+	}
+
+	const existing = await findOwnCalorieLog(c.env, userId, id);
+	if (!existing) {
+		return c.json({ error: { code: "NOT_FOUND", message: "カロリー記録が見つかりません" } }, 404);
+	}
+
+	const db = getDb(c.env);
+	await db.delete(calorieLog).where(eq(calorieLog.id, id));
+
+	return c.body(null, 204);
+});
+
+// 各APIのハンドラは、この後のタスク(T15以降)でこのルーターに追加していく

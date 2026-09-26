@@ -11,7 +11,7 @@
 
 - [x] T1: 本番のメール送信先の制限を外す
 - [x] T2: 静的ファイルのヘッダを_headersで付ける
-- [ ] T3: CSPのスタイルの方針を決める
+- [x] T3: CSPのスタイルの方針を決める
 - [ ] T4: 使わないコードだけのログインの入口を閉じる
 - [ ] T5: react-routerに一本化する
 - [ ] T6: 共通の定数と型
@@ -51,3 +51,8 @@
   - `GET /assets/<ビルド後のファイル名>`: 200、上記セキュリティヘッダに加え`Cache-Control: public, max-age=31536000, immutable`が付与される
   - `GET /no-such-page`(存在しないパス): 200でindex.htmlが返り(SPAのフォールバック)、セキュリティヘッダが付与される
   - `GET /api/health`: 200のJSON、`hono/secure-headers`によるセキュリティヘッダ(HSTS・CSP Report-Only・Referrer-Policy・X-Content-Type-Options・X-Frame-Optionsなど)が付与される
+
+### T3
+
+- Honoの`secureHeaders`の型定義(node_modules/hono/dist/types/middleware/secure-headers/secure-headers.d.ts)で`styleSrcElem`・`styleSrcAttr`ディレクティブが指定できることを確認した。`style-src-elem 'self'`(style要素・外部CSSは自分自身のみ)、`style-src-attr 'unsafe-inline'`(style属性は許可。計算で決まる値のみに使う運用ルールで補う)を、Hono側(src/worker/middleware/security-headers.ts)とpublic/_headersの両方に反映した(値はsrc/shared/security-headers.tsに一元化済み)
+- AGENTS.mdに「style属性は計算で決まる値だけに使う」ルールを追記した

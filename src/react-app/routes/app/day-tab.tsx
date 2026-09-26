@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { useSearchParams, Link } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { getDay, type DayHabit, type DayResponse } from "../../api/days";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { getDay, type DayCalorieItem, type DayHabit, type DayResponse } from "../../api/days";
 import { getMe } from "../../api/me";
 import { putHabitLog } from "../../api/habit-logs";
 import { toDisplayMessage } from "../../api/errors";
@@ -9,6 +10,7 @@ import { StatusIcon } from "../../components/StatusIcon";
 import { Skeleton } from "../../components/Skeleton";
 import { Button } from "../../components/Button";
 import { useToast } from "../../components/Toast";
+import { CalorieForm } from "./calorie-form";
 import { todayInTokyo, isValidDateString, isFuture, formatDateForDisplay, shiftDays } from "../../../shared/domain/date";
 import type { HabitLogResult } from "../../../shared/types";
 import styles from "./day-tab.module.css";
@@ -40,12 +42,20 @@ function hrefForDate(date: string): string {
 	return `/app?${params.toString()}`;
 }
 
+type CalorieDialogState = { mode: "new" } | { mode: "edit"; item: DayCalorieItem };
+
+// カロリーの合計を桁区切り付きで整形する(docs/week-month-tabs.md 2.3等と同じ「桁区切りあり」の表記)
+function formatKcal(value: number): string {
+	return value.toLocaleString("ja-JP");
+}
+
 // 日タブ(記録の表示と保存)。docs/design/mockups/Day.dc.html・DayPC.dc.html・
-// DayEmpty/DayLoading/DayError.dc.html に合わせている
+// DayEmpty/DayLoading/DayError.dc.html・CalorieForm.dc.html に合わせている
 export function DayTabRoute() {
 	const [searchParams] = useSearchParams();
 	const queryClient = useQueryClient();
 	const { showToast } = useToast();
+	const [calorieDialog, setCalorieDialog] = useState<CalorieDialogState | null>(null);
 
 	const today = todayInTokyo();
 	const date = resolveDate(searchParams.get("date"), today);
@@ -53,6 +63,12 @@ export function DayTabRoute() {
 
 	const dayQuery = useQuery({ queryKey: ["day", date], queryFn: () => getDay(date) });
 	const meQuery = useQuery({ queryKey: ["me"], queryFn: getMe });
+
+	function handleCalorieSaved(message: string) {
+		setCalorieDialog(null);
+		queryClient.invalidateQueries({ queryKey: ["day", date] });
+		showToast(message);
+	}
 
 	async function handlePick(habit: DayHabit, result: HabitLogResult) {
 		const newResult = habit.result === result ? null : result;
@@ -175,6 +191,47 @@ export function DayTabRoute() {
 								</div>
 							</section>
 						))}
+
+						{dayQuery.data.calories ? (
+							<section className={styles.card}>
+								<div className={styles.calorieHeader}>
+									<h2 className={styles.cardTitle}>カロリー</h2>
+									<button
+										type="button"
+										className={styles.recordButton}
+										onClick={() => setCalorieDialog({ mode: "new" })}
+									>
+										<Plus size={16} aria-hidden="true" />
+										記録する
+									</button>
+								</div>
+								{dayQuery.data.calories.items.length > 0 ? (
+									<div className={styles.calorieTotal}>
+										<span className={styles.calorieTotalValue}>
+											{formatKcal(dayQuery.data.calories.total)}
+											<span className={styles.calorieTotalUnit}>kcal</span>
+										</span>
+										<ul className={styles.calorieList}>
+											{dayQuery.data.calories.items.map((item) => (
+												<li key={item.id}>
+													<button
+														type="button"
+														className={styles.calorieItem}
+														aria-label={`${item.note ?? ""} ${item.calories}kcal を編集`}
+														onClick={() => setCalorieDialog({ mode: "edit", item })}
+													>
+														<span>{item.note}</span>
+														<span className={styles.calorieItemValue}>{formatKcal(item.calories)} kcal</span>
+													</button>
+												</li>
+											))}
+										</ul>
+									</div>
+								) : (
+									<p className={styles.calorieEmpty}>この日のカロリーはまだ記録されていません。</p>
+								)}
+							</section>
+						) : null}
 					</>
 				)}
 
@@ -184,6 +241,15 @@ export function DayTabRoute() {
 					服薬に関する判断は医師・薬剤師にご相談ください。
 				</p>
 			</div>
+
+			{calorieDialog ? (
+				<CalorieForm
+					date={date}
+					editing={calorieDialog.mode === "edit" ? calorieDialog.item : null}
+					onClose={() => setCalorieDialog(null)}
+					onSaved={handleCalorieSaved}
+				/>
+			) : null}
 		</div>
 	);
 }

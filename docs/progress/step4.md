@@ -12,7 +12,7 @@
 - [x] T1: compatibility_date のルールを直す
 - [x] T2: 記録の楽観的更新を公式の書き方に揃える
 - [x] T3: 期間の移動の共通部品
-- [ ] T4: 週タブ
+- [x] T4: 週タブ
 - [ ] T5: 月タブ
 - [ ] T6: 日週月の切り替えの確認
 - [ ] T7: 設定画面(/app/settings)
@@ -57,3 +57,12 @@
 - 期間の移動のUI(前へ・見出し(h1)・次へ・今日に戻る)を`src/react-app/components/PeriodNav.tsx`(+`PeriodNav.module.css`)に抽出した。前後の移動先・可否の計算はperiod.tsの関数を使い、呼び出し側(各タブ)がhrefを組み立てて渡す設計にした(部品自体はページ内の状態やAPIを持たない)
 - 今日を含む期間のときの表示(日タブは「今日」ラベル、週・月タブは何も表示しない)を`todayLabel`propの有無で切り替えられるようにした(todayHrefがnullのときのフォールバック)
 - 日タブ(day-tab.tsx)をPeriodNavに置き換え、ステップ3のテスト(day-tab.test.tsx)がすべて通ることを確認した。period.test.tsにday単位のテストを追加した
+
+### T4
+
+- 週タブのレイアウトは、AGENTS.mdの「DOMの親子構造を条件分岐で変えず、CSS Gridのgrid-template-areasで配置だけを切り替える」方針(app-shell.tsx参照)に揃えた。1つのグリッドコンテナ(nav/habits/calorie/legendの4領域)を用意し、スマホは縦1列(nav→habits→calorie→legend)、PC(1024px以上)は2列(左7:右5、1行目がnav+legend、2行目がhabits+calorie)にgrid-template-areasだけを切り替えた
+- 週・月タブ共通の凡例(Legend.tsx)を切り出した(達成・一部達成・未達成・空欄未記録の4項目で、両タブで内容が同一のため)
+- 日・週・月タブ間のURL組み立て(`/app?tab=...&date=...`)をsrc/react-app/lib/tab-links.tsのhrefForTabに共通化し、day-tab.tsxのhrefForDateもこれを使うように直した
+- 集計はGET /api/summary(既にステップ2で実装済み)を使い、期間はsrc/shared/domain/periodのgetWeekRangeで算出する。各マスの読み上げラベルは、未来の日は「9月26日 未来の日」、それ以外は「9月23日 服薬 未達成」(week-month-tabs.md 1.7)とし、getStatusLabel(StatusIconから export済み)を再利用した
+- カロリーの棒グラフの高さは、期間内の最大値を基準にした比率(最大80px、最小4px)で計算する実装にした(モックアップは固定の除数2200を使っていたが、値の大きさに応じて相対的に見やすくなるよう期間内最大値基準にした判断)
+- テスト(week-tab.test.tsx)では、todayInTokyo()が実行環境の現在時刻に依存するため、src/shared/domain/dateをvi.mockして「今日」を2026-09-24に固定した(fakeTimersはreact-queryの内部タイマーやwaitForのポーリングと干渉してテストがタイムアウトしたため、todayInTokyoの部分モックに変更した)

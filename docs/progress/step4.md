@@ -25,7 +25,7 @@
 - [x] T14: 利用規約・プライバシーポリシーのページ(/terms、/privacy)
 - [x] T15: ライセンスのページ(/licenses)
 - [x] T16: 旧資料の片付け
-- [ ] T17: 画面の動作確認
+- [x] T17: 画面の動作確認
 - [ ] T18: ドキュメント
 - [ ] T19: ステップ5への持ち越し
 - [ ] T20: PRの作成
@@ -151,3 +151,15 @@
 - docs/legacy/の内容(limits.ts・initial-habits.ts・email-templates.md・terms.md・privacy.md)がいずれもsrc/shared/・src/worker/lib/mail-templates.ts・T14のterms.tsx・privacy.tsxに移植済みであることを確認し、docs/legacy/を削除した(date.tsもsrc/shared/domain/date.tsとして既に移植済み)
 - AGENTS.md・CLAUDE.md・tsconfig.json・eslint.config.jsからdocs/legacy/への言及を削除した(CLAUDE.mdはタスクの指示に無かったが、AGENTS.mdと同内容の記述が残っていたため一貫性のためあわせて削除した)
 - 各ソースファイル内の「docs/legacy/xxx.ts(旧リポジトリ)から移植したもの」という由来を示すコメントは、移植元の履歴情報として残しておく判断をした(実装の参照先としてではなく、経緯の記録として無害なため)
+
+### T17
+
+- この環境にはブラウザを実際に操作できるツールが無かった(ステップ3のT15と同様)。そのため、まずdocs/progress/step4-manual-check.mdに手動確認手順(スマホ幅・PC幅の両方、ステップ4で追加した範囲)を書いた
+- そのうえで、`pnpm run db:migrate:local`でステップ4のマイグレーション(account_deletion)を適用し、`pnpm dev`を起動して、以下の流れをcurlでAPIレベルで実際に確認した
+  - 新規登録→メール確認→同意→日タブで記録(習慣・カロリー)→GET /api/summary(週・月タブが使うAPI)に反映されることを確認
+  - 設定でカロリー記録を無効化→GET /api/days・GET /api/summaryの両方からカロリーが消える(null)→再度有効化
+  - メールアドレスの変更: 誤ったパスワードでは送信されないこと、確認コードの送信→POST /api/auth/email-otp/change-emailでの確定→新しいメールアドレスでログインできることを確認
+  - パスワードの変更: 2つのセッション(別端末を想定)を用意し、変更後に別端末のセッションが401になり、変更した端末はそのまま200で使えること、新しいパスワードでログインできることを確認
+  - 退会: POST /api/account/withdraw後にそのセッションが401になること、再度ログイン(サインインのレート制限を避けるためcf-connecting-ipを変えて実施)するとGET /api/meのjustCanceledWithdrawalがtrueになることを確認
+  - `/`・`/app`・`/terms`・`/privacy`・`/licenses`・存在しないパスがいずれもSPAのシェル(index.html)を200で返すことを確認
+- 上記の確認で不具合は見つからなかった(コードの修正は無し)。ただし確認の過程で、日週月切り替えのトーストのテスト(tabs.test.tsx)が、他のテストファイルと並列実行される全体テスト実行時にだけ稀に失敗する(トーストの文言が反映される前にfindByRole("status")がトースト用の(まだ空の)コンテナ自体を先に見つけてしまう)ことに気づき、`findByText(実際のメッセージ)`で待つように直した(このテスト自体はT11で追加したもの)

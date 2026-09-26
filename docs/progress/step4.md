@@ -28,7 +28,7 @@
 - [x] T17: 画面の動作確認
 - [x] T18: ドキュメント
 - [x] T19: ステップ5への持ち越し
-- [ ] T20: PRの作成
+- [x] T20: PRの作成
 
 ## ステップ5への持ち越し
 
@@ -38,6 +38,10 @@
 - **OGP・robots.txt・ファビコン・ホーム画面への追加、本番での確認、DNSの切り替え**: 指示通りステップ5で行う(このステップでは着手していない)
 - **利用規約・プライバシーポリシーの最終改定日**: 現在ステップ4の実装日(2026年9月27日)になっている。実際の公開日が別の日になる場合は、公開前に`src/react-app/routes/terms.tsx`・`privacy.tsx`の`revisedDate`と`src/shared/policy.ts`の`POLICY_VERSION`を実際の公開日に更新する(docs/production-verification.md 8章に記載済み)
 - **退会の完全削除(Cron Trigger)の本番での実際の動作確認**: ローカルのテスト(test/worker/scheduled-purge*.test.ts)では確認済みだが、本番環境でのCron Triggerの実行自体(Cloudflareダッシュボードでの登録・実行ログ)はまだ確認していない(docs/production-verification.md 9章に記載済み)
+
+## PR
+
+https://github.com/n-eto-dev/shukanlog/pull/7 (マージはしていない)
 
 ## 判断ログ
 

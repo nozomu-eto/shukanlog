@@ -108,6 +108,9 @@ export function TopRoute() {
 					<Link to="/privacy" className={styles.footerLink}>
 						プライバシーポリシー
 					</Link>
+					<Link to="/licenses" className={styles.footerLink}>
+						ライセンス
+					</Link>
 					<a href="mailto:info@shukanlog.com" className={styles.footerLink}>
 						お問い合わせ
 					</a>

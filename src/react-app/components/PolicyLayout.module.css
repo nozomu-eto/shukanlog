@@ -71,6 +71,31 @@
 	font-weight: 700;
 }
 
+.body table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 14px;
+}
+
+.body th,
+.body td {
+	text-align: left;
+	padding: 6px 8px;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.body pre {
+	margin: 0;
+	padding: 14px;
+	background: var(--color-background);
+	border-radius: 12px;
+	font-size: 12px;
+	line-height: 1.6;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+	font-family: monospace;
+}
+
 @media (min-width: 1024px) {
 	.main {
 		padding: 40px 0 64px;

@@ -59,3 +59,22 @@
 	color: var(--color-text);
 	cursor: pointer;
 }
+
+@media (min-width: 1024px) {
+	.periodBar {
+		width: 1040px;
+		margin: 0 auto;
+		padding: 24px 0 0;
+		gap: 12px;
+		justify-content: flex-start;
+	}
+
+	.navButton {
+		border: 1px solid var(--color-border);
+		background: var(--color-surface);
+	}
+
+	.dateHeading {
+		font-size: 26px;
+	}
+}

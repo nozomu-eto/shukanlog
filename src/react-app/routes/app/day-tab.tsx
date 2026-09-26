@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSearchParams, Link } from "react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { getDay, type DayCalorieItem, type DayHabit, type DayResponse } from "../../api/days";
 import { getMe } from "../../api/me";
@@ -70,28 +70,56 @@ export function DayTabRoute() {
 		showToast(message);
 	}
 
-	async function handlePick(habit: DayHabit, result: HabitLogResult) {
-		const newResult = habit.result === result ? null : result;
-		const previous = queryClient.getQueryData<DayResponse>(["day", date]);
+	// 習慣ごとに「直近の操作」の連番を持つ(同じ習慣への連続操作で、後から失敗した古い操作が
+	// 新しい操作の結果を巻き戻してしまわないようにするための判定に使う)
+	const latestPickRequestRef = useRef(new Map<string, number>());
 
-		// 楽観的更新: 先に画面を更新してから保存する
-		queryClient.setQueryData<DayResponse>(["day", date], (old) =>
-			old
-				? {
-						...old,
-						habits: old.habits.map((h) => (h.id === habit.id ? { ...h, result: newResult } : h)),
-					}
-				: old,
-		);
-
-		try {
-			await putHabitLog({ habitId: habit.id, date, result: newResult });
-			showToast(newResult === null ? "記録を取り消しました" : "保存しました");
-		} catch {
-			// 失敗したら表示を元に戻す
-			queryClient.setQueryData(["day", date], previous);
+	// 習慣の記録の保存。TanStack Queryの公式の楽観的更新の書き方(onMutate→onError→onSettled)に揃える。
+	// onMutateでcancelQueriesしてから更新するのは、画面に戻ったときの自動再取得(refetchOnWindowFocus)と
+	// 重なって、押したばかりの状態が古い表示に戻ってしまうのを防ぐため。
+	// 同じ習慣への連続した操作は、最後の操作の結果が画面に残るようにする。scope.idを固定すること
+	// で、実際の保存(PUT)自体は発生順に1つずつ実行させ、サーバー側の最終状態も最後の操作と一致
+	// させる(scopeはmutationFnの実行だけを直列化し、onMutate/onErrorの実行順は保証しないため、
+	// それだけでは古い操作の失敗時ロールバックが新しい操作の楽観的更新を消してしまう可能性がある)。
+	// そのため、習慣ごとに直近の操作かどうかをlatestPickRequestRefで判定し、ロールバックは
+	// 「この操作より後に、同じ習慣への操作が始まっていない場合」だけ行う
+	const pickMutation = useMutation({
+		mutationFn: ({ habitId, result }: { habitId: string; result: HabitLogResult | null }) =>
+			putHabitLog({ habitId, date, result }),
+		scope: { id: "habit-log" },
+		onMutate: async ({ habitId, result }) => {
+			await queryClient.cancelQueries({ queryKey: ["day", date] });
+			const previous = queryClient.getQueryData<DayResponse>(["day", date]);
+			const requestId = (latestPickRequestRef.current.get(habitId) ?? 0) + 1;
+			latestPickRequestRef.current.set(habitId, requestId);
+			queryClient.setQueryData<DayResponse>(["day", date], (old) =>
+				old
+					? {
+							...old,
+							habits: old.habits.map((h) => (h.id === habitId ? { ...h, result } : h)),
+						}
+					: old,
+			);
+			return { previous, habitId, requestId };
+		},
+		onError: (_error, _variables, context) => {
+			const isLatest = context && latestPickRequestRef.current.get(context.habitId) === context.requestId;
+			if (isLatest) {
+				queryClient.setQueryData(["day", date], context.previous);
+			}
 			showToast("保存できませんでした。通信状況を確認して、もう一度お試しください");
-		}
+		},
+		onSuccess: (_data, { result }) => {
+			showToast(result === null ? "記録を取り消しました" : "保存しました");
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: ["day", date] });
+		},
+	});
+
+	function handlePick(habit: DayHabit, result: HabitLogResult) {
+		const newResult = habit.result === result ? null : result;
+		pickMutation.mutate({ habitId: habit.id, result: newResult });
 	}
 
 	return (

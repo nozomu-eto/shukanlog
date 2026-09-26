@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router";
+import { useSearchParams, Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getSummary, type SummaryDay } from "../../api/summary";
 import { getMe } from "../../api/me";
@@ -144,9 +144,9 @@ export function MonthTabRoute() {
 								}`;
 
 								return (
-									<a
+									<Link
 										key={cell.date}
-										href={hrefForTab("day", cell.date)}
+										to={hrefForTab("day", cell.date)}
 										aria-label={label}
 										className={isToday ? `${styles.dayCell} ${styles.dayCellToday}` : styles.dayCell}
 									>
@@ -167,7 +167,7 @@ export function MonthTabRoute() {
 										) : (
 											<span className={styles.dayKcal} />
 										)}
-									</a>
+									</Link>
 								);
 							})}
 						</div>

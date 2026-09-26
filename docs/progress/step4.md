@@ -14,7 +14,7 @@
 - [x] T3: 期間の移動の共通部品
 - [x] T4: 週タブ
 - [x] T5: 月タブ
-- [ ] T6: 日週月の切り替えの確認
+- [x] T6: 日週月の切り替えの確認
 - [ ] T7: 設定画面(/app/settings)
 - [ ] T8: メールアドレスの変更(/app/settings/email)
 - [ ] T9: パスワードの変更(/app/settings/password)
@@ -74,3 +74,10 @@
 - マスの読み上げラベルは、月タブの仕様(week-month-tabs.md 1.7)の「9月3日 服薬 達成 運動 一部達成 1950kcal」「カロリー記録なし」「未来の日」の3パターンをそのまま実装した。カロリー記録が無効な利用者にはkcal部分を付けない(カロリー自体を出さないため、記録なしとも言わない)
 - 月間サマリーの分母(eligibleDays)・平均カロリーはGET /api/summaryのtotalsをそのまま使う。服薬(2段階)は◯の数のみ、運動(3段階)は◯△の数を表示する(week-month-tabs.md 3.3)
 - テスト(month-tab.test.tsx)は、2026年2月(1日が日曜)を「今日」に固定して、月曜始まりのカレンダーの空欄マス数(前月分6+翌月分1=7)、未来のマスがリンクでないこと、カロリー無効時の表示(マスにkcalが出ない、説明が「左:服薬 右:運動」になる)を確認した
+
+### T6
+
+- 確認の過程で2つの不具合を見つけて修正した
+  1. 週・月タブのマスから日タブへのリンクが、react-routerの`Link`ではなく生の`<a href>`になっていた(T4・T5実装時の書き忘れ)。生の`<a>`だとブラウザのフルページ遷移になり、SPAとしての遷移(react-router側でのクライアントサイド遷移)にならないため、両タブとも`Link`に直した
+  2. 日タブで記録(習慣の保存・カロリーの保存)をしても、react-queryの`["summary", from, to]`キャッシュを無効化していなかったため、記録直後に週・月タブを開いても古い集計が表示され続ける(再度画面をリロードするまで反映されない)問題があった。day-tab.tsxのpickMutationのonSettled・handleCalorieSavedの両方に`queryClient.invalidateQueries({ queryKey: ["summary"] })`を追加した(fromToを問わず前方一致で無効化する)
+- テストを追加した: app-shell.test.tsx(日週月の切り替えでdateクエリパラメータが保持されること、aria-current)、day-tab.test.tsx(記録の保存でsummaryクエリのキャッシュが無効化されること)。週・月タブから日タブへのリンク(Linkのhref)は既存のweek-tab.test.tsx・month-tab.test.tsxのテストでも確認できている

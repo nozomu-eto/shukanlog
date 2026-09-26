@@ -168,6 +168,23 @@ describe("DayTabRoute", () => {
 		expect(completedButton).toHaveAttribute("aria-pressed", "false");
 	});
 
+	it("記録を保存すると、週・月タブの集計(summaryクエリ)のキャッシュも無効化される", async () => {
+		const user = userEvent.setup();
+		getDayMock.mockResolvedValue(baseDay());
+		putHabitLogMock.mockResolvedValue({ habitId: "h1", date: "2026-09-25", result: "completed" });
+
+		const { queryClient } = renderDayTab();
+		// 週タブを表示した際に作られるキャッシュを模して事前にセットしておく
+		queryClient.setQueryData(["summary", "2026-09-21", "2026-09-27"], { habits: [] });
+
+		const buttons = await screen.findAllByRole("button", { name: /できた/ });
+		await user.click(buttons[0]);
+
+		await waitFor(() =>
+			expect(queryClient.getQueryState(["summary", "2026-09-21", "2026-09-27"])?.isInvalidated).toBe(true),
+		);
+	});
+
 	it("今日のときは次の日へ進めない", async () => {
 		getDayMock.mockResolvedValue(baseDay());
 		renderDayTab();

@@ -77,6 +77,61 @@ Workers Rate Limitingバインディング(`ratelimits`)は10秒か60秒しか�
 
 ビルドで出力されるハッシュ付きファイル(`/assets/*`)には`public/_headers`で`Cache-Control: public, max-age=31536000, immutable`も付けています。
 
+### CSPのスタイルの方針
+
+style要素・外部CSSは`style-src-elem 'self'`のみ許可し、style属性は`style-src-attr 'unsafe-inline'`で許可しています。Reactのstyle属性はインラインスタイルとして扱われCSPの強制適用時に違反になるため、固定の見た目は必ずCSSのクラスで書き、style属性はグラフの棒の高さのような実行時の計算でしか決まらない値にのみ使う運用ルールにしています(AGENTS.md参照)。
+
+## 使わないエンドポイントを閉じる
+
+Better Authの`emailOTP`プラグインを入れると、メールのコードだけでログインできるエンドポイント(`POST /api/auth/sign-in/email-otp`)も有効になりますが、shukanlogではメールアドレス・パスワードでのログインのみを使うため使いません。`src/worker/middleware/disabled-auth-endpoints.ts`で、Better Authに処理を渡す前にHonoのミドルウェアで404を返して閉じています。
+
+## テーブル構成
+
+`src/worker/db/schema/`にdrizzleで定義しています。IDは`crypto.randomUUID()`で発行する文字列、日時はUNIXミリ秒の整数、日付は`YYYY-MM-DD`形式の文字列です。すべてのテーブルの`user_id`は`user.id`を参照し、`onDelete: "cascade"`にしているため、利用者を削除すると関連する行もすべて連動して削除されます(退会の物理削除の実装自体はステップ4)。
+
+| テーブル | 内容 | 一意制約・索引 |
+|---|---|---|
+| `profile`(`user_id`が主キー) | 利用者ごとの設定(カロリー記録の有効/無効。既定true) | - |
+| `habit` | 習慣(服薬・運動など)。`kind`・`evaluation_scale`・`status`・`sort_order`を持つ | `(user_id, kind)`一意(初期データの二重作成防止) |
+| `habit_log` | 習慣の日別の記録。未記録は行そのものが無い状態で表す | `(habit_id, record_date)`一意、`(user_id, record_date)`索引 |
+| `calorie_log` | カロリー記録。1日に複数件記録できる | `(user_id, record_date)`索引 |
+| `terms_agreement` | 利用規約・プライバシーポリシーへの同意 | `(user_id, policy_version)`一意 |
+
+初期データ(習慣2件・プロフィール1件)は、利用規約への同意時(`POST /api/consent`)に、`onConflictDoNothing`を使ったD1バッチ(`db.batch()`)で作成します。既にある行は無視されるため、同意を何度呼んでも重複作成せず、一部だけ欠けている状態でも欠けている分だけ補完されます。
+
+## 認証・同意が必要なAPIの共通の仕組み
+
+`src/worker/routes/index.ts`の`apiRouter`(`/api`にマウント)が、`/api/health`・`/api/auth/*`以外のAPIをまとめています。
+
+- **requireSession**(`src/worker/middleware/require-session.ts`): Better Authのセッション(`auth.api.getSession({ headers })`)を確認し、無ければ401(`UNAUTHORIZED`)。あればユーザーID・メールアドレス・アカウント作成日(日本時間の日付)をHonoのコンテキストに入れる
+- **requireConsent**(`require-consent.ts`): 現在の`POLICY_VERSION`への同意(`terms_agreement`テーブル)が無ければ403(`CONSENT_REQUIRED`)。`GET /api/me`・`POST /api/consent`はこのチェックの対象外
+- **writeRateLimit**(`write-rate-limit.ts`): 書き込み系(POST/PUT/PATCH/DELETE)に、Workers Rate Limitingバインディング(`API_RATE_LIMITER`)でユーザーID単位の制限(60秒に60回)をかける。超えたら429(`RATE_LIMITED`)。ステップ1で用意されていた60秒に300回という値は、書き込み専用の制限としては大きすぎるため見直した
+
+未処理のエラーは`app.onError`で500(`INTERNAL_ERROR`)にし、内部のエラー内容(スタックトレースなど)は返しません(ログにはスタックトレースを出しますが、確認コードやメール本文などの機微情報は出しません)。
+
+入力の検証は`zod`と`@hono/zod-validator`(`src/worker/lib/validation.ts`の`validate()`)で行い、検証エラーは統一して400(`VALIDATION_ERROR`)にしています。
+
+APIの一覧は[api.md](api.md)を参照してください。
+
+## 日付の扱い
+
+このサービスは「今日やったかどうか」を記録するものなので、日付は常に**日本時間(Asia/Tokyo)**基準で扱います。`src/shared/domain/date.ts`に、実行環境のローカルタイムゾーンに依存しない純粋関数をまとめています。
+
+- 「今日」の判定・任意時刻→日本時間の日付への変換は`Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo" })`で行う(en-CAロケールはYYYY-MM-DD形式を返す)
+- 日付同士の前後移動(前へ・次へボタン、月末の丸めなど)はUTC基準の`Date.UTC`で計算する(実行環境のタイムゾーンを混入させないため)
+- 「今日」は必ず`todayInTokyo(now)`のように現在時刻を引数で受け取れる形にし、`new Date()`のローカル時刻を直接使わない(テストで時刻を固定できるようにするため)
+
+週・月タブの期間計算(週の範囲、月のカレンダーのマス、分母の日数、前へ・次へ・今日に戻るの可否、期間の表示形式)は`src/shared/domain/period.ts`にまとめています。
+
+## 集計の方法(GET /api/summary)
+
+週・月タブの集計は、期間(`from`〜`to`、最大42日)を指定して1回のリクエストで取得できるようにしています(`src/worker/routes/summary.ts`)。
+
+- 習慣一覧・期間内の習慣の記録・期間内のカロリー記録を、それぞれ1クエリずつ(合計最大3クエリ)取得し、日ごとに個別のクエリは発行しない
+- 取得したデータをメモリ上でMapに整理してから、日付ごとの結果・カロリー合計、習慣ごとの達成数・分母(`eligibleDays`)を計算する
+- `eligibleDays`(分母)は、期間内で「アカウント作成日以降」かつ「今日以前」の日数(`src/shared/domain/period.ts`の`countEligibleDays`)
+- カロリーの平均は、記録がある日(その日にカロリー記録が1件以上ある日)だけで算出し、カロリー記録を無効にしている利用者には常に`null`を返す
+
 ## 日付の扱い
 
 このサービスは「今日やったかどうか」を記録するものなので、日付は常に**日本時間(Asia/Tokyo)**基準で扱います。サーバー・クライアントの両方で、UTCのまま日付を丸めない(日本時間の日付境界で「今日」を判定する)ことを徹底します。具体的な実装(共通の日付関数)はステップ2以降で`src/shared/`に追加します。

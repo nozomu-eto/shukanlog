@@ -26,7 +26,7 @@
 - [x] T15: プロフィールのAPI
 - [x] T16: 週・月の集計API
 - [x] T17: 他人のデータに触れないことの横断テスト
-- [ ] T18: ドキュメント
+- [x] T18: ドキュメント
 - [ ] T19: PRの作成
 
 ## 判断ログ
@@ -146,6 +146,11 @@
 ### T17
 
 - APIの実際の形を確認したところ、他人のデータに「ID指定で触れられる」経路はPUT /api/habit-logs(habitId)とPATCH/DELETE /api/calorie-logs/:idの2つだけだった(GET /api/days・GET /api/summary・PATCH /api/profileはいずれもセッションのuserId起点でしか自分のデータを参照せず、他人のIDを指定する余地がない)。そのため、横断テストはこの2つのエンドポイントに対する利用者Bからの操作(更新・取り消し・更新・削除)が404になること、操作後も利用者Aのデータが変更されていないこと、そして利用者Bが自分のGET /api/daysを取得しても利用者Aの記録が一切現れないことを1つのテストにまとめた
+
+### T18
+
+- docs/api.mdは、実際にsrc/worker/routes/index.tsに実装したエンドポイントの一覧(メソッド・パス・認証/同意の要否・リクエスト・レスポンス・エラーコード)を一次情報として書いた
+- docs/architecture.mdに、テーブル構成(一覧表)、認証・同意が必要なAPIの共通の仕組み(requireSession/requireConsent/writeRateLimit)、日付の扱い(Intl.DateTimeFormatとUTC計算の使い分け)、GET /api/summaryの集計方法(クエリ回数を抑える設計)、CSPのスタイルの方針、使わないエンドポイントを閉じたことを追記した
 
 ### T15
 

@@ -17,7 +17,7 @@
 - [x] T6: 共通の定数と型
 - [x] T7: 日本時間の日付の関数
 - [x] T8: 週・月の期間の計算
-- [ ] T9: テーブル定義とマイグレーション
+- [x] T9: テーブル定義とマイグレーション
 - [ ] T10: 認証が必要なAPIの共通の仕組み
 - [ ] T11: 自分の情報と同意のAPI
 - [ ] T12: 日ごとの記録を取得するAPI
@@ -89,3 +89,13 @@
 - 「前へ」ボタンには移動不可の条件が仕様に無いため、常に許可される関数として実装した(移動先の下限を設けていない)
 - 週の期間表示の「今年以外」の判定は、表示中の週の開始年と、引数で渡した「今日」の年を比較する形にした(今日はサーバー側で日本時間の今日を渡す想定)
 - テストは、年またぎの週(2026/12/28〜2027/1/3)、アカウント作成日が期間の途中にある場合の分母、今日が期間の途中にある場合の分母、今日を含む期間での次へ・今日に戻るの不可、2月のカレンダーのマス数を含めた
+
+### T9
+
+- 既存の`src/worker/db/schema/auth.ts`(Better Auth生成)の書式(sqliteTable、integer/text、index)に合わせて`records.ts`を追加した
+- IDはcrypto.randomUUID()で発行する想定のtext主キー、日時はSQLite側の既定値(`unixepoch('subsecond') * 1000`のUNIXミリ秒)を使う点をauth.tsから踏襲した。日付(record_date)はYYYY-MM-DD文字列のtext列にした
+- `profile`は1ユーザー1件のため、独立したid列を持たせず`user_id`をそのまま主キーにした
+- `habit`の`(user_id, kind)`一意制約は「初期データの二重作成防止」用。`habit_log`の`(habit_id, record_date)`一意制約は「同じ日・同じ習慣の記録は1件」を保証するためで、PUT /api/habit-logsの作成・更新の実装(T13)がこの制約に依存する
+- すべてのuser_idはuser.idを参照し`onDelete: "cascade"`にした(D1はデフォルトで外部キー制約が有効であることを、実際にuserを削除して関連行が連動削除されることを確認するテストで検証した)
+- `pnpm run db:generate`でmigrations/0002_short_rictor.sqlを生成した。テスト(test/worker/db-records.test.ts)で各テーブルへの書き込み・読み出し、一意制約(habit/habit_log/terms_agreement)、ユーザー削除時の連動削除を確認した
+- D1の内容はテスト間で初期化されない(既存のテストが`crypto.randomUUID()`でメールアドレスを一意にしていたのと同じ理由)ため、テストごとに`crypto.randomUUID()`で一意なuserIdを使うようにした

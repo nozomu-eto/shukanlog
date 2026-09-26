@@ -13,7 +13,7 @@
 - [x] T2: 静的ファイルのヘッダを_headersで付ける
 - [x] T3: CSPのスタイルの方針を決める
 - [x] T4: 使わないコードだけのログインの入口を閉じる
-- [ ] T5: react-routerに一本化する
+- [x] T5: react-routerに一本化する
 - [ ] T6: 共通の定数と型
 - [ ] T7: 日本時間の日付の関数
 - [ ] T8: 週・月の期間の計算
@@ -66,3 +66,7 @@
   - `POST /email-otp/request-email-change`・`/email-otp/change-email`: メールアドレス変更用。ステップ4で使う予定のためエンドポイント自体は閉じていないが、`changeEmail.enabled`オプションを有効化していないため、呼び出すとBetter Auth自身が400(`Change email with OTP is disabled`)を返す実装になっていることをソースで確認した(ログインできる系ではないため、指示の対象外と判断)
   - `createVerificationOTP`・`getVerificationOTP`エンドポイントはOTP値の作成・参照のみでセッションを発行しない(ログイン機能ではない)ため閉じる対象外と判断した
 - 上記より、閉じる対象は`/api/auth/sign-in/email-otp`の1つのみと判断し、`src/worker/middleware/disabled-auth-endpoints.ts`でBetter Authに処理を渡す前に404(`{ error: { code: "NOT_FOUND", message: "Not Found" } }`)を返すようにした
+
+### T5
+
+- `pnpm remove react-router-dom` → `pnpm add react-router@7` で入れ替え、importを`react-router-dom`から`react-router`に書き換えた対象は`main.tsx`・`router.tsx`・`routes/not-found.tsx`・`routes/app/require-auth.tsx`の4ファイル。React Router v7の公式ドキュメントで、ライブラリモードでは`react-router`への一本化が推奨されていることを確認した(APIはreact-router-domと同じで、importの向き先のみ変わる)

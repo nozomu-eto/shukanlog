@@ -51,3 +51,7 @@ Cloudflareダッシュボードの請求設定で、Workers・D1・Email Sending
 - `.dev.vars`・`.wrangler/`などがコミットされていないこと(`.gitignore`で除外済みだが、`git log`上に過去のコミットとして残っていないかも確認する)
 - コミット履歴全体に対してシークレットスキャンツール(例: `gitleaks`、GitHubのsecret scanning)を実行し、APIキーやシークレットが含まれていないことを確認する
 - `.dev.vars.example`に実際のシークレットではなく、プレースホルダーまたは公式のテスト用キーのみが書かれていることを確認する
+
+## 8. 利用規約・プライバシーポリシーの日付の更新
+
+`/terms`・`/privacy`(`src/react-app/routes/terms.tsx`・`privacy.tsx`)の最終改定日と、`src/shared/policy.ts`の`POLICY_VERSION`は、ステップ4の実装時点の日付(2026年9月27日)になっている。公開日が変わる場合は、公開前に両方を実際の公開日に更新する(`POLICY_VERSION`を変更すると、既存の利用者は次回ログイン時に再同意(`/consent`)を求められる)。

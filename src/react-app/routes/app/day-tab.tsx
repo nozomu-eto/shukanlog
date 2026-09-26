@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
-import { useSearchParams, Link } from "react-router";
+import { useSearchParams } from "react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { getDay, type DayCalorieItem, type DayHabit, type DayResponse } from "../../api/days";
 import { getMe } from "../../api/me";
 import { putHabitLog } from "../../api/habit-logs";
@@ -9,9 +9,11 @@ import { toDisplayMessage } from "../../api/errors";
 import { StatusIcon } from "../../components/StatusIcon";
 import { Skeleton } from "../../components/Skeleton";
 import { Button } from "../../components/Button";
+import { PeriodNav } from "../../components/PeriodNav";
 import { useToast } from "../../components/Toast";
 import { CalorieForm } from "./calorie-form";
-import { todayInTokyo, isValidDateString, isFuture, formatDateForDisplay, shiftDays } from "../../../shared/domain/date";
+import { todayInTokyo, isValidDateString, isFuture, formatDateForDisplay } from "../../../shared/domain/date";
+import { getPreviousPeriodDate, getNextPeriodDate, canGoToNextPeriod, canReturnToToday, getPeriodRange } from "../../../shared/domain/period";
 import type { HabitLogResult } from "../../../shared/types";
 import styles from "./day-tab.module.css";
 
@@ -122,32 +124,19 @@ export function DayTabRoute() {
 		pickMutation.mutate({ habitId: habit.id, result: newResult });
 	}
 
+	const dayPeriod = getPeriodRange(date, "day");
+
 	return (
 		<div>
-			<div className={styles.periodBar}>
-				<Link to={hrefForDate(shiftDays(date, -1))} aria-label="前の日" className={styles.navButton}>
-					<ChevronLeft size={20} aria-hidden="true" />
-				</Link>
-				<div className={styles.dateBlock}>
-					<h1 className={styles.dateHeading}>{formatDateForDisplay(date)}</h1>
-					{isToday ? (
-						<span className={styles.todayLabel}>今日</span>
-					) : (
-						<Link to={hrefForDate(today)} className={styles.todayButton}>
-							今日に戻る
-						</Link>
-					)}
-				</div>
-				{isToday ? (
-					<span aria-label="次の日" aria-disabled="true" className={styles.navButton}>
-						<ChevronRight size={20} aria-hidden="true" />
-					</span>
-				) : (
-					<Link to={hrefForDate(shiftDays(date, 1))} aria-label="次の日" className={styles.navButton}>
-						<ChevronRight size={20} aria-hidden="true" />
-					</Link>
-				)}
-			</div>
+			<PeriodNav
+				heading={formatDateForDisplay(date)}
+				prevHref={hrefForDate(getPreviousPeriodDate(date, "day"))}
+				prevLabel="前の日"
+				nextHref={canGoToNextPeriod(dayPeriod, today) ? hrefForDate(getNextPeriodDate(date, "day", today)) : null}
+				nextLabel="次の日"
+				todayHref={canReturnToToday(dayPeriod, today) ? hrefForDate(today) : null}
+				todayLabel={isToday ? "今日" : undefined}
+			/>
 
 			<div className={styles.body}>
 				{dayQuery.isPending ? (

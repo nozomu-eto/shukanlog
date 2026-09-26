@@ -11,7 +11,7 @@
 
 - [x] T1: compatibility_date のルールを直す
 - [x] T2: 記録の楽観的更新を公式の書き方に揃える
-- [ ] T3: 期間の移動の共通部品
+- [x] T3: 期間の移動の共通部品
 - [ ] T4: 週タブ
 - [ ] T5: 月タブ
 - [ ] T6: 日週月の切り替えの確認
@@ -50,3 +50,10 @@
   - `scope: { id: "habit-log" }` で、実際の保存(PUT)自体を発生順に1つずつ実行させる(サーバー側の最終状態も、最後にクリックした操作と一致させるため)
   - scopeは`mutationFn`の実行だけを直列化し、各mutationの`onMutate`/`onError`自体の実行順は保証しない(ソース上、`onMutate`は`mutate()`呼び出し時点で即時実行される)ため、scopeだけでは「古い操作が後から失敗した際のロールバックが、すでに反映されている新しい操作の楽観的更新を消してしまう」可能性が残る。そのため、習慣ごとに直近の操作の連番を`useRef`で持ち、ロールバックは「この操作より後に、同じ習慣への操作が始まっていない場合」だけ行うようにした(習慣ごとに最新の操作だけを反映する、の考え方)
 - テスト(day-tab.test.tsx)に、保存中に画面に戻ったこと等による再取得が重なっても押した状態が保たれること、同じ習慣への連続操作(2回目の後に1回目が失敗)で2回目の状態が残ることの2つを追加した。テストのモックは、実際のサーバーと同様に保存内容を反映するようにし(invalidateQueriesによる再取得が現実的な値を返すようにする)、フリー放置される`getDayMock`が常に初期状態を返すことで発生する誤検知を避けた
+
+### T3
+
+- `src/shared/domain/period.ts`の`PeriodUnit`に`"day"`を追加し、`getPreviousPeriodDate`・`getNextPeriodDate`がdayのときは1日ずつ移動するようにした。日タブを「start===endの1日だけの期間」として扱えば、`canGoToNextPeriod`・`canReturnToToday`(DateRangeを受け取る既存の関数)もそのまま使えるため、`getPeriodRange(date, unit)`(day→{start:date,end:date}、week/month→既存の関数)を追加してdate単体から範囲を作れるようにした
+- 期間の移動のUI(前へ・見出し(h1)・次へ・今日に戻る)を`src/react-app/components/PeriodNav.tsx`(+`PeriodNav.module.css`)に抽出した。前後の移動先・可否の計算はperiod.tsの関数を使い、呼び出し側(各タブ)がhrefを組み立てて渡す設計にした(部品自体はページ内の状態やAPIを持たない)
+- 今日を含む期間のときの表示(日タブは「今日」ラベル、週・月タブは何も表示しない)を`todayLabel`propの有無で切り替えられるようにした(todayHrefがnullのときのフォールバック)
+- 日タブ(day-tab.tsx)をPeriodNavに置き換え、ステップ3のテスト(day-tab.test.tsx)がすべて通ることを確認した。period.test.tsにday単位のテストを追加した

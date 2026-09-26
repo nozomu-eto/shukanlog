@@ -12,7 +12,7 @@
 - [x] T1: 本番のメール送信先の制限を外す
 - [x] T2: 静的ファイルのヘッダを_headersで付ける
 - [x] T3: CSPのスタイルの方針を決める
-- [ ] T4: 使わないコードだけのログインの入口を閉じる
+- [x] T4: 使わないコードだけのログインの入口を閉じる
 - [ ] T5: react-routerに一本化する
 - [ ] T6: 共通の定数と型
 - [ ] T7: 日本時間の日付の関数
@@ -56,3 +56,13 @@
 
 - Honoの`secureHeaders`の型定義(node_modules/hono/dist/types/middleware/secure-headers/secure-headers.d.ts)で`styleSrcElem`・`styleSrcAttr`ディレクティブが指定できることを確認した。`style-src-elem 'self'`(style要素・外部CSSは自分自身のみ)、`style-src-attr 'unsafe-inline'`(style属性は許可。計算で決まる値のみに使う運用ルールで補う)を、Hono側(src/worker/middleware/security-headers.ts)とpublic/_headersの両方に反映した(値はsrc/shared/security-headers.tsに一元化済み)
 - AGENTS.mdに「style属性は計算で決まる値だけに使う」ルールを追記した
+
+### T4
+
+- インストール済みのbetter-authのソース(node_modules/better-auth/dist/plugins/email-otp/routes.mjs、index.mjs)を確認し、emailOTPプラグインが登録するエンドポイント一覧(いずれも/api/auth配下)を洗い出した
+  - `POST /sign-in/email-otp`: メールアドレスとコードだけでログインできる(パスワード不要)。shukanlogでは使わないため**閉じた**
+  - `POST /email-otp/send-verification-otp`・`/email-otp/verify-email`・`/email-otp/check-verification-otp`: メールアドレス確認用のコード送信・検証(T7で使用中)。閉じていない
+  - `POST /email-otp/request-password-reset`・`/email-otp/reset-password`・`/forget-password/email-otp`: パスワード再設定用(T7で使用中)。閉じていない
+  - `POST /email-otp/request-email-change`・`/email-otp/change-email`: メールアドレス変更用。ステップ4で使う予定のためエンドポイント自体は閉じていないが、`changeEmail.enabled`オプションを有効化していないため、呼び出すとBetter Auth自身が400(`Change email with OTP is disabled`)を返す実装になっていることをソースで確認した(ログインできる系ではないため、指示の対象外と判断)
+  - `createVerificationOTP`・`getVerificationOTP`エンドポイントはOTP値の作成・参照のみでセッションを発行しない(ログイン機能ではない)ため閉じる対象外と判断した
+- 上記より、閉じる対象は`/api/auth/sign-in/email-otp`の1つのみと判断し、`src/worker/middleware/disabled-auth-endpoints.ts`でBetter Authに処理を渡す前に404(`{ error: { code: "NOT_FOUND", message: "Not Found" } }`)を返すようにした

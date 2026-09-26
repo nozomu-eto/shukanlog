@@ -24,7 +24,7 @@
 - [x] T13: メール未確認ユーザーの削除(定期処理)
 - [x] T14: 利用規約・プライバシーポリシーのページ(/terms、/privacy)
 - [x] T15: ライセンスのページ(/licenses)
-- [ ] T16: 旧資料の片付け
+- [x] T16: 旧資料の片付け
 - [ ] T17: 画面の動作確認
 - [ ] T18: ドキュメント
 - [ ] T19: ステップ5への持ち越し
@@ -145,3 +145,9 @@
 
 - docs/licenses.mdの一覧をもとに、フォント(SIL Open Font License 1.1)とアイコン(LucideのISC License、Feather由来アイコンのMIT License)のライセンス全文を、node_modules内の各パッケージのLICENSEファイルからそのまま(公式の文面)埋め込んだ。表(フォント2種・アイコンの出典)は既存のPolicyLayoutの表スタイルを追加して使った
 - 設定画面のサポート欄(利用規約・プライバシーポリシーの下)とトップページのフッターに「ライセンス」のリンクを追加した
+
+### T16
+
+- docs/legacy/の内容(limits.ts・initial-habits.ts・email-templates.md・terms.md・privacy.md)がいずれもsrc/shared/・src/worker/lib/mail-templates.ts・T14のterms.tsx・privacy.tsxに移植済みであることを確認し、docs/legacy/を削除した(date.tsもsrc/shared/domain/date.tsとして既に移植済み)
+- AGENTS.md・CLAUDE.md・tsconfig.json・eslint.config.jsからdocs/legacy/への言及を削除した(CLAUDE.mdはタスクの指示に無かったが、AGENTS.mdと同内容の記述が残っていたため一貫性のためあわせて削除した)
+- 各ソースファイル内の「docs/legacy/xxx.ts(旧リポジトリ)から移植したもの」という由来を示すコメントは、移植元の履歴情報として残しておく判断をした(実装の参照先としてではなく、経緯の記録として無害なため)

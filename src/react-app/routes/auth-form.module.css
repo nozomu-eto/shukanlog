@@ -1,0 +1,129 @@
+/* ログイン・新規登録・確認コード・パスワード再設定・利用規約への同意で共通に使う、
+   認証画面のフォームのレイアウト。docs/design.md 5章(認証画面は幅440pxのカード、同意画面のみ560px) */
+.page {
+	min-height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.main {
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+	padding: 20px 20px 24px;
+	box-sizing: border-box;
+}
+
+/* 見出し・入力欄・ボタン等を縦に並べる共通の箱。<form>要素にも、その外側の箱(.card)にも使う */
+.stack {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+}
+
+/* フォーム全体を囲む箱。スマホは.mainがそのまま兼ねるが、PCでは中央寄せのカードにするため別要素にしている */
+.card {
+}
+
+.heading {
+	margin: 0;
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 24px;
+	line-height: 1.4;
+}
+
+.lead {
+	margin: 0;
+	font-size: 15px;
+	line-height: 1.8;
+	color: var(--color-text-muted);
+}
+
+.statusBanner {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 12px;
+	padding: 12px 14px;
+	font-size: 14px;
+	font-weight: 500;
+}
+
+.linkRow {
+	align-self: flex-start;
+	min-height: 44px;
+	display: flex;
+	align-items: center;
+	font-size: 14px;
+	color: var(--color-text);
+	text-decoration: none;
+}
+
+.centerLink {
+	align-self: center;
+	min-height: 44px;
+	display: flex;
+	align-items: center;
+	font-size: 14px;
+	color: var(--color-text);
+	text-decoration: none;
+}
+
+.footNote {
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.6;
+	color: var(--color-text-muted);
+	text-align: center;
+}
+
+.footNote a {
+	font-weight: 700;
+	color: var(--color-text);
+}
+
+.resendBlock {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	align-items: center;
+}
+
+.resendNote {
+	font-size: 13px;
+	line-height: 1.6;
+	color: var(--color-text-muted);
+	text-align: center;
+}
+
+.turnstile {
+	height: 65px;
+	max-width: 300px;
+	box-sizing: border-box;
+}
+
+@media (min-width: 1024px) {
+	.main {
+		align-items: flex-start;
+		justify-content: center;
+		padding-top: 48px;
+		flex-direction: row;
+	}
+
+	.card {
+		width: 440px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: 20px;
+		padding: 32px;
+		box-sizing: border-box;
+	}
+
+	.cardWide {
+		width: 560px;
+	}
+
+	.heading {
+		font-size: 28px;
+	}
+}

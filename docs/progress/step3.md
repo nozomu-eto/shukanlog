@@ -13,7 +13,7 @@
 - [x] T2: テストの新規登録の回数制限を外す
 - [x] T3: 画面の土台(データ取得・認証クライアント・API クライアント)
 - [x] T4: 共通の部品
-- [ ] T5: トップページ(/)
+- [x] T5: トップページ(/)
 - [ ] T6: ログイン(/login)
 - [ ] T7: 新規登録(/signup)と Turnstile
 - [ ] T8: 確認コードの入力(/verify)
@@ -69,3 +69,9 @@
 - jsdomが`<dialog>`のshowModal()/close()、Escキーでのcancelイベントを実装していないため、test/frontend/setup.tsに最小限のポリフィルを追加した(実ブラウザの完全な再現ではなく、テストに必要な範囲のみ)
 - test.globalsを有効にしていないため、@testing-library/reactの自動cleanup(afterEachでのunmount)が効かないことに気づき、test/frontend/setup.tsに明示的なafterEach(cleanup)を追加した(1ファイル内で複数のitが同じ部品を描画するテストが増えるこのステップ以降で必要になるため)
 - 未ログイン向けの画面の枠(UnauthHeader.tsx)は、サービス名のみ・戻る矢印付き・「ログイン」リンク付きの組み合わせをprops(backTo, showLogin)で切り替えられるようにした
+
+### T5
+
+- authClient.useSession()でログイン状態を判定し、isPendingの間は何も表示せず(画面のちらつき防止)、セッションがあれば/appへNavigateする実装にした
+- 週のふりかえりの例(今週のふりかえりカード)は、docs/design/mockups/Top.dc.htmlのサンプルデータ(服薬◯◯×◯◯、運動△◯×△◯)をそのままStatusIconで再現した
+- フッターの利用規約・プライバシーポリシーへのリンクは、アプリ内遷移のためreact-routerのLinkにした(モックアップは#terms等のプレースホルダーだが、実際のルート/terms・/privacyへのリンクにする判断をした)。お問い合わせはモックアップ通りmailto:のaタグのままにした

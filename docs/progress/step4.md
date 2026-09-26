@@ -17,7 +17,7 @@
 - [x] T6: 日週月の切り替えの確認
 - [x] T7: 設定画面(/app/settings)
 - [x] T8: メールアドレスの変更(/app/settings/email)
-- [ ] T9: パスワードの変更(/app/settings/password)
+- [x] T9: パスワードの変更(/app/settings/password)
 - [ ] T10: 退会の仕組み(サーバー)
 - [ ] T11: 退会の画面(/app/settings/withdraw)
 - [ ] T12: 退会から30日後の完全削除(定期処理)
@@ -97,3 +97,10 @@
 - コードの確認・変更の確定(`POST /email-otp/change-email`)自体は、独自の検証が不要なためBetter Authの標準エンドポイントをフロントエンドから直接呼び出す(`authClient.emailOtp.changeEmail()`)。この呼び出しは通常のfetch(Cookie送受信付き)を経由するため、成功時にBetter Auth側が発行するセッションの更新(新しいメールアドレスを反映したCookie)がそのままブラウザに反映される。これにより、サーバー側で新しいSet-Cookieを手動で転送する実装(`auth.api.X()`をasResponse付きで呼び出しCookieを付け替える等)を避けられた
 - 確認コードの送信は、書き込み全般用のAPI_RATE_LIMITER(60秒60回)では粗すぎる(既知の落とし穴5と同じ考え方、Better Auth側の確認コード送信customRulesは60秒に1回)ため、専用のWorkers Rate Limitingバインディング`EMAIL_CHANGE_RATE_LIMITER`(60秒に1回)を追加した
 - テスト(test/worker/account-email-change.test.ts)は、誤ったパスワードでは送信されない、既に使われているメールアドレスでは送信されずエラーになる、確認前は`GET /api/me`が元のメールアドレスのままで確認後に変わる、変更後は新しいメールアドレスでログインでき古いメールアドレスではログインできないことを確認した。`POST /api/auth/email-otp/change-email`の直接呼び出しにはOriginヘッダーが必須(Better Auth側のCSRF対策、BETTER_AUTH_URLと一致する必要がある)であることがテスト実行時のエラーから分かったため、テストのfetchにも付けた
+
+### T9
+
+- Better Auth本体(プラグインではなくコア)に`POST /change-password`(`authClient.changePassword`)が既に用意されており、`currentPassword`・`newPassword`・`revokeOtherSessions`を渡せることをソース(api/routes/update-user.mjs)で確認した。`revokeOtherSessions: true`にすると、内部で対象利用者の全セッション(呼び出し中の現在のセッションを含む)を削除したうえで、その場で新しいセッションを1つ発行し直す実装だった(`deleteUserSessions`→`createSession`→`setSessionCookie`)。そのため「ほかの端末を無効にしつつ今の端末はログインしたまま」は、この呼び出し自体のレスポンスが返す新しいCookieがブラウザにそのまま反映されることで実現される(サーバー側で個別に古いセッションだけを選んで消す実装は不要だった)
+- 現在のパスワードが誤っている場合は`INVALID_PASSWORD`(Better Auth本体のBASE_ERROR_CODES)が返るため、T6で使ったものと同じ`getAuthErrorCode()`で判定した
+- 画面(settings-password.tsx)はdocs/design/mockups/PasswordChange.dc.html・PasswordChangePC.dc.htmlの2ステップ(入力→完了)構成をそのまま実装した
+- テスト(test/worker/account-password-change.test.ts)は、同じ利用者で2つ目のセッション(別端末を想定)を作ってから変更し、他の端末のセッションが無効になること・今の端末は変更時の新しいCookieでログインしたままなこと・新しいパスワードでログインできて古いパスワードでは失敗することを確認した。フロントエンドのテスト(settings-password.test.tsx)はauthClientをモックし、revokeOtherSessions:trueで呼び出されること・エラー表示を確認した

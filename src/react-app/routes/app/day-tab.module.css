@@ -209,23 +209,6 @@
 		padding: 24px 0;
 	}
 
-	.periodBar {
-		width: 1040px;
-		margin: 0 auto;
-		padding: 24px 0 0;
-		gap: 12px;
-		justify-content: flex-start;
-	}
-
-	.navButton {
-		border: 1px solid var(--color-border);
-		background: var(--color-surface);
-	}
-
-	.dateHeading {
-		font-size: 26px;
-	}
-
 	.columns {
 		display: grid;
 		grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);

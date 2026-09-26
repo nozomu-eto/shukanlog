@@ -13,7 +13,7 @@
 - [x] T2: 記録の楽観的更新を公式の書き方に揃える
 - [x] T3: 期間の移動の共通部品
 - [x] T4: 週タブ
-- [ ] T5: 月タブ
+- [x] T5: 月タブ
 - [ ] T6: 日週月の切り替えの確認
 - [ ] T7: 設定画面(/app/settings)
 - [ ] T8: メールアドレスの変更(/app/settings/email)
@@ -66,3 +66,11 @@
 - 集計はGET /api/summary(既にステップ2で実装済み)を使い、期間はsrc/shared/domain/periodのgetWeekRangeで算出する。各マスの読み上げラベルは、未来の日は「9月26日 未来の日」、それ以外は「9月23日 服薬 未達成」(week-month-tabs.md 1.7)とし、getStatusLabel(StatusIconから export済み)を再利用した
 - カロリーの棒グラフの高さは、期間内の最大値を基準にした比率(最大80px、最小4px)で計算する実装にした(モックアップは固定の除数2200を使っていたが、値の大きさに応じて相対的に見やすくなるよう期間内最大値基準にした判断)
 - テスト(week-tab.test.tsx)では、todayInTokyo()が実行環境の現在時刻に依存するため、src/shared/domain/dateをvi.mockして「今日」を2026-09-24に固定した(fakeTimersはreact-queryの内部タイマーやwaitForのポーリングと干渉してテストがタイムアウトしたため、todayInTokyoの部分モックに変更した)
+
+### T5
+
+- PC(1024px以上)の右カラム(マスの見方・服薬・運動・平均カロリー・凡例)は、モックアップ上は1本の縦並びだが、モバイルでは「マスの見方」の説明はカレンダーカード内の見出し行(cellLegendHint)、服薬・運動・平均カロリーは3列(カロリー無効時2列)のグリッド、凡例は別カードという構成で、DOM構造自体が異なって見える。AGENTS.mdの「DOMの親子構造を条件分岐で変えない」方針を保つため、両方の要素(cellLegendHintとhintCard)を常にDOMに置き、CSSの`display:none`/`display:contents`の切り替えだけでモバイル/PCの見た目を作った(hintCardはモバイルで非表示、cellLegendHintはPCで非表示、summaryのgrid-template-columnsはPCで`display:contents`にして`.side`のflexカラムに合流させる)
+- カロリーの桁区切り(スマホはなし・PCはあり)も同様に、両方の文字列を常にレンダリングし、CSSで出し分ける(mobileOnly/pcOnlyクラス)実装にした
+- マスの読み上げラベルは、月タブの仕様(week-month-tabs.md 1.7)の「9月3日 服薬 達成 運動 一部達成 1950kcal」「カロリー記録なし」「未来の日」の3パターンをそのまま実装した。カロリー記録が無効な利用者にはkcal部分を付けない(カロリー自体を出さないため、記録なしとも言わない)
+- 月間サマリーの分母(eligibleDays)・平均カロリーはGET /api/summaryのtotalsをそのまま使う。服薬(2段階)は◯の数のみ、運動(3段階)は◯△の数を表示する(week-month-tabs.md 3.3)
+- テスト(month-tab.test.tsx)は、2026年2月(1日が日曜)を「今日」に固定して、月曜始まりのカレンダーの空欄マス数(前月分6+翌月分1=7)、未来のマスがリンクでないこと、カロリー無効時の表示(マスにkcalが出ない、説明が「左:服薬 右:運動」になる)を確認した

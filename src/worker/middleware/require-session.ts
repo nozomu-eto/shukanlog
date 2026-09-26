@@ -13,6 +13,7 @@ export const requireSession: MiddlewareHandler<AppEnv> = async (c, next) => {
 	}
 
 	c.set("userId", session.user.id);
+	c.set("userEmail", session.user.email);
 	// user.createdAtはBetter Auth側でDateとして返るが、念のためnew Date()で正規化してから変換する
 	c.set("accountCreatedDate", toTokyoDateString(new Date(session.user.createdAt)));
 

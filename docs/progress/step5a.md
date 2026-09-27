@@ -14,7 +14,7 @@
 - [x] T3: ページのタイトル・説明・OGP
 - [x] T4: 検索エンジンに載せないページ
 - [x] T5: robots.txtとサイトマップ
-- [ ] T6: CSPとの整合の確認
+- [x] T6: CSPとの整合の確認
 - [ ] T7: ドキュメント
 - [ ] T8: PRの作成
 
@@ -62,3 +62,9 @@
 - public/robots.txtは`/api/`のみをDisallowにし、`/app`などはDisallowにしなかった。**判断**: `/app`等をDisallowにすると、クローラーがそのURLを一切取得しなくなり、T4で付けたX-Robots-Tag: noindexヘッダー自体を読めなくなる。その結果、他のページ(検索結果一覧やSNS等)からリンクされているURLが、内容不明のまま検索結果の見出し・URLだけの状態で残ってしまう可能性がある(Googleのドキュメントで説明されている既知の挙動)。noindexを確実に効かせるには、クローラーがそのページを取得できる状態(Disallowにしない)にしておく必要があるため、Disallowは`/api/`だけにした
 - public/sitemap.xmlは、公開してよい4ページ(`/`・`/terms`・`/privacy`・`/licenses`)の絶対URLのみを載せた(ログイン後・認証まわりのページはT4でnoindexにしているため載せない)
 - テスト(test/frontend/robots-and-sitemap.test.ts)で、robots.txtの内容(Allow・Disallow・Sitemapの行、/appなどをDisallowにしていないこと)とsitemap.xmlの4URLを確認した
+
+### T6
+
+- MDN(CSPのmanifest-src・img-src・default-srcの各ページ)で確認した。`manifest-src`ディレクティブが無い場合は`default-src`にフォールバックする(`<link rel="manifest">`の取得を制御する)。favicon・apple-touch-iconのようなアイコンは専用のディレクティブが無く`img-src`が対象になり、これも指定が無い場合は`default-src`にフォールバックする
+- 現在のCSP(`src/shared/security-headers.ts`のCSP_DIRECTIVES)には`manifest-src`・`img-src`が個別に定義されていないため、いずれも`default-src 'self'`にフォールバックする。T2で追加したmanifest.webmanifest・各アイコン(favicon.svg・favicon.ico・apple-touch-icon.png等)はすべて同一オリジン(自分自身)から配信するため、`'self'`で許可される。OGP画像(og-image.png)はSNS等の外部サービスが直接取得するものでブラウザがCSPを適用する対象ではないため、そもそもCSPの制約を受けない
+- 上記の確認により、T2〜T5で追加したファイルはいずれも現在のCSP(Report-Only)に違反しないと判断した。Hono側の設定(src/worker/middleware/security-headers.ts)・public/_headersのどちらも変更不要(コードの変更は無し)

@@ -15,7 +15,7 @@
 - [x] T4: 検索エンジンに載せないページ
 - [x] T5: robots.txtとサイトマップ
 - [x] T6: CSPとの整合の確認
-- [ ] T7: ドキュメント
+- [x] T7: ドキュメント
 - [ ] T8: PRの作成
 
 ## 判断ログ
@@ -68,3 +68,8 @@
 - MDN(CSPのmanifest-src・img-src・default-srcの各ページ)で確認した。`manifest-src`ディレクティブが無い場合は`default-src`にフォールバックする(`<link rel="manifest">`の取得を制御する)。favicon・apple-touch-iconのようなアイコンは専用のディレクティブが無く`img-src`が対象になり、これも指定が無い場合は`default-src`にフォールバックする
 - 現在のCSP(`src/shared/security-headers.ts`のCSP_DIRECTIVES)には`manifest-src`・`img-src`が個別に定義されていないため、いずれも`default-src 'self'`にフォールバックする。T2で追加したmanifest.webmanifest・各アイコン(favicon.svg・favicon.ico・apple-touch-icon.png等)はすべて同一オリジン(自分自身)から配信するため、`'self'`で許可される。OGP画像(og-image.png)はSNS等の外部サービスが直接取得するものでブラウザがCSPを適用する対象ではないため、そもそもCSPの制約を受けない
 - 上記の確認により、T2〜T5で追加したファイルはいずれも現在のCSP(Report-Only)に違反しないと判断した。Hono側の設定(src/worker/middleware/security-headers.ts)・public/_headersのどちらも変更不要(コードの変更は無し)
+
+### T7
+
+- docs/architecture.mdに「公開の準備(アイコン・OGP・検索エンジン向けの設定)」の章を追加し、アイコン・Manifest・Service Workerを入れない判断・ページタイトル/OGP・noindex・robots.txt/サイトマップの構成をまとめた
+- docs/production-verification.mdに「11. 公開の準備(ファビコン・OGP・検索エンジン)の確認」を追加し、SNSのカード表示確認・ホーム画面への追加(iPhone Safari・Android Chrome)・Search Consoleへのサイトマップ登録・curl -IでのX-Robots-Tag確認を記載した

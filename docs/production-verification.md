@@ -71,3 +71,14 @@ Cloudflareダッシュボードの請求設定で、Workers・D1・Email Sending
 1. 退会すると即座にログインできなくなり、30日間はデータが残ること
 2. 30日以内に同じメールアドレス・パスワードでログインすると退会が取り消され、「退会を取り消しました」が1回だけ表示されること
 3. Cron Triggerの実行(または`runScheduledPurge`相当の処理)で、30日を過ぎた退会の利用者のデータが完全に削除され、関連するテーブルの行も連動して削除されること
+
+## 11. 公開の準備(ファビコン・OGP・検索エンジン)の確認
+
+ステップ5aで追加したファビコン・Manifest・OGP・robots.txt・サイトマップ・noindexは、実際に本番URL(https://shukanlog.com)で表示・取得できることを本番公開後に確認する。
+
+1. 各SNS(X、Facebook等)のカード表示確認ツールに`https://shukanlog.com/`を入力し、OGPの画像(og-image.png)・タイトル・説明が正しく表示されることを確認する
+2. ホーム画面への追加を実機で確認する
+   - iPhoneのSafari: 共有メニューから「ホーム画面に追加」し、アイコン(apple-touch-icon.png)とアプリ名(shukanlog)が正しく表示されることを確認する
+   - AndroidのChrome: メニューから「ホーム画面に追加」(または自動表示されるインストールバナー)で、Manifestのアイコン(icon-192.png・icon-512.png・icon-maskable-512.png)とアプリ名が正しく表示されることを確認する
+3. 検索エンジン(Google Search Console等)にサイトマップ(`https://shukanlog.com/sitemap.xml`)を登録する
+4. `curl -I https://shukanlog.com/app`・`curl -I https://shukanlog.com/login`等で、ログイン後・認証まわりの画面に`X-Robots-Tag: noindex`ヘッダーが付いていることを確認する(公開ページ`/`・`/terms`等には付いていないことも合わせて確認する)

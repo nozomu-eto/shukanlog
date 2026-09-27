@@ -13,7 +13,7 @@
 - [x] T2: ファビコンとホーム画面のアイコン
 - [x] T3: ページのタイトル・説明・OGP
 - [x] T4: 検索エンジンに載せないページ
-- [ ] T5: robots.txtとサイトマップ
+- [x] T5: robots.txtとサイトマップ
 - [ ] T6: CSPとの整合の確認
 - [ ] T7: ドキュメント
 - [ ] T8: PRの作成
@@ -56,3 +56,9 @@
 - Cloudflareの公式ドキュメント(Pages Configuration / Headers、Workers Static Assets / Headers。両者とも同じ`_headers`形式)で、複数のルールが同じパスにマッチした場合の挙動を確認した。「一致した全ルールのヘッダーを継承する(組み合わさる)」であり、特定のルールが他を上書きするわけではない。同じヘッダー名が複数のルールにあると値がカンマ区切りで連結される。今回追加する`X-Robots-Tag`は既存の`/*`ルールには無いヘッダーのため、既存のセキュリティヘッダ(HSTS・CSP等)とは競合せず、単純に追加される
 - public/_headersに、`/app`・`/app/*`・`/login`・`/signup`・`/verify`・`/reset`・`/reset/*`・`/consent`のそれぞれに`X-Robots-Tag: noindex`を追加した。公開してよいページ(`/`・`/terms`・`/privacy`・`/licenses`)には追加していない(既存の`/*`ルールのみが当たる)
 - テスト(test/frontend/robots-tag-file.test.ts)は、ステップ2の`security-headers-file.test.ts`と同じ考え方(_headersファイルをパスごとのブロックにパースして確認)で、上記8パスにnoindexが付き、`/*`・`/terms`・`/privacy`・`/licenses`には付いていないことを確認した
+
+### T5
+
+- public/robots.txtは`/api/`のみをDisallowにし、`/app`などはDisallowにしなかった。**判断**: `/app`等をDisallowにすると、クローラーがそのURLを一切取得しなくなり、T4で付けたX-Robots-Tag: noindexヘッダー自体を読めなくなる。その結果、他のページ(検索結果一覧やSNS等)からリンクされているURLが、内容不明のまま検索結果の見出し・URLだけの状態で残ってしまう可能性がある(Googleのドキュメントで説明されている既知の挙動)。noindexを確実に効かせるには、クローラーがそのページを取得できる状態(Disallowにしない)にしておく必要があるため、Disallowは`/api/`だけにした
+- public/sitemap.xmlは、公開してよい4ページ(`/`・`/terms`・`/privacy`・`/licenses`)の絶対URLのみを載せた(ログイン後・認証まわりのページはT4でnoindexにしているため載せない)
+- テスト(test/frontend/robots-and-sitemap.test.ts)で、robots.txtの内容(Allow・Disallow・Sitemapの行、/appなどをDisallowにしていないこと)とsitemap.xmlの4URLを確認した

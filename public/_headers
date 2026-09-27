@@ -35,3 +35,23 @@
   Cache-Control: public, max-age=86400
 /og-image.png
   Cache-Control: public, max-age=86400
+
+# ログイン後・認証まわりの画面は検索結果に載せる必要が無いため、X-Robots-Tagで検索エンジンに
+# 除外してもらう(公開してよいページ: / ・/terms ・/privacy ・/licenses には付けない)。
+# /* のルールとは(同じヘッダー名が無いため)組み合わさる形で両方のヘッダーが付く
+/app
+  X-Robots-Tag: noindex
+/app/*
+  X-Robots-Tag: noindex
+/login
+  X-Robots-Tag: noindex
+/signup
+  X-Robots-Tag: noindex
+/verify
+  X-Robots-Tag: noindex
+/reset
+  X-Robots-Tag: noindex
+/reset/*
+  X-Robots-Tag: noindex
+/consent
+  X-Robots-Tag: noindex

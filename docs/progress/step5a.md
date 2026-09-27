@@ -12,7 +12,7 @@
 - [x] T1: 新規登録画面で、退会の取り消し方法を案内する(スキップ)
 - [x] T2: ファビコンとホーム画面のアイコン
 - [x] T3: ページのタイトル・説明・OGP
-- [ ] T4: 検索エンジンに載せないページ
+- [x] T4: 検索エンジンに載せないページ
 - [ ] T5: robots.txtとサイトマップ
 - [ ] T6: CSPとの整合の確認
 - [ ] T7: ドキュメント
@@ -50,3 +50,9 @@
 - 利用規約・プライバシーポリシー・ライセンスの3ページは、共通レイアウトのPolicyLayout.tsxが受け取る`title` propをそのままPageTitleに渡す実装にした(各ページのファイルを個別に直す必要が無いようにするため)
 - 404ページは`noindex`をtrueにしてmeta robotsを付けた
 - テスト(test/frontend/page-title.test.tsx)で、ログイン画面・利用規約ページ・404ページのdocument.titleと、404のnoindexのmetaを確認した
+
+### T4
+
+- Cloudflareの公式ドキュメント(Pages Configuration / Headers、Workers Static Assets / Headers。両者とも同じ`_headers`形式)で、複数のルールが同じパスにマッチした場合の挙動を確認した。「一致した全ルールのヘッダーを継承する(組み合わさる)」であり、特定のルールが他を上書きするわけではない。同じヘッダー名が複数のルールにあると値がカンマ区切りで連結される。今回追加する`X-Robots-Tag`は既存の`/*`ルールには無いヘッダーのため、既存のセキュリティヘッダ(HSTS・CSP等)とは競合せず、単純に追加される
+- public/_headersに、`/app`・`/app/*`・`/login`・`/signup`・`/verify`・`/reset`・`/reset/*`・`/consent`のそれぞれに`X-Robots-Tag: noindex`を追加した。公開してよいページ(`/`・`/terms`・`/privacy`・`/licenses`)には追加していない(既存の`/*`ルールのみが当たる)
+- テスト(test/frontend/robots-tag-file.test.ts)は、ステップ2の`security-headers-file.test.ts`と同じ考え方(_headersファイルをパスごとのブロックにパースして確認)で、上記8パスにnoindexが付き、`/*`・`/terms`・`/privacy`・`/licenses`には付いていないことを確認した

@@ -11,7 +11,7 @@
 
 - [x] T1: 新規登録画面で、退会の取り消し方法を案内する(スキップ)
 - [x] T2: ファビコンとホーム画面のアイコン
-- [ ] T3: ページのタイトル・説明・OGP
+- [x] T3: ページのタイトル・説明・OGP
 - [ ] T4: 検索エンジンに載せないページ
 - [ ] T5: robots.txtとサイトマップ
 - [ ] T6: CSPとの整合の確認
@@ -39,3 +39,14 @@
 - **Service Workerを入れない判断**: ログイン状態に依存する画面(/app配下)をService Workerでキャッシュすると、ログアウト後や別の利用者でのログイン後に、古い画面やキャッシュされたほかの人の情報が表示される危険がある。ホーム画面への追加自体はWeb App Manifestとアイコンだけで実現でき、Service Workerが無くても機能するため、オフライン対応・PWAとしてのインストール促進(beforeinstallprompt等)は今回スコープに含めず、Service Workerを追加しないことにした
 - public/_headersに、アイコン・manifest・OGP画像へのCache-Control(max-age=86400)を追加した。これらはビルド時にハッシュが付かないファイル名のため、/assets/*と同じ長期間のimmutableにはせず、更新時に古いキャッシュが残る期間を1日に抑えた
 - テスト(test/frontend/manifest.test.ts)で、manifest.webmanifestが正しいJSONであること・name等の指定値・指定したアイコンファイルがpublic/に実在すること・maskableの指定を確認した
+
+### T3
+
+- index.html(静的HTML)にtitle・meta description・canonical・OGP(og:title/description/type/url/image/image:width/image:height/image:alt/locale/site_name)・twitter:cardを直接書いた。SNS・検索エンジンの多くはJavaScriptを実行せずに読むため、Reactが起動する前の状態でも正しい情報が読めるようにする(指示通り)
+- package.jsonでreact 19.2.1を使っていることを確認したため、各画面のタイトルはReact 19のドキュメントメタデータの機能(コンポーネント内で`<title>`・`<meta>`を描画すると、Reactが自動で`<head>`内へ移動させる)を使う`src/react-app/components/PageTitle.tsx`を作り、各ルートコンポーネントの先頭に配置した(useEffectでdocument.titleを書き換える実装は不要だった)
+- トップページ(/)は、index.htmlの静的なtitleと同じ内容(「shukanlog | カロリーと習慣をシンプルに記録するアプリ」)にすべきだが、フォーマットが「<画面名> | shukanlog」と異なる特別扱いになるため、TopRouteコンポーネントでは`<title>`を描画せず、index.htmlの静的な値をそのまま使う(重複した定義を避けるための判断)
+- 日・週・月タブは、既存のPeriodNavのheading(`formatDateForDisplay`・`formatWeekPeriodDisplay`・`formatMonthPeriodDisplay`)と同じ文字列をそのままタイトルにした(見出しとタイトルの文言が常に一致するようにするため)
+- 設定・サブページ(/app/settings以下)は、AppShell(app-shell.tsx)が既に持っているSETTINGS_PAGESの対応表(モバイルの「戻る」ヘッダーの見出しに使っているもの)をそのままPageTitleに再利用した(見出しの文言を2か所で別々に持たないようにするため)
+- 利用規約・プライバシーポリシー・ライセンスの3ページは、共通レイアウトのPolicyLayout.tsxが受け取る`title` propをそのままPageTitleに渡す実装にした(各ページのファイルを個別に直す必要が無いようにするため)
+- 404ページは`noindex`をtrueにしてmeta robotsを付けた
+- テスト(test/frontend/page-title.test.tsx)で、ログイン画面・利用規約ページ・404ページのdocument.titleと、404のnoindexのmetaを確認した

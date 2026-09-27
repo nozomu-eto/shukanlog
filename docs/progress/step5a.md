@@ -16,7 +16,11 @@
 - [x] T5: robots.txtとサイトマップ
 - [x] T6: CSPとの整合の確認
 - [x] T7: ドキュメント
-- [ ] T8: PRの作成
+- [x] T8: PRの作成
+
+## PR
+
+https://github.com/n-eto-dev/shukanlog/pull/8 (feat/finishing → feat/ui-settings。マージはしていない。PR #7がマージされていれば main に向け直す)
 
 ## 判断ログ
 
@@ -73,3 +77,7 @@
 
 - docs/architecture.mdに「公開の準備(アイコン・OGP・検索エンジン向けの設定)」の章を追加し、アイコン・Manifest・Service Workerを入れない判断・ページタイトル/OGP・noindex・robots.txt/サイトマップの構成をまとめた
 - docs/production-verification.mdに「11. 公開の準備(ファビコン・OGP・検索エンジン)の確認」を追加し、SNSのカード表示確認・ホーム画面への追加(iPhone Safari・Android Chrome)・Search Consoleへのサイトマップ登録・curl -IでのX-Robots-Tag確認を記載した
+
+### T8
+
+- `gh pr view 7`でPR #7がまだマージされていない(state: OPEN)ことを確認したため、指示通りfeat/ui-settingsをベースにPRを作成した(https://github.com/n-eto-dev/shukanlog/pull/8)。PR #7がマージされた後は、ベースをmainに向け直す必要がある

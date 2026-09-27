@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { authClient, getAuthErrorCode } from "../lib/auth-client";
 import { UnauthHeader } from "../components/UnauthHeader";
+import { PageTitle } from "../components/PageTitle";
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { validateOtp } from "../lib/validators";
@@ -98,6 +99,7 @@ export function VerifyRoute() {
 
 	return (
 		<div className={styles.page}>
+			<PageTitle title="確認コードの入力" />
 			<UnauthHeader backTo="/signup" />
 			<main className={styles.main}>
 				<div className={`${styles.stack} ${styles.card}`}>

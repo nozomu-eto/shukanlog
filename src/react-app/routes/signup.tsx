@@ -6,6 +6,7 @@ import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { PasswordField } from "../components/PasswordField";
 import { Turnstile } from "../components/Turnstile";
+import { PageTitle } from "../components/PageTitle";
 import { validateEmail, validateNewPassword } from "../lib/validators";
 import { setPendingEmail } from "../lib/pending-email";
 import styles from "./auth-form.module.css";
@@ -75,6 +76,7 @@ export function SignupRoute() {
 
 	return (
 		<div className={styles.page}>
+			<PageTitle title="新規登録" />
 			<UnauthHeader backTo="/" />
 			<main className={styles.main}>
 				<div className={`${styles.stack} ${styles.card}`}>

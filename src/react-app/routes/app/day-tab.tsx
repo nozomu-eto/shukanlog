@@ -10,6 +10,7 @@ import { StatusIcon } from "../../components/StatusIcon";
 import { Skeleton } from "../../components/Skeleton";
 import { Button } from "../../components/Button";
 import { PeriodNav } from "../../components/PeriodNav";
+import { PageTitle } from "../../components/PageTitle";
 import { useToast } from "../../components/Toast";
 import { CalorieForm } from "./calorie-form";
 import { todayInTokyo, isValidDateString, isFuture, formatDateForDisplay } from "../../../shared/domain/date";
@@ -132,6 +133,7 @@ export function DayTabRoute() {
 
 	return (
 		<div>
+			<PageTitle title={formatDateForDisplay(date)} />
 			<PeriodNav
 				heading={formatDateForDisplay(date)}
 				prevHref={hrefForDate(getPreviousPeriodDate(date, "day"))}

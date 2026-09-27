@@ -7,6 +7,7 @@ import { StatusIcon, getStatusLabel } from "../../components/StatusIcon";
 import { Skeleton } from "../../components/Skeleton";
 import { Button } from "../../components/Button";
 import { PeriodNav } from "../../components/PeriodNav";
+import { PageTitle } from "../../components/PageTitle";
 import { Legend } from "../../components/Legend";
 import { hrefForTab } from "../../lib/tab-links";
 import { todayInTokyo, isValidDateString, isFuture } from "../../../shared/domain/date";
@@ -107,6 +108,7 @@ export function WeekTabRoute() {
 
 	return (
 		<div className={styles.body}>
+			<PageTitle title={formatWeekPeriodDisplay(period, today)} />
 			<div className={styles.navArea}>
 				<PeriodNav
 					heading={formatWeekPeriodDisplay(period, today)}

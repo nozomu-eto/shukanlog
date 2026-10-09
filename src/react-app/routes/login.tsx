@@ -5,6 +5,7 @@ import { UnauthHeader } from "../components/UnauthHeader";
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { PasswordField } from "../components/PasswordField";
+import { PageTitle } from "../components/PageTitle";
 import { validateEmail, validatePasswordRequired } from "../lib/validators";
 import { setPendingEmail } from "../lib/pending-email";
 import styles from "./auth-form.module.css";
@@ -64,6 +65,7 @@ export function LoginRoute() {
 
 	return (
 		<div className={styles.page}>
+			<PageTitle title="ログイン" />
 			<UnauthHeader backTo="/" />
 			<main className={styles.main}>
 				<div className={`${styles.stack} ${styles.card}`}>

@@ -1,5 +1,6 @@
 import { Outlet, useSearchParams, useLocation, Link } from "react-router";
 import { Settings, ChevronLeft } from "lucide-react";
+import { PageTitle } from "../../components/PageTitle";
 import styles from "./app-shell.module.css";
 
 type Tab = "day" | "week" | "month";
@@ -39,6 +40,7 @@ export function AppShell() {
 
 	return (
 		<div className={styles.page}>
+			{settingsPage ? <PageTitle title={settingsPage.title} /> : null}
 			<header className={settingsPage ? `${styles.header} ${styles.headerSettings}` : styles.header}>
 				{settingsPage ? (
 					<Link to={settingsPage.backTo} aria-label={settingsPage.backLabel} className={styles.backButton}>

@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { authClient, getAuthErrorCode } from "../lib/auth-client";
 import { UnauthHeader } from "../components/UnauthHeader";
+import { PageTitle } from "../components/PageTitle";
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { PasswordField } from "../components/PasswordField";
@@ -73,6 +74,7 @@ export function ResetNewRoute() {
 
 	return (
 		<div className={styles.page}>
+			<PageTitle title="新しいパスワードの設定" />
 			<UnauthHeader backTo="/reset" />
 			<main className={styles.main}>
 				<div className={`${styles.stack} ${styles.card}`}>

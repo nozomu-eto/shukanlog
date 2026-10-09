@@ -36,4 +36,6 @@
 
 ### T4
 
-- 結果は下記のPR作成時に確認
+- pnpm test(51ファイル・175件)/ typecheck / lint(エラー0・警告1。StatusIcon.tsx の既存の警告)/ build がすべて通った。マイグレーションの追加なし
+- vitest が「Tests closed successfully but something prevents the main process from exiting」と表示する場合があるが、テストはすべて成功している(今回の変更とは無関係)
+- PR: https://github.com/nozomu-eto/shukanlog/pull/11

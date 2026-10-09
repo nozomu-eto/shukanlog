@@ -81,6 +81,16 @@ Workers Rate Limitingバインディング(`ratelimits`)は10秒か60秒しか�
 
 style要素・外部CSSは`style-src-elem 'self'`のみ許可し、style属性は`style-src-attr 'unsafe-inline'`で許可しています。Reactのstyle属性はインラインスタイルとして扱われCSPの強制適用時に違反になるため、固定の見た目は必ずCSSのクラスで書き、style属性はグラフの棒の高さのような実行時の計算でしか決まらない値にのみ使う運用ルールにしています(AGENTS.md参照)。
 
+## 公開の準備(アイコン・OGP・検索エンジン向けの設定)
+
+`public/`配下の静的ファイルと`index.html`で、公開サービスとして必要な最低限の設定をしている。
+
+- **ファビコン・ホーム画面のアイコン**: `index.html`でfavicon.svg(SVG対応ブラウザ優先)・favicon.ico(代替)・apple-touch-icon・`manifest.webmanifest`へのlinkと、theme-color(#F5F5F3)を指定している。`public/manifest.webmanifest`はicon-192.png・icon-512.png(通常用)・icon-maskable-512.png(`purpose: "maskable"`)の3種類を持つ
+- **Service Workerは入れない**: ログイン状態に依存する画面(`/app`配下)をService Workerでキャッシュすると、ログアウト後や別の利用者でのログイン後に、古い画面やほかの利用者の情報が表示される危険がある。ホーム画面への追加自体はWeb App Manifestとアイコンだけで実現できるため、Service Workerは追加していない
+- **ページのタイトル・OGP**: SNS・検索エンジンの多くはJavaScriptを実行せずに読むため、既定のタイトル・説明・OGP(og:title等)・canonicalは`index.html`に静的に書いている。画面ごとのタイトルは、React 19のドキュメントメタデータの機能(コンポーネント内で`<title>`を描画すると、Reactが自動的に`<head>`内へ移動させる)を使う`src/react-app/components/PageTitle.tsx`で「`<画面名> | shukanlog`」の形に設定している
+- **検索エンジンに載せないページ**: ログイン後・認証まわりの画面(`/app`・`/app/*`・`/login`・`/signup`・`/verify`・`/reset`・`/reset/*`・`/consent`)には、`public/_headers`で`X-Robots-Tag: noindex`を付けている。公開してよいページ(`/`・`/terms`・`/privacy`・`/licenses`)には付けない
+- **robots.txt・サイトマップ**: `public/robots.txt`は`/api/`のみをDisallowにし、`/app`等はDisallowにしていない(Disallowにするとクローラーが上記のX-Robots-Tagを読めなくなり、かえって検索結果にURLだけが残ることがあるため)。`public/sitemap.xml`には公開してよい4ページの絶対URLのみを載せている
+
 ## 使わないエンドポイントを閉じる
 
 Better Authの`emailOTP`プラグインを入れると、メールのコードだけでログインできるエンドポイント(`POST /api/auth/sign-in/email-otp`)も有効になりますが、shukanlogではメールアドレス・パスワードでのログインのみを使うため使いません。`src/worker/middleware/disabled-auth-endpoints.ts`で、Better Authに処理を渡す前にHonoのミドルウェアで404を返して閉じています。

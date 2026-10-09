@@ -3,7 +3,40 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>shukanlog</title>
+		<!-- SNS・検索エンジンの多くはJavaScriptを実行せずに読むため、タイトル・説明・OGPは
+		     静的なHTMLに直接書く(Reactのコンポーネント側での上書きに頼らない) -->
+		<title>shukanlog | カロリーと習慣をシンプルに記録するアプリ</title>
+		<meta
+			name="description"
+			content="服薬・運動・カロリーを記録して、週・月のカレンダーで振り返る、個人向けの健康習慣記録サービスです。"
+		/>
+		<link rel="canonical" href="https://shukanlog.com/" />
+
+		<!-- ファビコン: SVG対応ブラウザにはfavicon.svg、非対応ブラウザにはfavicon.icoを使わせる -->
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="alternate icon" href="/favicon.ico" sizes="any" />
+		<!-- iOSのホーム画面に追加したときのアイコン -->
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<!-- ホーム画面への追加(Android Chrome等)の設定 -->
+		<link rel="manifest" href="/manifest.webmanifest" />
+		<!-- ブラウザのUI(アドレスバー等)の色をページの背景色に合わせる -->
+		<meta name="theme-color" content="#F5F5F3" />
+
+		<!-- OGP(SNSでシェアされたときのカード表示) -->
+		<meta property="og:title" content="shukanlog | カロリーと習慣をシンプルに記録するアプリ" />
+		<meta
+			property="og:description"
+			content="服薬・運動・カロリーを記録して、週・月のカレンダーで振り返る、個人向けの健康習慣記録サービスです。"
+		/>
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://shukanlog.com/" />
+		<meta property="og:image" content="https://shukanlog.com/og-image.png" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:alt" content="shukanlog | カロリーと習慣をシンプルに記録するアプリ" />
+		<meta property="og:locale" content="ja_JP" />
+		<meta property="og:site_name" content="shukanlog" />
+		<meta name="twitter:card" content="summary_large_image" />
 	</head>
 
 	<body>

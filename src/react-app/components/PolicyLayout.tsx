@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { UnauthHeader } from "./UnauthHeader";
+import { PageTitle } from "./PageTitle";
 import styles from "./PolicyLayout.module.css";
 
 interface PolicyLayoutProps {
@@ -14,6 +15,7 @@ interface PolicyLayoutProps {
 export function PolicyLayout({ title, establishedDate, revisedDate, children }: PolicyLayoutProps) {
 	return (
 		<div className={styles.page}>
+			<PageTitle title={title} />
 			<UnauthHeader />
 			<main className={styles.main}>
 				<article className={styles.article}>

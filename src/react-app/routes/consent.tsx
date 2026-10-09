@@ -6,6 +6,7 @@ import { postConsent } from "../api/me";
 import { toDisplayMessage } from "../api/errors";
 import { POLICY_VERSION } from "../../shared/policy";
 import { UnauthHeader } from "../components/UnauthHeader";
+import { PageTitle } from "../components/PageTitle";
 import { Button } from "../components/Button";
 import formStyles from "./auth-form.module.css";
 import styles from "./consent.module.css";
@@ -49,6 +50,7 @@ export function ConsentRoute() {
 
 	return (
 		<div className={formStyles.page}>
+			<PageTitle title="利用規約への同意" />
 			<UnauthHeader />
 			<main className={formStyles.main}>
 				<div className={`${formStyles.stack} ${formStyles.card} ${formStyles.cardWide}`}>

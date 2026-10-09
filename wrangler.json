@@ -94,13 +94,15 @@
 			],
 			"ratelimits": [
 				{
+					// namespace_id はアカウント単位の値で、同じアカウントの別Worker(kyurl-link は1001〜1004)と
+					// 同じ値にすると回数の数え方を共有してしまう。重ならないよう、本番は2001番台にする
 					"name": "API_RATE_LIMITER",
-					"namespace_id": "1002",
+					"namespace_id": "2001",
 					"simple": { "limit": 60, "period": 60 }
 				},
 				{
 					"name": "EMAIL_CHANGE_RATE_LIMITER",
-					"namespace_id": "1004",
+					"namespace_id": "2002",
 					"simple": { "limit": 1, "period": 60 }
 				}
 			]

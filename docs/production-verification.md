@@ -2,26 +2,34 @@
 
 本番環境(`--env production`)にデプロイする前に、手動で確認・実施する項目です。このステップ(ステップ1)では、本番環境へのデプロイ・wrangler secretの登録・本番D1の作成は行っていません。
 
-## 1. プレースホルダーの置き換え
+## 1. プレースホルダーの置き換えとnamespace_idの確認
 
-`wrangler.json`の`env.production`内にある、次の値を実際の値に置き換える。
+`wrangler.json`の`env.production`内にある、次の値を確認・置き換える。
 
-- `d1_databases[].database_id`(`REPLACE_WITH_PRODUCTION_D1_DATABASE_ID`)
-- `ratelimits[].namespace_id`(実際のnamespace_idを払い出して置き換える)
+- `d1_databases[].database_id`(`REPLACE_WITH_PRODUCTION_D1_DATABASE_ID`)は、2で作成した本番D1の値に置き換える
+- `ratelimits[].namespace_id`は、払い出される値ではなく自分で決める整数。アカウント単位の値で、同じアカウントの別Worker(kyurl-linkは1001〜1004)と同じ値にすると回数の数え方を共有してしまうため、本番は2001(API_RATE_LIMITER)・2002(EMAIL_CHANGE_RATE_LIMITER)にしてある。置き換えは不要だが、同じアカウントで他のWorkerを増やすときは重ならない値を選ぶ
 
 `send_email[].allowed_sender_addresses`は`noreply@shukanlog.com`に設定済み(destination_addressは指定していない。指定すると検証済みの1つの宛先にしか送れなくなり、利用者への送信ができなくなるため)。
 
-## 2. 本番D1データベースの作成
+## 2. 本番D1データベースの作成とデプロイ
 
 ```bash
 npx wrangler d1 create shukanlog-production
 ```
 
-出力された`database_id`を`wrangler.json`の`env.production.d1_databases[0].database_id`に設定し、マイグレーションを適用する。
+出力された`database_id`を`wrangler.json`の`env.production.d1_databases[0].database_id`に設定する。そのあと、次でマイグレーションの適用とデプロイを行う。
 
 ```bash
-npx wrangler d1 migrations apply DB --remote --env production
+pnpm deploy:production
 ```
+
+これは次の順に実行する。
+
+1. `CLOUDFLARE_ENV=production pnpm run build`: @cloudflare/vite-pluginの仕様で、環境はビルド時に確定する。本番用の設定だけを含む`dist/shukanlog/wrangler.json`と、それを指す`.wrangler/deploy/config.json`が生成される
+2. `wrangler d1 migrations apply DB --remote --env production`: マイグレーションはビルド後の設定を使わず、`wrangler.json`を直接読む。そのため`--env production`が必要(付け忘れると開発用DBを指す)
+3. `wrangler deploy`: `.wrangler/deploy/config.json`が指す本番用の設定でデプロイする(`--env`は不要。ビルド時の環境と食い違う指定はエラーになる)
+
+デプロイ前に`npx wrangler deploy --dry-run`で、DBが`shukanlog-production`、レート制限が2001・2002、`BETTER_AUTH_URL`が本番になっていることを確認できる。
 
 ## 3. シークレットの登録
 

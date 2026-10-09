@@ -19,7 +19,7 @@
 - 公式 changelog(2025-11-09)の通り、環境はビルド時に確定する。`build:production`(`CLOUDFLARE_ENV=production pnpm run build`)を追加し、`deploy:production` はそれを先に実行する
 - 実際に生成されたファイルで確認した結果:
   - `.wrangler/deploy/config.json` は `dist/shukanlog/wrangler.json` を指す
-  - `dist/shukanlog/wrangler.json` は `targetEnvironment: "production"`、`name: shukanlog-production`、D1 は `shukanlog-production`、ratelimits は本番の値、`BETTER_AUTH_URL` は本番、cron・send_email も本番だった
+  - `dist/shukanlog/wrangler.json` は `targetEnvironment: "production"`、`name: shukanlog-production`(当時の生成名。ステップ5cで `shukanlog` に変更)、D1 は `shukanlog-production`、ratelimits は本番の値、`BETTER_AUTH_URL` は本番、cron・send_email も本番だった
   - `wrangler deploy --dry-run` のバインディング一覧も本番の内容だった。よって `wrangler deploy` に `--env` は不要
 - **`wrangler d1 migrations` はこの生成設定を使わない**。`--env` なしで実行すると開発用DB(`REPLACE_WITH_DEV_D1_DATABASE_ID`)を指し、`--env production` を付けると本番DBを指すことを確認した。そのため migrations apply には `--env production` を残した(付け忘れると開発用DBに適用しようとする)
 - 実際のリモートには接続していない(database_id がプレースホルダーのため、API はどちらもIDの不正で失敗した)

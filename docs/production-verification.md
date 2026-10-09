@@ -17,19 +17,26 @@
 npx wrangler d1 create shukanlog-production
 ```
 
-出力された`database_id`を`wrangler.json`の`env.production.d1_databases[0].database_id`に設定する。そのあと、次でマイグレーションの適用とデプロイを行う。
+出力された`database_id`を`wrangler.json`の`env.production.d1_databases[0].database_id`に設定する。
+
+デプロイはWorkers Builds(Cloudflareのダッシュボードで連携したGitHubリポジトリのビルド)で行う。`main`へのマージで自動実行され、設定は次の通り。
+
+- Worker名: `shukanlog`(`wrangler.json`の`env.production.name`と一致させる。違うとビルドが失敗する。D1データベース名の`shukanlog-production`とは別のもの)
+- ビルドコマンド: `pnpm run build:production`
+- デプロイコマンド: `npx wrangler deploy`
+- 本番以外のブランチのビルド: 無効
+
+ビルドコマンドの`build:production`は`CLOUDFLARE_ENV=production pnpm run build`で、@cloudflare/vite-pluginの仕様により環境はビルド時に確定する。本番用の設定だけを含む`dist/shukanlog/wrangler.json`と、それを指す`.wrangler/deploy/config.json`が生成され、`wrangler deploy`はそれを使うため`--env`は不要(ビルド時の環境と食い違う指定はエラーになる)。
+
+マイグレーションはWorkers Buildsでは実行されないため、手元から次を実行する。`d1 migrations`はビルド後の設定を使わず`wrangler.json`を直接読むので、`--env production`が必要(付け忘れると開発用DBを指す)。
 
 ```bash
-pnpm deploy:production
+npx wrangler d1 migrations apply DB --remote --env production
 ```
 
-これは次の順に実行する。
+スキーマを変更するPRでは、新しいコードがデプロイされる前(マージの前)にマイグレーションを適用しておく。
 
-1. `CLOUDFLARE_ENV=production pnpm run build`: @cloudflare/vite-pluginの仕様で、環境はビルド時に確定する。本番用の設定だけを含む`dist/shukanlog/wrangler.json`と、それを指す`.wrangler/deploy/config.json`が生成される
-2. `wrangler d1 migrations apply DB --remote --env production`: マイグレーションはビルド後の設定を使わず、`wrangler.json`を直接読む。そのため`--env production`が必要(付け忘れると開発用DBを指す)
-3. `wrangler deploy`: `.wrangler/deploy/config.json`が指す本番用の設定でデプロイする(`--env`は不要。ビルド時の環境と食い違う指定はエラーになる)
-
-デプロイ前に`npx wrangler deploy --dry-run`で、DBが`shukanlog-production`、レート制限が2001・2002、`BETTER_AUTH_URL`が本番になっていることを確認できる。
+デプロイ前に、手元で`pnpm run build:production`のあと`npx wrangler deploy --dry-run`を実行すると、Worker名が`shukanlog`、DBが`shukanlog-production`、レート制限が2001・2002、`BETTER_AUTH_URL`が本番になっていることを確認できる。手元から直接デプロイする場合は`pnpm deploy:production`でもよい。
 
 ## 3. シークレットの登録
 

@@ -8,6 +8,8 @@
 	--color-border: #e3e2dc;
 	--color-border-subtle: #eeede8;
 	--color-input-border: #8a8983;
+	/* 退会ボタンの枠線・スイッチのオフ状態の地の色(docs/design/mockups/Settings.dc.html等) */
+	--color-border-strong: #c9c8c1;
 	--color-tab-background: #e9e8e3;
 	--color-future-border: #d6d5cf;
 	--color-skeleton: #ecebe6;

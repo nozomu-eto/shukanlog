@@ -19,6 +19,20 @@ export function buildEmailVerificationMail(code: string): MailTemplate {
 	};
 }
 
+export function buildEmailChangeMail(code: string): MailTemplate {
+	return {
+		subject: "【shukanlog】メールアドレス変更の確認コード",
+		text: `メールアドレスの変更手続きのため、確認コードが必要です。
+以下の確認コードを画面に入力してください。
+
+確認コード: ${code}
+有効期限: 10分
+
+このメールに心当たりがない場合は、このメールを破棄してください。
+`,
+	};
+}
+
 export function buildPasswordResetMail(code: string): MailTemplate {
 	return {
 		subject: "【shukanlog】パスワード再設定コード",

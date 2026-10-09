@@ -1,0 +1,60 @@
+/* 退会。docs/design/mockups/Withdraw.dc.html・WithdrawPC.dc.html に合わせる */
+.body {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 16px 20px 24px;
+	box-sizing: border-box;
+}
+
+.card {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 16px;
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.stepStack {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.lead {
+	margin: 0;
+	font-size: 15px;
+	line-height: 1.7;
+}
+
+.list {
+	margin: 0;
+	padding: 14px 16px 14px 32px;
+	background: var(--color-background);
+	border-radius: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 14px;
+	line-height: 1.7;
+}
+
+.formError {
+	margin: 0;
+	font-size: 13px;
+	color: var(--color-error);
+}
+
+@media (min-width: 1024px) {
+	.body {
+		width: 640px;
+		margin: 0 auto;
+		padding: 24px 0 40px;
+	}
+
+	.card {
+		border-radius: 18px;
+	}
+}

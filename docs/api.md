@@ -26,10 +26,12 @@ shukanlog(Cloudflare版)のAPI(`/api/`配下)の一覧です。エラーレス�
     "user": { "email": "string" },
     "accountCreatedDate": "YYYY-MM-DD",
     "profile": { "calorieTrackingEnabled": true } ,
-    "consent": { "currentVersion": "2026-09-25", "agreed": true }
+    "consent": { "currentVersion": "2026-09-25", "agreed": true },
+    "justCanceledWithdrawal": false
   }
   ```
   - `profile` はまだ同意しておらず初期データが無い場合は `null`
+  - `justCanceledWithdrawal` は、直前(10分以内)に退会の申請を取り消した場合に `true`。画面側で「退会を取り消しました」を1回だけ表示するために使う
 
 ## POST /api/consent
 
@@ -134,6 +136,29 @@ shukanlog(Cloudflare版)のAPI(`/api/`配下)の一覧です。エラーレス�
   - `totals.habits[habitId].eligibleDays` は、期間内で「アカウント作成日以降」かつ「今日以前」の日数
   - `totals.calories.average` は記録がある日だけで算出した平均。カロリー記録を無効にしている利用者、または記録が1日も無い場合は `null`
 
+## POST /api/account/email/request-change
+
+メールアドレスの変更を申請し、新しいメールアドレスへ確認コードを送る。認証必須・同意必須。
+確認コードの検証・変更の確定は、このAPIではなくBetter Authのエンドポイント(`POST /api/auth/email-otp/change-email`、`authClient.emailOtp.changeEmail()`)で行う(確認が済むまでは今のメールアドレスのまま)。
+
+- リクエスト: `{ "newEmail": "string", "currentPassword": "string" }`
+- エラー
+  - `newEmail` が現在のメールアドレスと同じ、または形式が不正な場合は400(`VALIDATION_ERROR`)
+  - `currentPassword` が正しくない場合は400(`INVALID_PASSWORD`)
+  - `newEmail` が既に使われている場合は400(`EMAIL_ALREADY_IN_USE`)
+  - 60秒に1回を超えて呼び出した場合は429(`RATE_LIMITED`)
+- レスポンス: `{ "success": true }`
+
+## POST /api/account/withdraw
+
+退会を申請する。認証必須・同意必須。
+
+- リクエスト: `{ "currentPassword": "string" }`
+- 現在のパスワードを確認したうえで、即時に論理削除(退会の申請を記録し、その利用者のすべてのセッションを無効にする)する。データそのものはこの時点では削除しない(申請から30日後に定期処理で完全に削除する)
+- 申請から30日以内に同じメールアドレス・パスワードでログインすると、退会は自動的に取り消される(`GET /api/me` の `justCanceledWithdrawal` で分かる)
+- エラー: `currentPassword` が正しくない場合は400(`INVALID_PASSWORD`)
+- レスポンス: `{ "success": true }`
+
 ## エラーコード一覧
 
 | コード | HTTPステータス | 説明 |
@@ -143,5 +168,7 @@ shukanlog(Cloudflare版)のAPI(`/api/`配下)の一覧です。エラーレス�
 | `CONSENT_REQUIRED` | 403 | 現在の利用規約に同意していない |
 | `CALORIE_TRACKING_DISABLED` | 403 | カロリー記録が無効な状態で書き込もうとした |
 | `NOT_FOUND` | 404 | 対象が存在しない、または他人のもの(存在の有無を区別しない) |
+| `INVALID_PASSWORD` | 400 | 現在のパスワードの確認に失敗した |
+| `EMAIL_ALREADY_IN_USE` | 400 | 変更・登録しようとしたメールアドレスが既に使われている |
 | `RATE_LIMITED` | 429 | 書き込みの回数が多すぎる |
 | `INTERNAL_ERROR` | 500 | 予期しないエラー(内部の詳細は返さない) |

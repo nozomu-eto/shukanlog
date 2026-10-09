@@ -1,0 +1,167 @@
+/* 設定画面。docs/design/mockups/Settings.dc.html・SettingsPC.dc.html に合わせる */
+.body {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	padding: 12px 20px 20px;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.sectionTitle {
+	margin: 0 4px;
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--color-text-muted);
+}
+
+.list {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 16px;
+	overflow: hidden;
+}
+
+.listItem {
+	min-height: 52px;
+	padding: 0 14px 0 16px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	text-decoration: none;
+	color: var(--color-text);
+	background: var(--color-surface);
+	border: none;
+	border-top: 1px solid var(--color-border-subtle);
+	font-size: 15px;
+	width: 100%;
+	box-sizing: border-box;
+	text-align: left;
+	cursor: pointer;
+}
+
+.list > .listItem:first-child {
+	border-top: none;
+}
+
+.listItemTall {
+	min-height: 60px;
+	padding: 8px 14px 8px 16px;
+}
+
+.listItemLabel {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.listItemSub {
+	font-size: 13px;
+	color: var(--color-text-muted);
+}
+
+.listItemArrow {
+	color: var(--color-text-muted);
+	flex-shrink: 0;
+}
+
+.switchRow {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 16px;
+	padding: 10px 14px 10px 16px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.switch {
+	flex-shrink: 0;
+	width: 60px;
+	height: 44px;
+	border: none;
+	background: transparent;
+	padding: 0;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.switchTrack {
+	width: 52px;
+	height: 32px;
+	border-radius: 999px;
+	padding: 3px;
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	background: var(--color-border-strong);
+}
+
+.switchTrackOn {
+	background: var(--color-text);
+	justify-content: flex-end;
+}
+
+.switchKnob {
+	width: 26px;
+	height: 26px;
+	border-radius: 999px;
+	background: #ffffff;
+	display: block;
+}
+
+.withdrawSection {
+	margin-top: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.withdrawButton {
+	min-height: 52px;
+	border-radius: 14px;
+	border: 1px solid var(--color-border-strong);
+	background: var(--color-surface);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-decoration: none;
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--color-text);
+}
+
+.withdrawNote {
+	margin: 0 4px;
+	font-size: 12px;
+	line-height: 1.6;
+	color: var(--color-text-muted);
+}
+
+@media (min-width: 1024px) {
+	.body {
+		width: 640px;
+		margin: 0 auto;
+		padding: 28px 0 40px;
+		gap: 24px;
+	}
+
+	.pageTitle {
+		margin: 0;
+		font-family: var(--font-heading);
+		font-weight: 700;
+		font-size: 26px;
+	}
+
+	.list > .listItem {
+		min-height: 60px;
+		padding: 8px 16px 8px 18px;
+	}
+}

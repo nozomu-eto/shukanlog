@@ -7,6 +7,8 @@ const FALLBACK_MESSAGES: Record<string, string> = {
 	CONSENT_REQUIRED: "利用規約への同意が必要です。",
 	CALORIE_TRACKING_DISABLED: "カロリー記録が無効になっています。",
 	NOT_FOUND: "対象のデータが見つかりませんでした。",
+	INVALID_PASSWORD: "現在のパスワードが正しくありません。",
+	EMAIL_ALREADY_IN_USE: "そのメールアドレスは既に使われています。",
 	RATE_LIMITED: "しばらく時間をおいてから、もう一度お試しください。",
 	NETWORK_ERROR: "通信状況を確認して、もう一度お試しください。",
 	INTERNAL_ERROR: "予期しないエラーが発生しました。もう一度お試しください。",

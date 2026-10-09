@@ -6,5 +6,5 @@
 		{ "path": "./tsconfig.worker.json" },
 		{ "path": "./tsconfig.test.json" }
 	],
-	"exclude": ["docs/design/mockups", "docs/legacy"]
+	"exclude": ["docs/design/mockups"]
 }

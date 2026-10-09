@@ -71,7 +71,6 @@ shukanlog は、服薬・運動・カロリーを記録し、週・月で振り�
 
 - デザインと画面の仕様は docs/design.md と docs/week-month-tabs.md が正。これと矛盾する実装をしない
 - docs/design/mockups/ は画面のモックアップ(参照専用のHTML)。実装の見た目はここを参照する
-- docs/legacy/ は以前の版から引き継ぐ資料(利用規約・プライバシーポリシーの本文、入力上限、日付処理、初期データ、メール文面)。ビルド・lint・型チェックの対象からは外れているが、内容は実装の参考にする
 - 画面は 1024px 以上の PC レイアウトを前提にする
 
 ## 開発の基本ルール
@@ -99,7 +98,7 @@ shukanlog は、服薬・運動・カロリーを記録し、週・月で振り�
 
 ## 既知の落とし穴(必ず対策する)
 
-1. `compatibility_date` が古いと、Better Auth でログイン失敗時に「未処理の Promise 拒否」が誤検知され、テストが非ゼロで終了することがある(Better Auth の issue #10658)。`compatibility_date` は作業日時点の最新日付にする
+1. `compatibility_date` が古いと、Better Auth でログイン失敗時に「未処理の Promise 拒否」が誤検知され、テストが非ゼロで終了することがある(Better Auth の issue #10658)。一方で、新しすぎる日付を指定すると、`pnpm dev`(`@cloudflare/vite-plugin` 同梱の workerd)が対応しておらず起動に失敗する(`wrangler dev` は別の新しい実行環境を持つため、`wrangler dev` での確認だけでは気づけない)。`compatibility_date` は **2026-03-03 以降(Better Auth の誤検知を避けるため)、かつ `pnpm dev` の実行環境が対応している日付** にする。依存パッケージを更新したときに、より新しい日付に上げてよい。動作確認は利用者が普段使う `pnpm dev` で行う(`wrangler dev` だけで確認しない)
 2. Better Auth のレート制限は既定でメモリに保存され、Workers では isolate ごとにカウンタが分かれるため実質的に効かない。`storage: "database"` にし、テストでも有効にする。IPアドレスの取得には `cf-connecting-ip` ヘッダーを使う
 3. Workers の静的ファイル(ASSETS)から返したレスポンスは、ヘッダーを直接変更できない。セキュリティヘッダを付けるには、レスポンスを複製(`new Response(res.body, res)`)してから付ける
 4. メール送信を開発用の console のまま本番に出すと、確認コードが届かず誰も登録できないうえ、コードがログに平文で残る。本番の URL(https://)で console / memory のメール送信が使われたら例外を投げる安全装置を入れる

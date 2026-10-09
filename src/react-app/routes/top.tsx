@@ -1,4 +1,4 @@
-import { Navigate, Link } from "react-router";
+import { Navigate, Link, useLocation } from "react-router";
 import { authClient } from "../lib/auth-client";
 import { UnauthHeader } from "../components/UnauthHeader";
 import { Button } from "../components/Button";
@@ -22,6 +22,9 @@ const FEATURES = [
 // ログイン済みの状態でこのページを開いた場合は/appへ移動する
 export function TopRoute() {
 	const { data: session, isPending } = authClient.useSession();
+	const location = useLocation();
+	// 退会の完了直後に、見出しの上に表示するメッセージ(react-routerのstate経由)
+	const completionMessage = (location.state as { message?: string } | null)?.message;
 
 	if (isPending) {
 		return null;
@@ -34,6 +37,11 @@ export function TopRoute() {
 		<div className={styles.page}>
 			<UnauthHeader showLogin />
 			<main className={styles.main}>
+				{completionMessage ? (
+					<div role="status" className={styles.statusBanner}>
+						{completionMessage}
+					</div>
+				) : null}
 				<div className={styles.hero}>
 					<div className={styles.heroText}>
 						<h1 className={styles.heading}>
@@ -99,6 +107,9 @@ export function TopRoute() {
 					</Link>
 					<Link to="/privacy" className={styles.footerLink}>
 						プライバシーポリシー
+					</Link>
+					<Link to="/licenses" className={styles.footerLink}>
+						ライセンス
 					</Link>
 					<a href="mailto:info@shukanlog.com" className={styles.footerLink}>
 						お問い合わせ

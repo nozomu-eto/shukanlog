@@ -120,3 +120,23 @@ export const termsAgreement = sqliteTable(
 		unique("terms_agreement_user_policy_version_unique").on(table.userId, table.policyVersion),
 	],
 );
+
+// 退会の申請。即時に論理削除(セッションの無効化)し、purgeAfterを過ぎたら定期処理(T12)で
+// 物理削除する。canceledAtが無い(null)申請中に、同じ利用者が再度ログインに成功すると
+// 取り消しとみなし、canceledAtを記録する(取り消し後は物理削除の対象にしない)
+export const accountDeletion = sqliteTable(
+	"account_deletion",
+	{
+		id: text("id").primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		requestedAt: integer("requested_at")
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		// 申請から30日後(物理削除の実行日時の下限)
+		purgeAfter: integer("purge_after").notNull(),
+		canceledAt: integer("canceled_at"),
+	},
+	(table) => [index("account_deletion_user_id_idx").on(table.userId)],
+);

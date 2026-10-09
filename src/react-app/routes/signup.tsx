@@ -21,6 +21,8 @@ export function SignupRoute() {
 	const [tried, setTried] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const [formError, setFormError] = useState<string | null>(null);
+	// 登録済みのメールアドレスのエラー(下にログインへのリンクを表示するため、formErrorとは別に管理する)
+	const [existingAccountError, setExistingAccountError] = useState(false);
 
 	const emailError = tried ? validateEmail(email) : undefined;
 	const passwordError = tried ? validateNewPassword(password) : undefined;
@@ -29,6 +31,7 @@ export function SignupRoute() {
 		e.preventDefault();
 		setTried(true);
 		setFormError(null);
+		setExistingAccountError(false);
 		if (validateEmail(email) || validateNewPassword(password)) {
 			return;
 		}
@@ -51,7 +54,9 @@ export function SignupRoute() {
 
 			const code = getAuthErrorCode(error);
 			if (code === "USER_ALREADY_EXISTS" || code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
-				setFormError("このメールアドレスはすでに登録されています");
+				// 退会の手続き中かどうかは画面から判別できないようにするため、
+				// すべての登録済みのメールアドレスに同じ文言を出す
+				setExistingAccountError(true);
 				return;
 			}
 			if (code === "TURNSTILE_TOKEN_REQUIRED" || code === "TURNSTILE_VERIFICATION_FAILED") {
@@ -98,7 +103,13 @@ export function SignupRoute() {
 							error={passwordError}
 						/>
 						<Turnstile onTokenChange={setTurnstileToken} />
-						{formError ? (
+						{existingAccountError ? (
+							<p role="alert" className={styles.footNote}>
+								このメールアドレスはすでに登録されています。ログインしてください。退会の手続き中の場合は、30日以内にログインすると退会を取り消せます。
+								<br />
+								<Link to="/login">ログイン</Link>
+							</p>
+						) : formError ? (
 							<p role="alert" className={styles.footNote}>
 								{formError}
 							</p>

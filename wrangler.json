@@ -6,8 +6,10 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "shukanlog",
 	"main": "./src/worker/index.ts",
-	// compatibility_date は作業日の日付にする(既知の落とし穴1: 2026-03-03より前だと
-	// Better Authのログイン失敗時に「未処理のPromise拒否」が誤検知されテストが失敗する)
+	// compatibility_date は 2026-03-03 以降(既知の落とし穴1: それより前だとBetter Authの
+	// ログイン失敗時に「未処理のPromise拒否」が誤検知されテストが失敗する)、かつ pnpm dev の
+	// 実行環境(@cloudflare/vite-plugin同梱のworkerd)が対応している日付にする。依存パッケージを
+	// 更新したときに、より新しい日付に上げてよい(動作確認は pnpm dev で行う)
 	"compatibility_date": "2026-08-18",
 	"compatibility_flags": ["nodejs_compat"],
 	"observability": {
@@ -46,8 +48,22 @@
 			"name": "API_RATE_LIMITER",
 			"namespace_id": "1001",
 			"simple": { "limit": 60, "period": 60 }
+		},
+		{
+			// メールアドレス変更の確認コード送信(POST /api/account/email/request-change)専用の制限。
+			// メール送信を伴うためBetter Auth側のcustomRules(確認コードの送信・再送: 60秒に1回)と
+			// 同じ考え方で、書き込み全般用のAPI_RATE_LIMITERより厳しくユーザーID単位でかける
+			"name": "EMAIL_CHANGE_RATE_LIMITER",
+			"namespace_id": "1003",
+			"simple": { "limit": 1, "period": 60 }
 		}
 	],
+
+	// 毎日1回、退会から30日後の完全削除・メール未確認のまま30日を過ぎた利用者の削除を行う(T12・T13)。
+	// UTC 18:00 = 日本時間3:00(深夜、利用者への影響が少ない時間帯)
+	"triggers": {
+		"crons": ["0 18 * * *"]
+	},
 
 	// 本番環境。バインディングは環境ごとに再定義が必要(トップレベルからは引き継がれない)
 	"env": {
@@ -56,6 +72,9 @@
 				"BETTER_AUTH_URL": "https://shukanlog.com",
 				"MAIL_TRANSPORT": "cloudflare",
 				"MAIL_FROM_ADDRESS": "noreply@shukanlog.com"
+			},
+			"triggers": {
+				"crons": ["0 18 * * *"]
 			},
 			"d1_databases": [
 				{
@@ -78,6 +97,11 @@
 					"name": "API_RATE_LIMITER",
 					"namespace_id": "1002",
 					"simple": { "limit": 60, "period": 60 }
+				},
+				{
+					"name": "EMAIL_CHANGE_RATE_LIMITER",
+					"namespace_id": "1004",
+					"simple": { "limit": 1, "period": 60 }
 				}
 			]
 		}

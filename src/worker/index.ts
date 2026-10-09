@@ -4,6 +4,7 @@ import { turnstileMiddleware } from "./middleware/turnstile";
 import { securityHeadersMiddleware } from "./middleware/security-headers";
 import { disabledAuthEndpointsMiddleware } from "./middleware/disabled-auth-endpoints";
 import { apiRouter } from "./routes";
+import { runScheduledPurge } from "./scheduled/purge";
 
 // Hono アプリのエントリーポイント。wrangler.json の assets.run_worker_first を ["/api/*"] にしているため、
 // このWorkerが処理するのは /api/ 配下のリクエストのみ。それ以外の静的ファイル(SPA本体・画像・フォントなど)は
@@ -36,4 +37,13 @@ app.onError((err, c) => {
 	return c.json({ error: { code: "INTERNAL_ERROR", message: "サーバーエラーが発生しました" } }, 500);
 });
 
-export default app;
+const worker: ExportedHandler<Env> = {
+	fetch: app.fetch,
+	// Cron Trigger(wrangler.jsonのtriggers.crons)から毎日1回呼ばれる定期処理。
+	// 退会から30日後の完全削除・メール未確認のまま30日を過ぎた利用者の削除を行う(T12・T13)
+	scheduled: async (_controller, env) => {
+		await runScheduledPurge(env);
+	},
+};
+
+export default worker;

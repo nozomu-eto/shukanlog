@@ -53,7 +53,8 @@
 		"cf-typegen": "wrangler types",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate:local": "wrangler d1 migrations apply DB --local",
-		"deploy:production": "wrangler d1 migrations apply DB --remote --env production && npm run build && wrangler deploy --env production"
+		"build:production": "CLOUDFLARE_ENV=production pnpm run build",
+		"deploy:production": "pnpm run build:production && wrangler d1 migrations apply DB --remote --env production && wrangler deploy"
 	},
 	"type": "module"
 }

@@ -83,6 +83,9 @@
 	// 本番環境。バインディングは環境ごとに再定義が必要(トップレベルからは引き継がれない)
 	"env": {
 		"production": {
+			// 本番のWorker名。環境名を付けた既定名(shukanlog-production)ではなく、Workers Buildsの
+			// ダッシュボード上のWorker名(shukanlog)と一致させる(名前が違うとビルドが失敗する)
+			"name": "shukanlog",
 			"vars": {
 				"BETTER_AUTH_URL": "https://shukanlog.com",
 				"MAIL_TRANSPORT": "cloudflare",

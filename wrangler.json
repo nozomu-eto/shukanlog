@@ -11,7 +11,9 @@
 	// 実行環境(@cloudflare/vite-plugin同梱のworkerd)が対応している日付にする。依存パッケージを
 	// 更新したときに、より新しい日付に上げてよい(動作確認は pnpm dev で行う)
 	"compatibility_date": "2026-08-18",
-	"compatibility_flags": ["nodejs_compat"],
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
 	"observability": {
 		"enabled": true
 	},
@@ -21,10 +23,11 @@
 		// /api/ 配下のみWorkerを先に実行する。それ以外の静的ファイル(日本語フォントなど細かいファイルを含む)は
 		// Workerを経由せず直接配信する(1回の画面表示でWorkerが何十回も動くのを避け、無料枠の消費を抑える)。
 		// 静的ファイルのヘッダーは public/_headers で付ける(既知の落とし穴3)
-		"run_worker_first": ["/api/*"],
+		"run_worker_first": [
+			"/api/*"
+		],
 		"not_found_handling": "single-page-application"
 	},
-
 	// 開発用(トップレベル)の環境変数・バインディング
 	"vars": {
 		"BETTER_AUTH_URL": "http://localhost:5173",
@@ -38,6 +41,12 @@
 			// 開発用DBの実体はT4でローカルにセットアップする(ローカル実行のみのためIDは仮のまま)
 			"database_id": "REPLACE_WITH_DEV_D1_DATABASE_ID",
 			"migrations_dir": "./migrations"
+		},
+		{
+			"binding": "shukanlog_production",
+			"database_name": "shukanlog-production",
+			"database_id": "00ba9cfc-3ebd-432f-b9be-7a76951f7b5b",
+			"remote": true
 		}
 	],
 	"ratelimits": [
@@ -47,7 +56,10 @@
 			// 60秒に60回に見直した(T10)。ログイン試行回数などの細かい制限はBetter Auth側のcustomRulesで行う(既知の落とし穴5)
 			"name": "API_RATE_LIMITER",
 			"namespace_id": "1001",
-			"simple": { "limit": 60, "period": 60 }
+			"simple": {
+				"limit": 60,
+				"period": 60
+			}
 		},
 		{
 			// メールアドレス変更の確認コード送信(POST /api/account/email/request-change)専用の制限。
@@ -55,16 +67,19 @@
 			// 同じ考え方で、書き込み全般用のAPI_RATE_LIMITERより厳しくユーザーID単位でかける
 			"name": "EMAIL_CHANGE_RATE_LIMITER",
 			"namespace_id": "1003",
-			"simple": { "limit": 1, "period": 60 }
+			"simple": {
+				"limit": 1,
+				"period": 60
+			}
 		}
 	],
-
 	// 毎日1回、退会から30日後の完全削除・メール未確認のまま30日を過ぎた利用者の削除を行う(T12・T13)。
 	// UTC 18:00 = 日本時間3:00(深夜、利用者への影響が少ない時間帯)
 	"triggers": {
-		"crons": ["0 18 * * *"]
+		"crons": [
+			"0 18 * * *"
+		]
 	},
-
 	// 本番環境。バインディングは環境ごとに再定義が必要(トップレベルからは引き継がれない)
 	"env": {
 		"production": {
@@ -74,13 +89,15 @@
 				"MAIL_FROM_ADDRESS": "noreply@shukanlog.com"
 			},
 			"triggers": {
-				"crons": ["0 18 * * *"]
+				"crons": [
+					"0 18 * * *"
+				]
 			},
 			"d1_databases": [
 				{
 					"binding": "DB",
 					"database_name": "shukanlog-production",
-					"database_id": "REPLACE_WITH_PRODUCTION_D1_DATABASE_ID",
+					"database_id": "00ba9cfc-3ebd-432f-b9be-7a76951f7b5b",
 					"migrations_dir": "./migrations"
 				}
 			],
@@ -89,7 +106,9 @@
 					"name": "MAILER",
 					// 送信元をnoreply@shukanlog.comのみに限定する(destination_addressは指定しない。
 					// 指定すると検証済みの1つの宛先にしか送れなくなり、利用者への送信ができなくなるため)
-					"allowed_sender_addresses": ["noreply@shukanlog.com"]
+					"allowed_sender_addresses": [
+						"noreply@shukanlog.com"
+					]
 				}
 			],
 			"ratelimits": [
@@ -98,17 +117,22 @@
 					// 同じ値にすると回数の数え方を共有してしまう。重ならないよう、本番は2001番台にする
 					"name": "API_RATE_LIMITER",
 					"namespace_id": "2001",
-					"simple": { "limit": 60, "period": 60 }
+					"simple": {
+						"limit": 60,
+						"period": 60
+					}
 				},
 				{
 					"name": "EMAIL_CHANGE_RATE_LIMITER",
 					"namespace_id": "2002",
-					"simple": { "limit": 1, "period": 60 }
+					"simple": {
+						"limit": 1,
+						"period": 60
+					}
 				}
 			]
 		}
 	}
-
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

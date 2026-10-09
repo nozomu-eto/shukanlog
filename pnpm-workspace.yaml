@@ -1,3 +1,9 @@
+packages:
+  - "."
+# pnpm 10(Workers Buildsのビルド環境)用。pnpm 11 の allowBuilds と同じ内容
+onlyBuiltDependencies:
+  - esbuild
+  - workerd
 # Pre-approve build scripts for the packages C3 itself installs that need
 # them: `workerd` downloads the platform binary and `esbuild` downloads/
 # builds native bindings. Without these, pnpm 11+ aborts the install with

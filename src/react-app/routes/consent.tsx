@@ -12,7 +12,7 @@ import formStyles from "./auth-form.module.css";
 import styles from "./consent.module.css";
 
 // 利用規約への同意画面(/consent)。docs/design/mockups/Consent.dc.html・ConsentPC.dc.html に合わせている。
-// ログイン・同意状況による振り分け自体はConsentGuard(consent-guard.tsx)が行う
+// ログイン・同意状況による振り分け自体はconsentLoader(routes/app/app-loader.ts)が行う
 export function ConsentRoute() {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();

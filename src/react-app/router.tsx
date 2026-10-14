@@ -6,13 +6,13 @@ import { VerifyRoute } from "./routes/verify";
 import { ResetRequestRoute } from "./routes/reset-request";
 import { ResetNewRoute } from "./routes/reset-new";
 import { ConsentRoute } from "./routes/consent";
-import { ConsentGuard } from "./routes/consent-guard";
 import { RedirectIfAuthenticated } from "./routes/redirect-if-authenticated";
 import { TermsRoute } from "./routes/terms";
 import { PrivacyRoute } from "./routes/privacy";
 import { LicensesRoute } from "./routes/licenses";
 import { NotFoundRoute } from "./routes/not-found";
-import { RequireAuth } from "./routes/app/require-auth";
+import { APP_ROUTE_ID, appLoader, appShouldRevalidate, consentLoader } from "./routes/app/app-loader";
+import { AppErrorElement, AppHydrateFallback } from "./routes/app/app-boundary";
 import { AppShell } from "./routes/app/app-shell";
 import { TabsRoute } from "./routes/app/tabs";
 import { SettingsRoute } from "./routes/app/settings";
@@ -21,8 +21,8 @@ import { SettingsPasswordRoute } from "./routes/app/settings-password";
 import { SettingsWithdrawRoute } from "./routes/app/settings-withdraw";
 
 // 画面のルーティング定義。URLはdocs/design.md 8章に合わせている。
-// ログインと同意の状態による振り分け(T10)は、それぞれのガード(RedirectIfAuthenticated・
-// ConsentGuard・RequireAuth)がOutletの手前で行う
+// ログインと同意の状態による振り分けは、/consentと/appのloader(routes/app/app-loader.ts)が行う。
+// /login等は、useSession()で判定するRedirectIfAuthenticatedがOutletの手前で行う
 export const router = createBrowserRouter([
 	{ path: "/", element: <TopRoute /> },
 	{
@@ -38,7 +38,9 @@ export const router = createBrowserRouter([
 	},
 	{
 		path: "/consent",
-		element: <ConsentGuard />,
+		loader: consentLoader,
+		HydrateFallback: AppHydrateFallback,
+		errorElement: <AppErrorElement />,
 		children: [{ index: true, element: <ConsentRoute /> }],
 	},
 	{ path: "/terms", element: <TermsRoute /> },
@@ -46,7 +48,12 @@ export const router = createBrowserRouter([
 	{ path: "/licenses", element: <LicensesRoute /> },
 	{
 		path: "/app",
-		element: <RequireAuth />,
+		// 子ルートがuseRouteLoaderData(APP_ROUTE_ID)で親のloaderの結果を取り出すためのid
+		id: APP_ROUTE_ID,
+		loader: appLoader,
+		shouldRevalidate: appShouldRevalidate,
+		HydrateFallback: AppHydrateFallback,
+		errorElement: <AppErrorElement />,
 		children: [
 			{
 				element: <AppShell />,

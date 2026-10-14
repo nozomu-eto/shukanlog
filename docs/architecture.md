@@ -149,13 +149,17 @@ APIの一覧は[api.md](api.md)を参照してください。
 
 ### ルーティングと振り分け
 
-`src/react-app/router.tsx`(`createBrowserRouter`)がURL一覧(design.md 8章)を定義する。ログイン・同意の状態による振り分けは、3つのガードコンポーネントが担う。
+`src/react-app/router.tsx`(`createBrowserRouter`、React Routerのdata mode)がURL一覧(design.md 8章)を定義する。ログイン・同意の状態による振り分けは、コンポーネントの中ではなく各ルートの`loader`が担う。
 
-- **RedirectIfAuthenticated**(`routes/redirect-if-authenticated.tsx`): `/login`・`/signup`・`/verify`・`/reset`・`/reset/new`をまとめる、パスを持たない層(レイアウトルート)。ログイン済みなら`/app`へ
-- **ConsentGuard**(`routes/consent-guard.tsx`): `/consent`用。未ログインなら`/login`へ、同意済みなら`/app`へ
-- **RequireAuth**(`routes/app/require-auth.tsx`): `/app`配下用。未ログインなら`/login`へ、未同意なら`/consent`へ
+- **RedirectIfAuthenticated**(`routes/redirect-if-authenticated.tsx`): `/login`・`/signup`・`/verify`・`/reset`・`/reset/new`をまとめる、パスを持たない層(レイアウトルート)。ログイン済みなら`/app`へ。`authClient.useSession()`で判定するコンポーネントのまま
+- **`/consent`の`loader`**: 未ログインなら`/login`へ、同意済みなら`/app`へ`redirect`する
+- **`/app`(親ルート)の`loader`**: `authClient.getSession()`でセッションがなければ`/login`へ、`GET /api/me`の`consent.agreed`が未同意なら`/consent`へ`redirect`する。取得した`/api/me`の結果は、子ルートが`useRouteLoaderData`で受け取る(各画面で`/api/me`を取り直さない)
 
-いずれも`authClient.useSession()`(セッションの有無)と、必要な場合はreact-queryの`GET /api/me`(`["me"]`キャッシュ、`consent.agreed`)を見て判定する。判定中は画面のちらつきを避けるため何も描画しない(`null`を返す)。
+`loader`の中ではReactのフックを使えないため、セッションの確認は`useSession()`ではなく`authClient.getSession()`を使う。`/app`の`loader`が失敗した場合(`/api/me`のエラーなど)は`errorElement`が「再読み込み」ボタンだけの簡単な画面を出す。
+
+初回表示では`loader`が終わるまで`HydrateFallback`が表示される(画面のちらつきを避けるため、判定中に何も描画しない`null`方式は使わない)。画面遷移のときは、移動前の画面を残したまま`useNavigation`で小さな読み込み中の表示を出す。
+
+親ルートの`shouldRevalidate`が`false`を返すのは、送信(action)を伴わない`tab`・`date`のsearch paramsの変更だけに限る。それ以外は`defaultShouldRevalidate`を返し、actionの後は必ず`/api/me`を取り直す。
 
 `/app`配下はさらに`AppShell`(`routes/app/app-shell.tsx`、パスを持たない層)を挟み、ヘッダー・日週月の切り替えを提供したうえで`Outlet`を描画する。設定画面とそのサブページ(`/app/settings`以下)を表示しているときは、`location.pathname`を見て、スマホでは「戻る」+ページ名の見出しに、PCでは通常のヘッダー(設定リンクを選択中の見た目にする)に切り替える。DOMの親子構造は変えず、両方の要素を常に用意してCSSの`display`切り替えで出し分けている(AGENTS.mdの画面の実装ルール参照)。
 
@@ -167,7 +171,7 @@ APIの一覧は[api.md](api.md)を参照してください。
 
 ### 設定・アカウントの操作
 
-設定画面(`routes/app/settings.tsx`)は、カロリー記録の有効/無効のスイッチ(`PATCH /api/profile`)の成功時に`["me"]`・`["day"]`・`["summary"]`のキャッシュを無効化し、日・週・月タブに即時反映されるようにしている。
+設定画面(`routes/app/settings.tsx`)は、カロリー記録の有効/無効のスイッチ(`PATCH /api/profile`)を`action`(`useFetcher`)で送る。`action`の後はReact Routerが`loader`を自動で再実行するため、`/api/me`・日・週・月タブのデータが最新になり、日・週・月タブに即時反映される。
 
 - **メールアドレスの変更**(`settings-email.tsx`): 現在のパスワードの確認と、既に使われているメールアドレスの検出は、独自のサーバーAPI(`POST /api/account/email/request-change`、`src/worker/routes/account.ts`)で行う。確認コードの検証・変更の確定自体はBetter Auth標準のエンドポイントをフロントエンドから直接呼ぶ(`authClient.emailOtp.changeEmail()`)。現在のパスワードの確認は、Better Auth自身のchange-password処理が使っているのと同じ内部処理(`ctx.password.verify` / `ctx.internalAdapter.findCredentialAccount`、`auth.$context`経由でアクセスする、`src/worker/auth/verify-password.ts`)を使う
 - **パスワードの変更**(`settings-password.tsx`): Better Auth本体の`POST /change-password`(`authClient.changePassword()`)を`revokeOtherSessions: true`で呼ぶ。内部で対象利用者の全セッションを削除したうえでその場で新しいセッションを発行し直す実装のため、呼び出し元(今の端末)はそのレスポンスのCookieでログインしたままになり、他の端末は無効になる
@@ -184,9 +188,11 @@ APIの一覧は[api.md](api.md)を参照してください。
 
 ### データ取得と楽観的更新
 
-`@tanstack/react-query`の`QueryClient`(`react-app/lib/query-client.ts`)を`main.tsx`で1つだけ用意し、`QueryClientProvider`でアプリ全体に配線する。サーバーのデータ(`GET /api/me`・`GET /api/days/:date`等)は`useQuery`で取得し、クエリキーは`["me"]`・`["day", date]`のように用途ごとに分ける。
+サーバーのデータ(`GET /api/me`・`GET /api/days/:date`・`GET /api/summary`等)は、React Routerの`loader`で取得する。取得用の関数は`react-app/api/`のものをそのまま使う。更新(保存)は`action`と`useFetcher` / `Form`で送り、完了後の再取得は`action`後の自動再取得(revalidation)に任せる。TanStack Query(`@tanstack/react-query`)は使わない。
 
-記録ボタン(◯△×)・カロリーの記録は「押した瞬間に保存する」という仕様(design.md 7章)のため、`queryClient.setQueryData()`で画面を先に更新してから`PUT`/`POST`等を呼ぶ楽観的更新にしている(`routes/app/day-tab.tsx`の`handlePick`)。保存前の値は`getQueryData()`で退避しておき、失敗したら書き戻す。`useMutation`は使わず、素朴な`async`関数+`try/catch`にしている(処理の見通しを優先した)。
+- **日・週・月タブ**: `/app?tab=day|week|month&date=YYYY-MM-DD`の1つのルート(index)に`loader`を1つ置き、`tab`と`date`に応じて取得するデータを切り替える。`loader`は`try/catch`し、`{ data }`または`{ error }`の形で返す。画面側は取得中に`<Skeleton>`、失敗時に「再読み込み」ボタン付きのエラー表示を出し、再読み込みは`useRevalidator().revalidate()`で行う
+- **画面に戻ったときの再取得**: `useRevalidator`と`visibilitychange`を使った小さなフックで、画面に戻ってきたときに`loader`を再実行する
+- **記録ボタン(◯△×)・カロリー**: 「押した瞬間に保存する」という仕様(design.md 7章)のため楽観的更新にする。習慣ごとに`useFetcher`を持ち、画面は`fetcher.formData`の値を先に表示する。失敗すると`fetcher.formData`が消えて`loader`のデータ(サーバーの値)の表示に自然に戻るため、手動のロールバックは書かない。全習慣の保存(`PUT`)は、`lib/`の小さな直列キューでフロント側で1本の列にして順番に送る(APIは変更しない)
 
 ### 認証クライアント
 

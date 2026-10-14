@@ -119,4 +119,4 @@ CSP は style 要素・外部CSS を `'self'` のみ許可し(`style-src-elem`)�
 - 画面の見た目は `docs/design/mockups/` のモックアップ(参照専用の HTML、そのままでは表示されない)を見て、構造・余白・文字サイズ・色・文言を確認したうえで、`docs/design.md` の規則に沿って React のコンポーネントとして作り直す。規則とモックアップが食い違う場合は `docs/design.md` を優先する。文言(見出し・ボタン・エラー文など)はモックアップのものをそのまま使う
 - 個人情報(メールアドレスなど)を URL のクエリに入れない。画面間で受け渡す必要がある場合は、React Router の `state` または `sessionStorage`(直接URLを開いた場合のフォールバック用)を使う(`react-app/lib/pending-email.ts` 参照)
 - API の呼び出しは `src/react-app/api/` のクライアント経由で行い、エラーレスポンス(`{ error: { code, message } }`)は `api/errors.ts` の `toDisplayMessage()` で画面の文言に変換する
-- サーバーから取得するデータは `@tanstack/react-query` で管理する。押した瞬間に保存する操作(記録ボタン等)は `queryClient.setQueryData()` による楽観的更新を行い、失敗したら `getQueryData()` で退避しておいた値に書き戻す
+- サーバーから取得するデータは React Router の `loader` で取得し、更新は `action`(`useFetcher` / `Form`)で送る。`@tanstack/react-query` は使わない。押した瞬間に保存する操作(記録ボタン等)は `fetcher.formData` による楽観的更新を行う(失敗すると `loader` のデータの表示に戻る)。ログイン・同意の判定は `loader` の `redirect` で行い、`loader` の中では `useSession()` ではなく `authClient.getSession()` を使う

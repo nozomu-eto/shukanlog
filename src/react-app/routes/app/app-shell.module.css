@@ -177,3 +177,35 @@
 		font-weight: 700;
 	}
 }
+
+/* 画面・タブ・日付の移動でデータを取得している間、画面の上端に出す細い帯 */
+.loadingBar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 3px;
+	background-color: var(--color-text);
+	transform-origin: left;
+	animation: loading-bar 1.2s ease-in-out infinite;
+	z-index: 10;
+}
+
+@keyframes loading-bar {
+	0% {
+		transform: scaleX(0.1);
+	}
+	50% {
+		transform: scaleX(0.7);
+	}
+	100% {
+		transform: scaleX(0.1);
+		opacity: 0.4;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.loadingBar {
+		animation: none;
+	}
+}

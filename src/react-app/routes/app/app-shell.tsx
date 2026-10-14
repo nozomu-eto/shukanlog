@@ -1,4 +1,4 @@
-import { Outlet, useSearchParams, useLocation, Link } from "react-router";
+import { Outlet, useSearchParams, useLocation, useNavigation, Link } from "react-router";
 import { Settings, ChevronLeft } from "lucide-react";
 import { PageTitle } from "../../components/PageTitle";
 import styles from "./app-shell.module.css";
@@ -25,6 +25,10 @@ const SETTINGS_PAGES: Record<string, { title: string; backTo: string; backLabel:
 export function AppShell() {
 	const [searchParams] = useSearchParams();
 	const location = useLocation();
+	// 別の画面・タブ・日付へ移動してデータを取得している間はtrue。
+	// 取得が終わるまで移動前の画面を残し、その間だけ小さな読み込み中の表示を出す
+	const navigation = useNavigation();
+	const isNavigating = navigation.state === "loading";
 	const activeTab: Tab = (searchParams.get("tab") as Tab | null) ?? "day";
 	const date = searchParams.get("date");
 	const settingsPage = SETTINGS_PAGES[location.pathname];
@@ -40,6 +44,10 @@ export function AppShell() {
 
 	return (
 		<div className={styles.page}>
+			{isNavigating ? <div aria-hidden="true" className={styles.loadingBar} /> : null}
+			<p role="status" aria-label="画面の読み込み状況" className="visually-hidden">
+				{isNavigating ? "読み込み中" : ""}
+			</p>
 			{settingsPage ? <PageTitle title={settingsPage.title} /> : null}
 			<header className={settingsPage ? `${styles.header} ${styles.headerSettings}` : styles.header}>
 				{settingsPage ? (

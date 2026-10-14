@@ -1,14 +1,17 @@
-import { render, screen } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { MonthTabRoute } from "../../../src/react-app/routes/app/month-tab";
+import { ApiError } from "../../../src/react-app/api/client";
+import { renderAppRoute } from "./render-app-route";
 
 const getSummaryMock = vi.hoisted(() => vi.fn());
 const getMeMock = vi.hoisted(() => vi.fn());
+const getSessionMock = vi.hoisted(() => vi.fn());
 
 vi.mock("../../../src/react-app/api/summary", () => ({ getSummary: getSummaryMock }));
 vi.mock("../../../src/react-app/api/me", () => ({ getMe: getMeMock }));
+vi.mock("../../../src/react-app/lib/auth-client", () => ({ authClient: { getSession: getSessionMock } }));
 
 // 「今日」を2026-02-10(2026年2月、1日は日曜)に固定する
 vi.mock("../../../src/shared/domain/date", async () => {
@@ -40,20 +43,15 @@ function baseSummary() {
 }
 
 function renderMonthTab(initialDate = "2026-02-10") {
-	const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-	return render(
-		<QueryClientProvider client={queryClient}>
-			<MemoryRouter initialEntries={[`/app?tab=month&date=${initialDate}`]}>
-				<Routes>
-					<Route path="/app" element={<MonthTabRoute />} />
-				</Routes>
-			</MemoryRouter>
-		</QueryClientProvider>,
-	);
+	return renderAppRoute(`/app?tab=month&date=${initialDate}`, <MonthTabRoute />);
 }
 
 describe("MonthTabRoute", () => {
 	beforeEach(() => {
+		// テスト間で呼び出し回数や実装が残らないようにする
+		getSummaryMock.mockReset();
+		getMeMock.mockReset();
+		getSessionMock.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
 		getMeMock.mockResolvedValue({
 			user: { email: "a@example.com" },
 			accountCreatedDate: "2020-01-01",
@@ -100,5 +98,29 @@ describe("MonthTabRoute", () => {
 		await screen.findByLabelText("2月1日 服薬 達成 運動 一部達成");
 		expect(screen.queryByText("平均カロリー")).not.toBeInTheDocument();
 		expect(screen.getAllByText("左:服薬 右:運動", { exact: true }).length).toBeGreaterThan(0);
+	});
+
+	it("集計の取得に失敗したらエラー表示を出し、「再読み込み」で取得し直せる", async () => {
+		const user = userEvent.setup();
+		getSummaryMock.mockRejectedValueOnce(new ApiError("INTERNAL_ERROR", "サーバーで問題が起きました", 500));
+		getSummaryMock.mockResolvedValue(baseSummary());
+		renderMonthTab();
+
+		const alert = await screen.findByRole("alert");
+		expect(alert).toHaveTextContent("記録を読み込めませんでした");
+		expect(alert).toHaveTextContent("サーバーで問題が起きました");
+
+		await user.click(screen.getByRole("button", { name: "再読み込み" }));
+		await screen.findByText("服薬");
+		expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+		expect(getSummaryMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("画面を開いたときに/api/meを取得するのは親のloaderの1回だけ", async () => {
+		getSummaryMock.mockResolvedValue(baseSummary());
+		renderMonthTab();
+
+		await screen.findByText("服薬");
+		expect(getMeMock).toHaveBeenCalledTimes(1);
 	});
 });

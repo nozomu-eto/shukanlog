@@ -190,9 +190,13 @@ APIの一覧は[api.md](api.md)を参照してください。
 
 サーバーのデータ(`GET /api/me`・`GET /api/days/:date`・`GET /api/summary`等)は、React Routerの`loader`で取得する。取得用の関数は`react-app/api/`のものをそのまま使う。更新(保存)は`action`と`useFetcher` / `Form`で送り、完了後の再取得は`action`後の自動再取得(revalidation)に任せる。TanStack Query(`@tanstack/react-query`)は使わない。
 
-- **日・週・月タブ**: `/app?tab=day|week|month&date=YYYY-MM-DD`の1つのルート(index)に`loader`を1つ置き、`tab`と`date`に応じて取得するデータを切り替える。`loader`は`try/catch`し、`{ data }`または`{ error }`の形で返す。画面側は取得中に`<Skeleton>`、失敗時に「再読み込み」ボタン付きのエラー表示を出し、再読み込みは`useRevalidator().revalidate()`で行う
-- **画面に戻ったときの再取得**: `useRevalidator`と`visibilitychange`を使った小さなフックで、画面に戻ってきたときに`loader`を再実行する
-- **記録ボタン(◯△×)・カロリー**: 「押した瞬間に保存する」という仕様(design.md 7章)のため楽観的更新にする。習慣ごとに`useFetcher`を持ち、画面は`fetcher.formData`の値を先に表示する。失敗すると`fetcher.formData`が消えて`loader`のデータ(サーバーの値)の表示に自然に戻るため、手動のロールバックは書かない。全習慣の保存(`PUT`)は、`lib/`の小さな直列キューでフロント側で1本の列にして順番に送る(APIは変更しない)
+- **日・週・月タブ**: `/app?tab=day|week|month&date=YYYY-MM-DD`の1つのルート(index)に`loader`(`routes/app/tabs-loader.ts`)を1つ置き、`tab`と`date`に応じて取得するデータを切り替える。`loader`は`try/catch`し、`{ data }`または`{ error }`の形で返す。画面側は取得中に`<Skeleton>`、失敗時に「再読み込み」ボタン付きのエラー表示を出し、再読み込みは`useRevalidator().revalidate()`で行う
+- **記録ボタン(◯△×)**: 「押した瞬間に保存する」という仕様(design.md 7章)のため楽観的更新にする。習慣ごとのカード(`routes/app/day-tab.tsx`の`HabitCard`)が`useFetcher`を持ち、`routes/app/day-action.ts`の`action`へ送る。画面は`fetcher.formData`の値(同じ日のときだけ)を先に表示する。失敗すると`fetcher.formData`が消えて`loader`のデータ(サーバーの値)の表示に自然に戻るため、手動のロールバックや「直近の操作か」の判定は書かない
+- **保存の順番**: 同じ習慣を連打すると、React Routerは前の送信の`request.signal`を中断する。保存(PUT)は`lib/habit-log-queue.ts`の習慣ごとの直列キュー(`lib/serial-queue.ts`)に積み、`request.signal`は使わないので、中断された送信も押した順に最後まで送られ、最後の操作の結果がサーバーに残る。前の保存が失敗しても次の保存は送る。違う習慣同士は待たない。APIは変更しない
+- **保存結果のトースト**: fetcherは中断されると結果を受け取れないため、保存ごとの結果は`habit-log-queue`の通知(`onHabitLogSaved`)で受け、全タブ共通の`TabsRoute`の`useHabitLogSavedToast`が出す
+- **保存後の再取得**: fetcherのactionが終わると、React Routerが`loader`を自動で取り直す(日タブを離れてfetcherが閉じられた後でも取り直される。`test/frontend/routes/tabs-navigation.test.tsx`で確認)
+- **カロリー**: `calorie-form.tsx`がAPIを直接呼び、保存・削除に成功したら呼び出し側(`day-tab.tsx`)が`useRevalidator().revalidate()`で取り直す
+- **画面に戻ったときの再取得**: `lib/use-revalidate-on-visible.ts`が`visibilitychange`で`revalidate()`する(`AppShell`で使う)。保存中に重なっても、送信中の習慣は`fetcher.formData`で表示するため押した状態は崩れない
 
 ### 認証クライアント
 

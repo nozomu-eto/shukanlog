@@ -1,6 +1,7 @@
 import { Outlet, useSearchParams, useLocation, useNavigation, Link } from "react-router";
 import { Settings, ChevronLeft } from "lucide-react";
 import { PageTitle } from "../../components/PageTitle";
+import { useRevalidateOnVisible } from "../../lib/use-revalidate-on-visible";
 import styles from "./app-shell.module.css";
 
 type Tab = "day" | "week" | "month";
@@ -27,6 +28,8 @@ export function AppShell() {
 	const location = useLocation();
 	// 別の画面・タブ・日付へ移動してデータを取得している間はtrue。
 	// 取得が終わるまで移動前の画面を残し、その間だけ小さな読み込み中の表示を出す
+	// 画面に戻ってきたときに、表示中のデータを取り直す
+	useRevalidateOnVisible();
 	const navigation = useNavigation();
 	const isNavigating = navigation.state === "loading";
 	const activeTab: Tab = (searchParams.get("tab") as Tab | null) ?? "day";

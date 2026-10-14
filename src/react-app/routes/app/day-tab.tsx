@@ -1,19 +1,17 @@
-import { useRef, useState } from "react";
-import { useSearchParams } from "react-router";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { useSearchParams, useLoaderData, useRevalidator, useFetcher } from "react-router";
 import { Plus } from "lucide-react";
-import { getDay, type DayCalorieItem, type DayHabit, type DayResponse } from "../../api/days";
-import { getMe } from "../../api/me";
-import { putHabitLog } from "../../api/habit-logs";
-import { toDisplayMessage } from "../../api/errors";
+import type { DayCalorieItem, DayHabit } from "../../api/days";
 import { StatusIcon } from "../../components/StatusIcon";
-import { Skeleton } from "../../components/Skeleton";
 import { Button } from "../../components/Button";
 import { PeriodNav } from "../../components/PeriodNav";
 import { PageTitle } from "../../components/PageTitle";
 import { useToast } from "../../components/Toast";
 import { CalorieForm } from "./calorie-form";
-import { todayInTokyo, isValidDateString, isFuture, formatDateForDisplay } from "../../../shared/domain/date";
+import { useAppMe } from "./app-loader";
+import { resolveTabDate, tabsLoader } from "./tabs-loader";
+import type { dayAction } from "./day-action";
+import { todayInTokyo, formatDateForDisplay } from "../../../shared/domain/date";
 import { getPreviousPeriodDate, getNextPeriodDate, canGoToNextPeriod, canReturnToToday, getPeriodRange } from "../../../shared/domain/period";
 import { hrefForTab } from "../../lib/tab-links";
 import type { HabitLogResult } from "../../../shared/types";
@@ -32,15 +30,6 @@ const OPTIONS: Record<2 | 3, { result: HabitLogResult; label: string; className:
 	],
 };
 
-// URLのdateクエリパラメータから、実際に表示する日付を決める。
-// 無い・不正な形式・未来の日付の場合は今日として扱う(docs/week-month-tabs.md 1.1)
-function resolveDate(rawDate: string | null, today: string): string {
-	if (!rawDate || !isValidDateString(rawDate) || isFuture(rawDate, today)) {
-		return today;
-	}
-	return rawDate;
-}
-
 function hrefForDate(date: string): string {
 	return hrefForTab("day", date);
 }
@@ -52,81 +41,82 @@ function formatKcal(value: number): string {
 	return value.toLocaleString("ja-JP");
 }
 
+// 習慣1件分のカード。保存はroute action(dayAction)に送る。
+// 習慣ごとにfetcherを持つので、ある習慣の保存が終わるのを他の習慣が待たず、表示も習慣ごとに独立する
+function HabitCard({ habit, date }: { habit: DayHabit; date: string }) {
+	const fetcher = useFetcher<typeof dayAction>();
+
+	// 送信中は、送った値(fetcher.formData)を先に表示する(楽観的更新)。
+	// 別の日の画面に移動したあとにその日の表示へ紛れ込まないよう、同じ日のときだけ使う。
+	// 保存に失敗すると送信が終わってformDataが消え、loaderの値(サーバーの状態)の表示に戻る
+	const sending = fetcher.formData;
+	const shownResult: HabitLogResult | null =
+		sending && sending.get("date") === date ? toResult(sending.get("result")) : habit.result;
+
+	function handlePick(result: HabitLogResult) {
+		// 今の表示と同じボタンをもう一度押したら取り消し(null)にする
+		const next = shownResult === result ? null : result;
+		fetcher.submit({ habitId: habit.id, date, result: next ?? "" }, { method: "post" });
+	}
+
+	return (
+		<section className={styles.card}>
+			<div className={styles.cardHeader}>
+				<h2 className={styles.cardTitle}>{habit.name}</h2>
+				<span className={styles.cardHint}>もう一度押すと取り消し</span>
+			</div>
+			<div className={styles.options}>
+				{OPTIONS[habit.evaluationScale].map((opt) => {
+					const selected = shownResult === opt.result;
+					return (
+						<button
+							key={opt.result}
+							type="button"
+							aria-pressed={selected}
+							className={selected ? `${styles.option} ${opt.className}` : styles.option}
+							onClick={() => handlePick(opt.result)}
+						>
+							<StatusIcon status={opt.result} size={20} />
+							<span>{opt.label}</span>
+						</button>
+					);
+				})}
+			</div>
+		</section>
+	);
+}
+
+// フォームの値(文字列)を習慣の記録の結果に戻す。空文字・不正な値はnull(未記録)
+function toResult(value: FormDataEntryValue | null): HabitLogResult | null {
+	return value === "completed" || value === "partial" || value === "not_completed" ? value : null;
+}
+
 // 日タブ(記録の表示と保存)。docs/design/mockups/Day.dc.html・DayPC.dc.html・
-// DayEmpty/DayLoading/DayError.dc.html・CalorieForm.dc.html に合わせている
+// DayEmpty/DayLoading/DayError.dc.html・CalorieForm.dc.html に合わせている。
+// 記録の取得は/appのloader(tabsLoader)、習慣の保存はroute action(dayAction)が行う
 export function DayTabRoute() {
 	const [searchParams] = useSearchParams();
-	const queryClient = useQueryClient();
 	const { showToast } = useToast();
+	const me = useAppMe();
+	const loaderData = useLoaderData<typeof tabsLoader>();
+	const revalidator = useRevalidator();
 	const [calorieDialog, setCalorieDialog] = useState<CalorieDialogState | null>(null);
 
 	const today = todayInTokyo();
-	const date = resolveDate(searchParams.get("date"), today);
+	const date = resolveTabDate(searchParams.get("date"), today);
 	const isToday = date === today;
+	const result = loaderData.tab === "day" ? loaderData.result : null;
 
-	const dayQuery = useQuery({ queryKey: ["day", date], queryFn: () => getDay(date) });
-	const meQuery = useQuery({ queryKey: ["me"], queryFn: getMe });
-
+	// カロリーの保存・削除に成功したら、loaderを取り直して表示(日・週・月)を最新にする
 	function handleCalorieSaved(message: string) {
 		setCalorieDialog(null);
-		queryClient.invalidateQueries({ queryKey: ["day", date] });
-		// 週・月タブの集計にもこの日の変更を反映させる(タブを切り替えたときに古い値のままにならないように)
-		queryClient.invalidateQueries({ queryKey: ["summary"] });
+		revalidator.revalidate();
 		showToast(message);
 	}
 
-	// 習慣ごとに「直近の操作」の連番を持つ(同じ習慣への連続操作で、後から失敗した古い操作が
-	// 新しい操作の結果を巻き戻してしまわないようにするための判定に使う)
-	const latestPickRequestRef = useRef(new Map<string, number>());
-
-	// 習慣の記録の保存。TanStack Queryの公式の楽観的更新の書き方(onMutate→onError→onSettled)に揃える。
-	// onMutateでcancelQueriesしてから更新するのは、画面に戻ったときの自動再取得(refetchOnWindowFocus)と
-	// 重なって、押したばかりの状態が古い表示に戻ってしまうのを防ぐため。
-	// 同じ習慣への連続した操作は、最後の操作の結果が画面に残るようにする。scope.idを固定すること
-	// で、実際の保存(PUT)自体は発生順に1つずつ実行させ、サーバー側の最終状態も最後の操作と一致
-	// させる(scopeはmutationFnの実行だけを直列化し、onMutate/onErrorの実行順は保証しないため、
-	// それだけでは古い操作の失敗時ロールバックが新しい操作の楽観的更新を消してしまう可能性がある)。
-	// そのため、習慣ごとに直近の操作かどうかをlatestPickRequestRefで判定し、ロールバックは
-	// 「この操作より後に、同じ習慣への操作が始まっていない場合」だけ行う
-	const pickMutation = useMutation({
-		mutationFn: ({ habitId, result }: { habitId: string; result: HabitLogResult | null }) =>
-			putHabitLog({ habitId, date, result }),
-		scope: { id: "habit-log" },
-		onMutate: async ({ habitId, result }) => {
-			await queryClient.cancelQueries({ queryKey: ["day", date] });
-			const previous = queryClient.getQueryData<DayResponse>(["day", date]);
-			const requestId = (latestPickRequestRef.current.get(habitId) ?? 0) + 1;
-			latestPickRequestRef.current.set(habitId, requestId);
-			queryClient.setQueryData<DayResponse>(["day", date], (old) =>
-				old
-					? {
-							...old,
-							habits: old.habits.map((h) => (h.id === habitId ? { ...h, result } : h)),
-						}
-					: old,
-			);
-			return { previous, habitId, requestId };
-		},
-		onError: (_error, _variables, context) => {
-			const isLatest = context && latestPickRequestRef.current.get(context.habitId) === context.requestId;
-			if (isLatest) {
-				queryClient.setQueryData(["day", date], context.previous);
-			}
-			showToast("保存できませんでした。通信状況を確認して、もう一度お試しください");
-		},
-		onSuccess: (_data, { result }) => {
-			showToast(result === null ? "記録を取り消しました" : "保存しました");
-		},
-		onSettled: () => {
-			queryClient.invalidateQueries({ queryKey: ["day", date] });
-			// 週・月タブの集計にもこの日の変更を反映させる(タブを切り替えたときに古い値のままにならないように)
-			queryClient.invalidateQueries({ queryKey: ["summary"] });
-		},
-	});
-
-	function handlePick(habit: DayHabit, result: HabitLogResult) {
-		const newResult = habit.result === result ? null : result;
-		pickMutation.mutate({ habitId: habit.id, result: newResult });
+	if (!result) {
+		// URLのtabとloaderの結果が食い違う場合(通常は起きない)は何も描画しない
+		return null;
 	}
 
 	const dayPeriod = getPeriodRange(date, "day");
@@ -145,40 +135,19 @@ export function DayTabRoute() {
 			/>
 
 			<div className={styles.body}>
-				{dayQuery.isPending ? (
-					<>
-						<p role="status" className="visually-hidden">
-							記録を読み込んでいます
-						</p>
-						<div className={styles.card} aria-hidden="true">
-							<Skeleton width="30%" height={18} />
-							<div className={styles.skeletonRow}>
-								<Skeleton height={52} />
-								<Skeleton height={52} />
-							</div>
-						</div>
-						<div className={styles.card} aria-hidden="true">
-							<Skeleton width="30%" height={18} />
-							<div className={styles.skeletonRow}>
-								<Skeleton height={52} />
-								<Skeleton height={52} />
-								<Skeleton height={52} />
-							</div>
-						</div>
-					</>
-				) : dayQuery.isError ? (
+				{"error" in result ? (
 					<div role="alert" className={`${styles.card} ${styles.errorCard}`}>
 						<h2 className={styles.errorTitle}>記録を読み込めませんでした</h2>
-						<p className={styles.errorDesc}>{toDisplayMessage(dayQuery.error)}</p>
-						<Button type="button" onClick={() => dayQuery.refetch()}>
+						<p className={styles.errorDesc}>{result.error}</p>
+						<Button type="button" disabled={revalidator.state === "loading"} onClick={() => revalidator.revalidate()}>
 							再読み込み
 						</Button>
 					</div>
 				) : (
 					<>
 						{isToday &&
-						meQuery.data?.accountCreatedDate === today &&
-						dayQuery.data.habits.every((h) => h.result === null) ? (
+						me.accountCreatedDate === today &&
+						result.data.habits.every((h) => h.result === null) ? (
 							<section aria-labelledby="welcome-title" className={`${styles.card} ${styles.welcomeCard}`}>
 								<h2 id="welcome-title" className={styles.cardTitle}>
 									今日の記録をはじめましょう
@@ -189,33 +158,11 @@ export function DayTabRoute() {
 							</section>
 						) : null}
 
-						{dayQuery.data.habits.map((habit) => (
-							<section key={habit.id} className={styles.card}>
-								<div className={styles.cardHeader}>
-									<h2 className={styles.cardTitle}>{habit.name}</h2>
-									<span className={styles.cardHint}>もう一度押すと取り消し</span>
-								</div>
-								<div className={styles.options}>
-									{OPTIONS[habit.evaluationScale].map((opt) => {
-										const selected = habit.result === opt.result;
-										return (
-											<button
-												key={opt.result}
-												type="button"
-												aria-pressed={selected}
-												className={selected ? `${styles.option} ${opt.className}` : styles.option}
-												onClick={() => handlePick(habit, opt.result)}
-											>
-												<StatusIcon status={opt.result} size={20} />
-												<span>{opt.label}</span>
-											</button>
-										);
-									})}
-								</div>
-							</section>
+						{result.data.habits.map((habit) => (
+							<HabitCard key={habit.id} habit={habit} date={date} />
 						))}
 
-						{dayQuery.data.calories ? (
+						{result.data.calories ? (
 							<section className={styles.card}>
 								<div className={styles.calorieHeader}>
 									<h2 className={styles.cardTitle}>カロリー</h2>
@@ -228,14 +175,14 @@ export function DayTabRoute() {
 										記録する
 									</button>
 								</div>
-								{dayQuery.data.calories.items.length > 0 ? (
+								{result.data.calories.items.length > 0 ? (
 									<div className={styles.calorieTotal}>
 										<span className={styles.calorieTotalValue}>
-											{formatKcal(dayQuery.data.calories.total)}
+											{formatKcal(result.data.calories.total)}
 											<span className={styles.calorieTotalUnit}>kcal</span>
 										</span>
 										<ul className={styles.calorieList}>
-											{dayQuery.data.calories.items.map((item) => (
+											{result.data.calories.items.map((item) => (
 												<li key={item.id}>
 													<button
 														type="button"

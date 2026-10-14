@@ -1,5 +1,4 @@
 import { screen, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { TabsRoute } from "../../../src/react-app/routes/app/tabs";
@@ -14,14 +13,9 @@ vi.mock("../../../src/react-app/api/me", () => ({ getMe: getMeMock }));
 vi.mock("../../../src/react-app/api/days", () => ({ getDay: getDayMock }));
 vi.mock("../../../src/react-app/lib/auth-client", () => ({ authClient: { getSession: getSessionMock } }));
 
-// 日タブがまだTanStack Queryを使っているため、QueryClientとToastを用意する
+// トースト(ToastProvider)を用意する
 function Providers({ children }: { children: ReactNode }) {
-	const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-	return (
-		<QueryClientProvider client={queryClient}>
-			<ToastProvider>{children}</ToastProvider>
-		</QueryClientProvider>
-	);
+	return <ToastProvider>{children}</ToastProvider>;
 }
 
 function renderTabs() {

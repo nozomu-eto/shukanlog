@@ -27,7 +27,7 @@ export function resolveTabDate(rawDate: string | null, today: string): string {
 // /app(index)のloader。URLのtab・dateに応じて取得するデータを切り替える。
 // 日タブはその日の記録(GET /api/days/:date)、週・月タブは集計(GET /api/summary)を取得する。
 // タブや日付が変わるたびに、React Routerがこのloaderを再実行する
-export async function tabsLoader({ request }: LoaderFunctionArgs): Promise<TabsLoaderData> {
+export async function tabsLoader({ request }: Pick<LoaderFunctionArgs, "request">): Promise<TabsLoaderData> {
 	const searchParams = new URL(request.url).searchParams;
 	const tab = searchParams.get("tab");
 	const date = resolveTabDate(searchParams.get("date"), todayInTokyo());

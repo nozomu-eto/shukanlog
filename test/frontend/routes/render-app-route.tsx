@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
-import type { ComponentType, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { RouterProvider, createMemoryRouter } from "react-router";
+import { ToastProvider } from "../../../src/react-app/components/Toast";
 import { AppHydrateFallback } from "../../../src/react-app/routes/app/app-boundary";
 import { APP_ROUTE_ID, appLoader, appShouldRevalidate } from "../../../src/react-app/routes/app/app-loader";
 import { AppShell } from "../../../src/react-app/routes/app/app-shell";
@@ -15,11 +16,11 @@ import { tabsLoader } from "../../../src/react-app/routes/app/tabs-loader";
 // 同じindexルート(tabsLoader)の組み合わせで表示するテスト用の関数。
 // 呼び出すテストファイル側で、authClient.getSession・api/me・api/summary等のモックを用意しておくこと。
 // withShell: trueなら、ヘッダーとタブ切り替え(AppShell)も含めて表示する。
-// wrapper: 画面がTanStack QueryやToastのProviderを必要とする間(日タブが移行するまで)に使う
+// 画面がトーストを使うため、ToastProviderで包んで描画する
 export function renderAppRoute(
 	path: string,
 	element: ReactNode,
-	options: { withShell?: boolean; wrapper?: ComponentType<{ children: ReactNode }> } = {},
+	options: { withShell?: boolean } = {},
 ) {
 	const router = createMemoryRouter(
 		[
@@ -46,6 +47,10 @@ export function renderAppRoute(
 		],
 		{ initialEntries: [path] },
 	);
-	render(<RouterProvider router={router} />, { wrapper: options.wrapper });
+	render(
+		<ToastProvider>
+			<RouterProvider router={router} />
+		</ToastProvider>,
+	);
 	return router;
 }

@@ -1,9 +1,8 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { deferred } from "../deferred";
 import { renderAppRoute } from "./render-app-route";
-import { ToastProvider } from "../../../src/react-app/components/Toast";
 
 const getMeMock = vi.hoisted(() => vi.fn());
 const patchProfileMock = vi.hoisted(() => vi.fn());
@@ -17,20 +16,7 @@ vi.mock("../../../src/react-app/lib/auth-client", () => ({
 }));
 
 function renderSettings() {
-	return renderAppRoute("/app/settings", <div />, { wrapper: Providers });
-}
-
-// 設定画面はToastを使うため、ToastProviderで包む
-function Providers({ children }: { children: ReactNode }) {
-	return <ToastProvider>{children}</ToastProvider>;
-}
-
-function deferred<T>() {
-	let resolve!: (value: T) => void;
-	const promise = new Promise<T>((res) => {
-		resolve = res;
-	});
-	return { promise, resolve };
+	return renderAppRoute("/app/settings", <div />);
 }
 
 describe("SettingsRoute", () => {
@@ -74,7 +60,8 @@ describe("SettingsRoute", () => {
 
 		expect(patchProfileMock).toHaveBeenCalledWith(false);
 		await waitFor(() => expect(switchEl).toHaveAttribute("aria-checked", "false"));
-		expect(await screen.findByRole("status")).toHaveTextContent("設定を変更しました");
+		// トーストの枠(role=status)は最初から存在するため、文言の出現を待って確認する
+		expect(await screen.findByText("設定を変更しました")).toBeInTheDocument();
 	});
 
 	it("切り替えのあと、/api/meが取り直されて画面に反映される(action後の自動再取得)", async () => {

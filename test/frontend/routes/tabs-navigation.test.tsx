@@ -1,9 +1,8 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { TabsRoute } from "../../../src/react-app/routes/app/tabs";
-import { ToastProvider } from "../../../src/react-app/components/Toast";
+import { deferred } from "../deferred";
 import { renderAppRoute } from "./render-app-route";
 
 const getSessionMock = vi.hoisted(() => vi.fn());
@@ -25,19 +24,6 @@ vi.mock("../../../src/shared/domain/date", async () => {
 	);
 	return { ...actual, todayInTokyo: () => "2026-09-24" };
 });
-
-// トースト(ToastProvider)を用意する
-function Providers({ children }: { children: ReactNode }) {
-	return <ToastProvider>{children}</ToastProvider>;
-}
-
-function deferred<T>() {
-	let resolve!: (value: T) => void;
-	const promise = new Promise<T>((res) => {
-		resolve = res;
-	});
-	return { promise, resolve };
-}
 
 const HABITS = [
 	{ id: "h1", name: "服薬", kind: "medication", evaluationScale: 2 as const },
@@ -92,7 +78,7 @@ describe("タブの移動", () => {
 
 	it("日タブで保存したあと週タブに切り替えると、保存した内容が集計に表示される", async () => {
 		const user = userEvent.setup();
-		renderAppRoute("/app?tab=day&date=2026-09-24", <TabsRoute />, { withShell: true, wrapper: Providers });
+		renderAppRoute("/app?tab=day&date=2026-09-24", <TabsRoute />, { withShell: true });
 
 		const buttons = await screen.findAllByRole("button", { name: /できた/ });
 		await user.click(buttons[0]);
@@ -121,7 +107,7 @@ describe("タブの移動", () => {
 				};
 			});
 		});
-		renderAppRoute("/app?tab=day&date=2026-09-24", <TabsRoute />, { withShell: true, wrapper: Providers });
+		renderAppRoute("/app?tab=day&date=2026-09-24", <TabsRoute />, { withShell: true });
 
 		const buttons = await screen.findAllByRole("button", { name: /できた/ });
 		await user.click(buttons[0]);
@@ -140,7 +126,7 @@ describe("タブの移動", () => {
 	it("日タブで取り消したあと月タブに切り替えると、取り消した内容が集計に表示される", async () => {
 		const user = userEvent.setup();
 		serverResults = { h1: "completed" };
-		renderAppRoute("/app?tab=day&date=2026-09-24", <TabsRoute />, { withShell: true, wrapper: Providers });
+		renderAppRoute("/app?tab=day&date=2026-09-24", <TabsRoute />, { withShell: true });
 
 		const buttons = await screen.findAllByRole("button", { name: /できた/ });
 		await waitFor(() => expect(buttons[0]).toHaveAttribute("aria-pressed", "true"));
@@ -155,7 +141,7 @@ describe("タブの移動", () => {
 
 	it("週タブの移動中は、移動前の画面を残したまま「読み込み中」の表示を出し、取得が終わると消える", async () => {
 		const user = userEvent.setup();
-		renderAppRoute("/app?tab=week&date=2026-09-24", <TabsRoute />, { withShell: true, wrapper: Providers });
+		renderAppRoute("/app?tab=week&date=2026-09-24", <TabsRoute />, { withShell: true });
 		await screen.findByLabelText("9月24日 服薬 未記録");
 		const status = screen.getByRole("status", { name: "画面の読み込み状況" });
 		expect(status).toHaveTextContent("");
@@ -176,7 +162,7 @@ describe("タブの移動", () => {
 
 	it("タブの切り替え中も「読み込み中」の表示を出す", async () => {
 		const user = userEvent.setup();
-		renderAppRoute("/app?tab=week&date=2026-09-24", <TabsRoute />, { withShell: true, wrapper: Providers });
+		renderAppRoute("/app?tab=week&date=2026-09-24", <TabsRoute />, { withShell: true });
 		await screen.findByLabelText("9月24日 服薬 未記録");
 
 		const pending = deferred<ReturnType<typeof summaryFromServer>>();

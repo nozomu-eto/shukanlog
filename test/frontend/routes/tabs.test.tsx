@@ -1,8 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
-import type { ReactNode } from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { TabsRoute } from "../../../src/react-app/routes/app/tabs";
-import { ToastProvider } from "../../../src/react-app/components/Toast";
 import { renderAppRoute } from "./render-app-route";
 
 const getMeMock = vi.hoisted(() => vi.fn());
@@ -13,13 +11,8 @@ vi.mock("../../../src/react-app/api/me", () => ({ getMe: getMeMock }));
 vi.mock("../../../src/react-app/api/days", () => ({ getDay: getDayMock }));
 vi.mock("../../../src/react-app/lib/auth-client", () => ({ authClient: { getSession: getSessionMock } }));
 
-// トースト(ToastProvider)を用意する
-function Providers({ children }: { children: ReactNode }) {
-	return <ToastProvider>{children}</ToastProvider>;
-}
-
 function renderTabs() {
-	return renderAppRoute("/app?tab=day", <TabsRoute />, { wrapper: Providers });
+	return renderAppRoute("/app?tab=day", <TabsRoute />);
 }
 
 function meWith(justCanceledWithdrawal: boolean) {

@@ -1,16 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { deferred } from "../deferred";
 import { createSerialQueue } from "../../../src/react-app/lib/serial-queue";
-
-// 外から解決・拒否できるPromise(処理の完了タイミングを制御するため)
-function deferred<T = void>() {
-	let resolve!: (value: T) => void;
-	let reject!: (reason: unknown) => void;
-	const promise = new Promise<T>((res, rej) => {
-		resolve = res;
-		reject = rej;
-	});
-	return { promise, resolve, reject };
-}
 
 // マイクロタスクを一通り流す
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));

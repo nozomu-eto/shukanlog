@@ -3,7 +3,6 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { ApiError } from "../../../src/react-app/api/client";
 import { TabsRoute } from "../../../src/react-app/routes/app/tabs";
-import { ToastProvider } from "../../../src/react-app/components/Toast";
 import { renderAppRoute } from "./render-app-route";
 
 const getSessionMock = vi.hoisted(() => vi.fn());
@@ -73,10 +72,7 @@ function holdPuts() {
 }
 
 function renderDay(path = `/app?tab=day&date=${DATE}`) {
-	return renderAppRoute(path, <TabsRoute />, {
-		withShell: true,
-		wrapper: ({ children }) => <ToastProvider>{children}</ToastProvider>,
-	});
+	return renderAppRoute(path, <TabsRoute />, { withShell: true });
 }
 
 // 「画面に戻ってきた」状態を作る(document.visibilityStateをvisibleにしてvisibilitychangeを発火する)
@@ -156,6 +152,24 @@ describe("日タブ", () => {
 
 		await waitFor(() => expect(button).toHaveAttribute("aria-pressed", "false"));
 		expect(await screen.findByText("保存できませんでした。通信状況を確認して、もう一度お試しください")).toBeInTheDocument();
+	});
+
+	it("習慣の記録を保存しても、親の/api/meは取り直さない(保存した日の記録は取り直す)", async () => {
+		const user = userEvent.setup();
+		putHabitLogMock.mockImplementation((params: PendingPut["params"]) => {
+			serverResults[params.date] = { ...serverResults[params.date], [params.habitId]: params.result };
+			return Promise.resolve({ ...params });
+		});
+		renderDay();
+		const button = (await screen.findAllByRole("button", { name: /できた/ }))[0];
+		const meCalls = getMeMock.mock.calls.length;
+		const dayCalls = getDayMock.mock.calls.length;
+
+		await user.click(button);
+		await waitFor(() => expect(getDayMock.mock.calls.length).toBeGreaterThan(dayCalls));
+		await screen.findByText("保存しました");
+
+		expect(getMeMock.mock.calls.length).toBe(meCalls);
 	});
 
 	describe("連打", () => {

@@ -58,20 +58,28 @@ export async function consentLoader(): Promise<MeResponse> {
 	return me;
 }
 
-// 親(/app)のloaderを再実行しない条件。
-// 送信(action)を伴わず、同じパスのままsearch params(tab・date)だけが変わるときに限ってfalseを返す。
-// 日・週・月タブの切り替えや日付の移動のたびに/api/meを取り直さないため。
-// search paramsが同じ(useRevalidatorによる再読み込みなど)ときは、再取得が必要なのでfalseにしない。
-// それ以外(action後・別パスへの移動)はReact Routerの既定の判定に従う
+// 親(/app)のloaderを再実行しない条件。次の2つのときだけfalseを返す。
+// 1. 送信(action)を伴わず、同じパスのままsearch params(tab・date)だけが変わるとき。
+//    日・週・月タブの切り替えや日付の移動のたびに/api/meを取り直さないため。
+//    search paramsが同じ(useRevalidatorによる再読み込みなど)ときは、再取得が必要なのでfalseにしない
+// 2. 習慣の記録の保存(/appのindexルートのaction。日タブの◯△×)のとき。
+//    保存しても/api/meの内容(メール・プロフィール・同意状況など)は変わらず、
+//    押すたびに/api/meを取り直すのは無駄なため。設定やメール変更などの他のactionの後は、必ず取り直す
+// それ以外(上記以外のaction後・別パスへの移動・再読み込み)はReact Routerの既定の判定に従う
 export function appShouldRevalidate({
 	currentUrl,
 	nextUrl,
 	formMethod,
+	formAction,
 	defaultShouldRevalidate,
 }: ShouldRevalidateFunctionArgs): boolean {
 	const isSubmission = formMethod !== undefined;
 	const isSearchOnlyChange = currentUrl.pathname === nextUrl.pathname && currentUrl.search !== nextUrl.search;
 	if (!isSubmission && isSearchOnlyChange) {
+		return false;
+	}
+	const isHabitLogSave = isSubmission && formAction !== undefined && new URL(formAction, currentUrl).pathname === "/app";
+	if (isHabitLogSave) {
 		return false;
 	}
 	return defaultShouldRevalidate;

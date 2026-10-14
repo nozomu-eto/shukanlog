@@ -177,6 +177,20 @@ describe("appShouldRevalidate(親の再取得の条件)", () => {
 		expect(appShouldRevalidate(args({ formMethod: "POST", defaultShouldRevalidate: false }))).toBe(false);
 	});
 
+	it("習慣の記録の保存(/appのindexルートのaction)の後は、親を取り直さない", () => {
+		const sameUrl = new URL("http://localhost/app?tab=day&date=2026-10-01");
+		expect(
+			appShouldRevalidate(args({ currentUrl: sameUrl, nextUrl: sameUrl, formMethod: "POST", formAction: "/app?index" })),
+		).toBe(false);
+	});
+
+	it("設定など他のactionの後は、既定の判定に従って親を取り直す", () => {
+		const sameUrl = new URL("http://localhost/app/settings");
+		expect(
+			appShouldRevalidate(args({ currentUrl: sameUrl, nextUrl: sameUrl, formMethod: "POST", formAction: "/app/settings" })),
+		).toBe(true);
+	});
+
 	it("search paramsが同じ(再読み込みなど)場合は既定の判定に従い、falseにしない", () => {
 		expect(appShouldRevalidate(args({ nextUrl: new URL("http://localhost/app?tab=day&date=2026-10-01") }))).toBe(
 			true,

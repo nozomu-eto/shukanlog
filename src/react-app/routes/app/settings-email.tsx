@@ -1,88 +1,53 @@
 import { useState, type FormEvent } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getMe } from "../../api/me";
-import { requestEmailChange } from "../../api/account";
-import { authClient, getAuthErrorCode } from "../../lib/auth-client";
-import { toDisplayMessage, ApiError } from "../../api/errors";
+import { useFetcher } from "react-router";
 import { Button } from "../../components/Button";
 import { TextField } from "../../components/TextField";
 import { PasswordField } from "../../components/PasswordField";
 import { validateEmail, validatePasswordRequired, validateOtp } from "../../lib/validators";
+import { useAppMe } from "./app-loader";
+import type { settingsEmailAction } from "./settings-email-action";
 import styles from "./settings-email.module.css";
-
-type Step = "form" | "code" | "done";
 
 // メールアドレスの変更(/app/settings/email)。
 // docs/design/mockups/EmailChange.dc.html・EmailChangePC.dc.html に合わせている。
+// 確認コードの送信・検証はroute action(settingsEmailAction)に送る。画面の段階(form→code→done)は、
+// actionが返した結果のstepをそのまま使う。
 // 確認が済むまでは今のメールアドレスのまま(確認コードの検証(auth.emailOtp.changeEmail)に
 // 成功した時点でBetter Auth側がセッションのメールアドレスを更新する)
 export function SettingsEmailRoute() {
-	const meQuery = useQuery({ queryKey: ["me"], queryFn: getMe });
+	const me = useAppMe();
+	const fetcher = useFetcher<typeof settingsEmailAction>();
 
-	const [step, setStep] = useState<Step>("form");
 	const [newEmail, setNewEmail] = useState("");
 	const [currentPassword, setCurrentPassword] = useState("");
 	const [code, setCode] = useState("");
 	const [tried, setTried] = useState(false);
-	const [submitting, setSubmitting] = useState(false);
-	const [formError, setFormError] = useState<string | null>(null);
+
+	const step = fetcher.data?.step ?? "form";
+	const submitting = fetcher.state !== "idle";
+	const formError = fetcher.data?.error ?? null;
 
 	const newEmailError = tried ? validateEmail(newEmail) : undefined;
 	const currentPasswordError = tried ? validatePasswordRequired(currentPassword) : undefined;
 	const codeError = tried ? validateOtp(code) : undefined;
 
-	async function handleSubmitForm(e: FormEvent) {
+	function handleSubmitForm(e: FormEvent) {
 		e.preventDefault();
 		setTried(true);
-		setFormError(null);
 		if (validateEmail(newEmail) || validatePasswordRequired(currentPassword)) {
 			return;
 		}
-
-		setSubmitting(true);
-		try {
-			await requestEmailChange(newEmail, currentPassword);
-			setStep("code");
-			setTried(false);
-		} catch (error) {
-			if (error instanceof ApiError && error.code === "VALIDATION_ERROR") {
-				setFormError(error.message);
-			} else {
-				setFormError(toDisplayMessage(error));
-			}
-		} finally {
-			setSubmitting(false);
-		}
+		fetcher.submit({ intent: "request", newEmail, currentPassword }, { method: "post" });
+		setTried(false);
 	}
 
-	async function handleSubmitCode(e: FormEvent) {
+	function handleSubmitCode(e: FormEvent) {
 		e.preventDefault();
 		setTried(true);
-		setFormError(null);
 		if (validateOtp(code)) {
 			return;
 		}
-
-		setSubmitting(true);
-		try {
-			const { error } = await authClient.emailOtp.changeEmail({ newEmail, otp: code });
-			if (!error) {
-				setStep("done");
-				return;
-			}
-			const errorCode = getAuthErrorCode(error);
-			if (errorCode === "INVALID_OTP") {
-				setFormError("確認コードが正しくありません");
-				return;
-			}
-			if (errorCode === "OTP_EXPIRED") {
-				setFormError("確認コードの有効期限が切れています。もう一度手続きをやり直してください");
-				return;
-			}
-			setFormError("確認コードが正しくありません");
-		} finally {
-			setSubmitting(false);
-		}
+		fetcher.submit({ intent: "verify", newEmail, otp: code }, { method: "post" });
 	}
 
 	return (
@@ -92,7 +57,7 @@ export function SettingsEmailRoute() {
 					<form className={styles.stepStack} onSubmit={handleSubmitForm} noValidate>
 						<div className={styles.currentEmail}>
 							<span className={styles.currentEmailLabel}>現在のメールアドレス</span>
-							<span className={styles.currentEmailValue}>{meQuery.data?.user.email ?? ""}</span>
+							<span className={styles.currentEmailValue}>{me.user.email}</span>
 						</div>
 						<TextField
 							id="newEmail"

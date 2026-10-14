@@ -1,43 +1,49 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter, Route, Routes } from "react-router";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { SettingsRoute } from "../../../src/react-app/routes/app/settings";
+import { renderAppRoute } from "./render-app-route";
 import { ToastProvider } from "../../../src/react-app/components/Toast";
 
 const getMeMock = vi.hoisted(() => vi.fn());
 const patchProfileMock = vi.hoisted(() => vi.fn());
+const getSessionMock = vi.hoisted(() => vi.fn());
 const signOutMock = vi.hoisted(() => vi.fn());
 
 vi.mock("../../../src/react-app/api/me", () => ({ getMe: getMeMock }));
 vi.mock("../../../src/react-app/api/profile", () => ({ patchProfile: patchProfileMock }));
 vi.mock("../../../src/react-app/lib/auth-client", () => ({
-	authClient: { signOut: signOutMock },
+	authClient: { signOut: signOutMock, getSession: getSessionMock },
 }));
 
 function renderSettings() {
-	const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-	return render(
-		<QueryClientProvider client={queryClient}>
-			<ToastProvider>
-				<MemoryRouter initialEntries={["/app/settings"]}>
-					<Routes>
-						<Route path="/app/settings" element={<SettingsRoute />} />
-					</Routes>
-				</MemoryRouter>
-			</ToastProvider>
-		</QueryClientProvider>,
-	);
+	return renderAppRoute("/app/settings", <div />, { wrapper: Providers });
+}
+
+// 設定画面はToastを使うため、ToastProviderで包む
+function Providers({ children }: { children: ReactNode }) {
+	return <ToastProvider>{children}</ToastProvider>;
+}
+
+function deferred<T>() {
+	let resolve!: (value: T) => void;
+	const promise = new Promise<T>((res) => {
+		resolve = res;
+	});
+	return { promise, resolve };
 }
 
 describe("SettingsRoute", () => {
 	beforeEach(() => {
+		getMeMock.mockReset();
+		patchProfileMock.mockReset();
+		getSessionMock.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
 		getMeMock.mockResolvedValue({
 			user: { email: "a@example.com" },
 			accountCreatedDate: "2020-01-01",
 			profile: { calorieTrackingEnabled: true },
 			consent: { currentVersion: "2026-09-25", agreed: true },
+			justCanceledWithdrawal: false,
 		});
 	});
 
@@ -69,5 +75,76 @@ describe("SettingsRoute", () => {
 		expect(patchProfileMock).toHaveBeenCalledWith(false);
 		await waitFor(() => expect(switchEl).toHaveAttribute("aria-checked", "false"));
 		expect(await screen.findByRole("status")).toHaveTextContent("設定を変更しました");
+	});
+
+	it("切り替えのあと、/api/meが取り直されて画面に反映される(action後の自動再取得)", async () => {
+		const user = userEvent.setup();
+		const me = {
+			user: { email: "a@example.com" },
+			accountCreatedDate: "2020-01-01",
+			profile: { calorieTrackingEnabled: true },
+			consent: { currentVersion: "2026-09-25", agreed: true },
+			justCanceledWithdrawal: false,
+		};
+		getMeMock.mockImplementation(() => Promise.resolve(structuredClone(me)));
+		patchProfileMock.mockImplementation((calorieTrackingEnabled: boolean) => {
+			me.profile.calorieTrackingEnabled = calorieTrackingEnabled;
+			return Promise.resolve({ calorieTrackingEnabled });
+		});
+		renderSettings();
+		const switchEl = await screen.findByRole("switch");
+		expect(getMeMock).toHaveBeenCalledTimes(1);
+
+		await user.click(switchEl);
+
+		// 保存のあと、親のloaderが/api/meを取り直す(shouldRevalidateは送信を伴うのでfalseにしない)
+		await waitFor(() => expect(getMeMock).toHaveBeenCalledTimes(2));
+		await waitFor(() => expect(switchEl).toHaveAttribute("aria-checked", "false"));
+	});
+
+	it("取り直しの完了を待つ間も、切り替えた値のまま表示される(ちらつかない)", async () => {
+		const user = userEvent.setup();
+		const me = (enabled: boolean) => ({
+			user: { email: "a@example.com" },
+			accountCreatedDate: "2020-01-01",
+			profile: { calorieTrackingEnabled: enabled },
+			consent: { currentVersion: "2026-09-25", agreed: true },
+			justCanceledWithdrawal: false,
+		});
+		getMeMock.mockResolvedValueOnce(me(true));
+		renderSettings();
+		const switchEl = await screen.findByRole("switch");
+
+		const refetch = deferred<ReturnType<typeof me>>();
+		getMeMock.mockReturnValueOnce(refetch.promise);
+		patchProfileMock.mockResolvedValue({ calorieTrackingEnabled: false });
+		await user.click(switchEl);
+
+		// 保存は終わったが/api/meの取り直しが終わっていない間も、スイッチはオフのまま
+		await waitFor(() => expect(getMeMock).toHaveBeenCalledTimes(2));
+		expect(switchEl).toHaveAttribute("aria-checked", "false");
+		refetch.resolve(me(false));
+		await waitFor(() => expect(switchEl).toHaveAttribute("aria-checked", "false"));
+	});
+
+	it("保存に失敗するとスイッチは元の値に戻り、エラーのトーストを出す", async () => {
+		const user = userEvent.setup();
+		getMeMock.mockResolvedValue({
+			user: { email: "a@example.com" },
+			accountCreatedDate: "2020-01-01",
+			profile: { calorieTrackingEnabled: true },
+			consent: { currentVersion: "2026-09-25", agreed: true },
+			justCanceledWithdrawal: false,
+		});
+		patchProfileMock.mockRejectedValue(new Error("network"));
+		renderSettings();
+		const switchEl = await screen.findByRole("switch");
+
+		await user.click(switchEl);
+
+		expect(
+			await screen.findByText("設定を変更できませんでした。通信状況を確認して、もう一度お試しください"),
+		).toBeInTheDocument();
+		expect(switchEl).toHaveAttribute("aria-checked", "true");
 	});
 });

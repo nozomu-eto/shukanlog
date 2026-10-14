@@ -1,10 +1,7 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate, useFetcher, Link } from "react-router";
 import { authClient } from "../lib/auth-client";
-import { postConsent } from "../api/me";
-import { toDisplayMessage } from "../api/errors";
-import { POLICY_VERSION } from "../../shared/policy";
+import type { consentAction } from "./consent-action";
 import { UnauthHeader } from "../components/UnauthHeader";
 import { PageTitle } from "../components/PageTitle";
 import { Button } from "../components/Button";
@@ -15,32 +12,23 @@ import styles from "./consent.module.css";
 // ログイン・同意状況による振り分け自体はconsentLoader(routes/app/app-loader.ts)が行う
 export function ConsentRoute() {
 	const navigate = useNavigate();
-	const queryClient = useQueryClient();
+	// 同意の送信はroute action(consentAction)に任せる。成功すると/appへ移動する
+	const fetcher = useFetcher<typeof consentAction>();
 
 	const [agree, setAgree] = useState(false);
 	const [tried, setTried] = useState(false);
-	const [submitting, setSubmitting] = useState(false);
-	const [formError, setFormError] = useState<string | null>(null);
+
+	const submitting = fetcher.state !== "idle";
+	const formError = fetcher.data?.error ?? null;
 
 	const agreeError = tried && !agree ? "続けるには同意が必要です" : undefined;
 
-	async function handleSubmit() {
+	function handleSubmit() {
 		setTried(true);
-		setFormError(null);
 		if (!agree) {
 			return;
 		}
-		setSubmitting(true);
-		try {
-			await postConsent(POLICY_VERSION);
-			// GET /api/meのキャッシュ(consent.agreed)を更新してから/appへ移動する
-			await queryClient.invalidateQueries({ queryKey: ["me"] });
-			navigate("/app", { replace: true });
-		} catch (error) {
-			setFormError(toDisplayMessage(error));
-		} finally {
-			setSubmitting(false);
-		}
+		fetcher.submit({}, { method: "post" });
 	}
 
 	async function handleLogout() {

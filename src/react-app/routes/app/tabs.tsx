@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { useSearchParams } from "react-router";
-import { useQuery } from "@tanstack/react-query";
-import { getMe } from "../../api/me";
 import { useToast } from "../../components/Toast";
+import { useAppMe } from "./app-loader";
 import { DayTabRoute } from "./day-tab";
 import { WeekTabRoute } from "./week-tab";
 import { MonthTabRoute } from "./month-tab";
@@ -18,9 +17,9 @@ export function TabsRoute() {
 
 	// ログイン時に退会の申請が取り消された場合(GET /api/meのjustCanceledWithdrawal)、
 	// /appに来たタイミングで1回だけ「退会を取り消しました」を表示する
-	const meQuery = useQuery({ queryKey: ["me"], queryFn: getMe });
+	const { justCanceledWithdrawal } = useAppMe();
 	useEffect(() => {
-		if (!meQuery.data?.justCanceledWithdrawal) {
+		if (!justCanceledWithdrawal) {
 			return;
 		}
 		if (sessionStorage.getItem(WITHDRAWAL_CANCEL_TOAST_KEY)) {
@@ -28,7 +27,7 @@ export function TabsRoute() {
 		}
 		sessionStorage.setItem(WITHDRAWAL_CANCEL_TOAST_KEY, "1");
 		showToast("退会を取り消しました");
-	}, [meQuery.data?.justCanceledWithdrawal, showToast]);
+	}, [justCanceledWithdrawal, showToast]);
 
 	if (tab === "week") {
 		return <WeekTabRoute />;

@@ -12,6 +12,9 @@ import { PrivacyRoute } from "./routes/privacy";
 import { LicensesRoute } from "./routes/licenses";
 import { NotFoundRoute } from "./routes/not-found";
 import { APP_ROUTE_ID, appLoader, appShouldRevalidate, consentLoader } from "./routes/app/app-loader";
+import { consentAction } from "./routes/consent-action";
+import { settingsAction } from "./routes/app/settings-action";
+import { settingsEmailAction } from "./routes/app/settings-email-action";
 import { tabsLoader } from "./routes/app/tabs-loader";
 import { AppErrorElement, AppHydrateFallback } from "./routes/app/app-boundary";
 import { AppShell } from "./routes/app/app-shell";
@@ -42,7 +45,8 @@ export const router = createBrowserRouter([
 		loader: consentLoader,
 		HydrateFallback: AppHydrateFallback,
 		errorElement: <AppErrorElement />,
-		children: [{ index: true, element: <ConsentRoute /> }],
+		// actionはindexルートに置く(画面のConsentRouteがindexルートのため、fetcher.submitの送信先になる)
+		children: [{ index: true, action: consentAction, element: <ConsentRoute /> }],
 	},
 	{ path: "/terms", element: <TermsRoute /> },
 	{ path: "/privacy", element: <PrivacyRoute /> },
@@ -60,8 +64,8 @@ export const router = createBrowserRouter([
 				element: <AppShell />,
 				children: [
 					{ index: true, loader: tabsLoader, element: <TabsRoute /> },
-					{ path: "settings", element: <SettingsRoute /> },
-					{ path: "settings/email", element: <SettingsEmailRoute /> },
+					{ path: "settings", action: settingsAction, element: <SettingsRoute /> },
+					{ path: "settings/email", action: settingsEmailAction, element: <SettingsEmailRoute /> },
 					{ path: "settings/password", element: <SettingsPasswordRoute /> },
 					{ path: "settings/withdraw", element: <SettingsWithdrawRoute /> },
 				],

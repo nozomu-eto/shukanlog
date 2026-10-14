@@ -159,7 +159,7 @@ APIの一覧は[api.md](api.md)を参照してください。
 
 初回表示では`loader`が終わるまで`HydrateFallback`が表示される(画面のちらつきを避けるため、判定中に何も描画しない`null`方式は使わない)。画面遷移のときは、移動前の画面を残したまま`useNavigation`で小さな読み込み中の表示を出す。
 
-親ルートの`shouldRevalidate`が`false`を返すのは、送信(action)を伴わない`tab`・`date`のsearch paramsの変更だけに限る。それ以外は`defaultShouldRevalidate`を返し、actionの後は必ず`/api/me`を取り直す。
+親ルートの`shouldRevalidate`が`false`を返すのは、次の2つだけ。(1)送信(action)を伴わない`tab`・`date`のsearch paramsの変更、(2)習慣の記録の保存(`/app`のindexルートのaction。`formAction`が`/app`のとき)。(2)は`/api/me`の内容が変わらず、◯△×を押すたびの取り直しが無駄なため。それ以外は`defaultShouldRevalidate`を返し、設定・メール変更など他のactionの後は必ず`/api/me`を取り直す。
 
 `/app`配下はさらに`AppShell`(`routes/app/app-shell.tsx`、パスを持たない層)を挟み、ヘッダー・日週月の切り替えを提供したうえで`Outlet`を描画する。設定画面とそのサブページ(`/app/settings`以下)を表示しているときは、`location.pathname`を見て、スマホでは「戻る」+ページ名の見出しに、PCでは通常のヘッダー(設定リンクを選択中の見た目にする)に切り替える。DOMの親子構造は変えず、両方の要素を常に用意してCSSの`display`切り替えで出し分けている(AGENTS.mdの画面の実装ルール参照)。
 
@@ -194,7 +194,7 @@ APIの一覧は[api.md](api.md)を参照してください。
 - **記録ボタン(◯△×)**: 「押した瞬間に保存する」という仕様(design.md 7章)のため楽観的更新にする。習慣ごとのカード(`routes/app/day-tab.tsx`の`HabitCard`)が`useFetcher`を持ち、`routes/app/day-action.ts`の`action`へ送る。画面は`fetcher.formData`の値(同じ日のときだけ)を先に表示する。失敗すると`fetcher.formData`が消えて`loader`のデータ(サーバーの値)の表示に自然に戻るため、手動のロールバックや「直近の操作か」の判定は書かない
 - **保存の順番**: 同じ習慣を連打すると、React Routerは前の送信の`request.signal`を中断する。保存(PUT)は`lib/habit-log-queue.ts`の習慣ごとの直列キュー(`lib/serial-queue.ts`)に積み、`request.signal`は使わないので、中断された送信も押した順に最後まで送られ、最後の操作の結果がサーバーに残る。前の保存が失敗しても次の保存は送る。違う習慣同士は待たない。APIは変更しない
 - **保存結果のトースト**: fetcherは中断されると結果を受け取れないため、保存ごとの結果は`habit-log-queue`の通知(`onHabitLogSaved`)で受け、全タブ共通の`TabsRoute`の`useHabitLogSavedToast`が出す
-- **保存後の再取得**: fetcherのactionが終わると、React Routerが`loader`を自動で取り直す(日タブを離れてfetcherが閉じられた後でも取り直される。`test/frontend/routes/tabs-navigation.test.tsx`で確認)
+- **保存後の再取得**: fetcherのactionが終わると、React Routerが`loader`を自動で取り直す。日タブを離れてfetcherが閉じられた後でも、保存が終われば取り直される。根拠は、React Router v7ではfetcherの寿命が「持ち主のコンポーネントがアンマウントされたとき」ではなく「idleに戻ったとき」で決まること(v6の`future.v7_fetcherPersist`フラグがv7で削除されて標準の動きになった。`node_modules/react-router/CHANGELOG.md`の「Remove `future.v7_fetcherPersist` flag」と、`node_modules/react-router/docs/upgrading/v6.md`の`v7_fetcherPersist`の説明)。実際の動きは`test/frontend/routes/tabs-navigation.test.tsx`(保存の完了前に週タブへ切り替えるテスト)で確認している
 - **カロリー**: `calorie-form.tsx`がAPIを直接呼び、保存・削除に成功したら呼び出し側(`day-tab.tsx`)が`useRevalidator().revalidate()`で取り直す
 - **画面に戻ったときの再取得**: `lib/use-revalidate-on-visible.ts`が`visibilitychange`で`revalidate()`する(`AppShell`で使う)。保存中に重なっても、送信中の習慣は`fetcher.formData`で表示するため押した状態は崩れない
 

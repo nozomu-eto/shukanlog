@@ -1,16 +1,12 @@
-import { useSearchParams, Link } from "react-router";
-import { useQuery } from "@tanstack/react-query";
-import { getSummary, type SummaryDay } from "../../api/summary";
-import { getMe } from "../../api/me";
-import { toDisplayMessage } from "../../api/errors";
+import { useSearchParams, useLoaderData, useRevalidator, Link } from "react-router";
+import { type SummaryDay } from "../../api/summary";
 import { StatusIcon, getStatusLabel } from "../../components/StatusIcon";
-import { Skeleton } from "../../components/Skeleton";
 import { Button } from "../../components/Button";
 import { PeriodNav } from "../../components/PeriodNav";
 import { PageTitle } from "../../components/PageTitle";
 import { Legend } from "../../components/Legend";
 import { hrefForTab } from "../../lib/tab-links";
-import { todayInTokyo, isValidDateString, isFuture } from "../../../shared/domain/date";
+import { todayInTokyo, isFuture } from "../../../shared/domain/date";
 import {
 	getMonthRange,
 	getMonthCalendarCells,
@@ -20,15 +16,9 @@ import {
 	canReturnToToday,
 	formatMonthPeriodDisplay,
 } from "../../../shared/domain/period";
+import { useAppMe } from "./app-loader";
+import { resolveTabDate, tabsLoader } from "./tabs-loader";
 import styles from "./month-tab.module.css";
-
-// URLのdateクエリパラメータから、実際に表示する月の基準日を決める(week-month-tabs.md 1.1)
-function resolveDate(rawDate: string | null, today: string): string {
-	if (!rawDate || !isValidDateString(rawDate) || isFuture(rawDate, today)) {
-		return today;
-	}
-	return rawDate;
-}
 
 const WEEKDAY_LABELS = ["月", "火", "水", "木", "金", "土", "日"];
 
@@ -46,28 +36,33 @@ export function MonthTabRoute() {
 	const [searchParams] = useSearchParams();
 
 	const today = todayInTokyo();
-	const date = resolveDate(searchParams.get("date"), today);
+	const date = resolveTabDate(searchParams.get("date"), today);
 	const period = getMonthRange(date);
 	const cells = getMonthCalendarCells(date);
 
-	const meQuery = useQuery({ queryKey: ["me"], queryFn: getMe });
-	const summaryQuery = useQuery({
-		queryKey: ["summary", period.start, period.end],
-		queryFn: () => getSummary(period.start, period.end),
-	});
+	// /api/meは親(/app)のloaderで取得済みのものを使う。集計は/appのloader(tabsLoader)が取得した結果
+	const me = useAppMe();
+	const loaderData = useLoaderData<typeof tabsLoader>();
+	const revalidator = useRevalidator();
+	const result = loaderData.tab === "month" ? loaderData.result : null;
 
-	const calorieEnabled = meQuery.data?.profile?.calorieTrackingEnabled ?? true;
+	const calorieEnabled = me.profile?.calorieTrackingEnabled ?? true;
 
 	function hrefForMonthDate(target: string): string {
 		return hrefForTab("month", target);
 	}
 
-	const daysByDate = new Map<string, SummaryDay>((summaryQuery.data?.days ?? []).map((d) => [d.date, d]));
+	if (!result) {
+		// URLのtabとloaderの結果が食い違う場合(通常は起きない)は何も描画しない
+		return null;
+	}
+	const summary = "data" in result ? result.data : undefined;
+	const daysByDate = new Map<string, SummaryDay>((summary?.days ?? []).map((d) => [d.date, d]));
 	const hasAnyRecord =
-		summaryQuery.data !== undefined &&
-		summaryQuery.data.days.some((d) => Object.keys(d.results).length > 0 || d.calories !== null);
+		summary !== undefined &&
+		summary.days.some((d) => Object.keys(d.results).length > 0 || d.calories !== null);
 
-	const habits = summaryQuery.data?.habits ?? [];
+	const habits = summary?.habits ?? [];
 	const medicationHabit = habits[0];
 	const exerciseHabit = habits[1];
 
@@ -87,20 +82,11 @@ export function MonthTabRoute() {
 				/>
 			</div>
 
-			{summaryQuery.isPending ? (
-				<>
-					<div className={styles.calendarCard} aria-hidden="true">
-						<Skeleton height={280} />
-					</div>
-					<p role="status" className="visually-hidden">
-						記録を読み込んでいます
-					</p>
-				</>
-			) : summaryQuery.isError ? (
+			{"error" in result ? (
 				<div role="alert" className={styles.errorCard}>
 					<h2 className={styles.errorTitle}>記録を読み込めませんでした</h2>
-					<p className={styles.errorDesc}>{toDisplayMessage(summaryQuery.error)}</p>
-					<Button type="button" onClick={() => summaryQuery.refetch()}>
+					<p className={styles.errorDesc}>{result.error}</p>
+					<Button type="button" disabled={revalidator.state === "loading"} onClick={() => revalidator.revalidate()}>
 						再読み込み
 					</Button>
 				</div>
@@ -188,11 +174,11 @@ export function MonthTabRoute() {
 									<span className={styles.summaryValue}>
 										<StatusIcon status="completed" size={14} />
 										<span className={styles.summaryValueNumber}>
-											{summaryQuery.data.totals.habits[medicationHabit.id]?.completed ?? 0}
+											{result.data.totals.habits[medicationHabit.id]?.completed ?? 0}
 										</span>
 									</span>
 									<span className={styles.summarySub}>
-										/ {summaryQuery.data.totals.habits[medicationHabit.id]?.eligibleDays ?? 0}日
+										/ {result.data.totals.habits[medicationHabit.id]?.eligibleDays ?? 0}日
 									</span>
 								</div>
 							) : null}
@@ -203,15 +189,15 @@ export function MonthTabRoute() {
 									<span className={styles.summaryValue}>
 										<StatusIcon status="completed" size={14} />
 										<span className={styles.summaryValueNumber}>
-											{summaryQuery.data.totals.habits[exerciseHabit.id]?.completed ?? 0}
+											{result.data.totals.habits[exerciseHabit.id]?.completed ?? 0}
 										</span>
 										<StatusIcon status="partial" size={14} />
 										<span className={styles.summaryValueNumber}>
-											{summaryQuery.data.totals.habits[exerciseHabit.id]?.partial ?? 0}
+											{result.data.totals.habits[exerciseHabit.id]?.partial ?? 0}
 										</span>
 									</span>
 									<span className={styles.summarySub}>
-										/ {summaryQuery.data.totals.habits[exerciseHabit.id]?.eligibleDays ?? 0}日
+										/ {result.data.totals.habits[exerciseHabit.id]?.eligibleDays ?? 0}日
 									</span>
 								</div>
 							) : null}
@@ -221,13 +207,13 @@ export function MonthTabRoute() {
 									<span className={styles.summaryLabel}>平均カロリー</span>
 									<span className={styles.summaryValue}>
 										<span className={styles.summaryValueNumber}>
-											{summaryQuery.data.totals.calories.average === null
+											{result.data.totals.calories.average === null
 												? "記録なし"
-												: formatKcalPc(summaryQuery.data.totals.calories.average)}
+												: formatKcalPc(result.data.totals.calories.average)}
 										</span>
-										{summaryQuery.data.totals.calories.average === null ? null : " kcal"}
+										{result.data.totals.calories.average === null ? null : " kcal"}
 									</span>
-									<span className={styles.summarySub}>記録 {summaryQuery.data.totals.calories.recordedDays}日</span>
+									<span className={styles.summarySub}>記録 {result.data.totals.calories.recordedDays}日</span>
 								</div>
 							) : null}
 						</div>

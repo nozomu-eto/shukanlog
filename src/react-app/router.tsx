@@ -12,6 +12,7 @@ import { PrivacyRoute } from "./routes/privacy";
 import { LicensesRoute } from "./routes/licenses";
 import { NotFoundRoute } from "./routes/not-found";
 import { APP_ROUTE_ID, appLoader, appShouldRevalidate, consentLoader } from "./routes/app/app-loader";
+import { tabsLoader } from "./routes/app/tabs-loader";
 import { AppErrorElement, AppHydrateFallback } from "./routes/app/app-boundary";
 import { AppShell } from "./routes/app/app-shell";
 import { TabsRoute } from "./routes/app/tabs";
@@ -58,7 +59,7 @@ export const router = createBrowserRouter([
 			{
 				element: <AppShell />,
 				children: [
-					{ index: true, element: <TabsRoute /> },
+					{ index: true, loader: tabsLoader, element: <TabsRoute /> },
 					{ path: "settings", element: <SettingsRoute /> },
 					{ path: "settings/email", element: <SettingsEmailRoute /> },
 					{ path: "settings/password", element: <SettingsPasswordRoute /> },

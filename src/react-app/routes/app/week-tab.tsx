@@ -1,16 +1,12 @@
-import { useSearchParams, Link } from "react-router";
-import { useQuery } from "@tanstack/react-query";
-import { getSummary, type SummaryDay, type SummaryHabit } from "../../api/summary";
-import { getMe } from "../../api/me";
-import { toDisplayMessage } from "../../api/errors";
+import { useSearchParams, useLoaderData, useRevalidator, Link } from "react-router";
+import { type SummaryDay, type SummaryHabit } from "../../api/summary";
 import { StatusIcon, getStatusLabel } from "../../components/StatusIcon";
-import { Skeleton } from "../../components/Skeleton";
 import { Button } from "../../components/Button";
 import { PeriodNav } from "../../components/PeriodNav";
 import { PageTitle } from "../../components/PageTitle";
 import { Legend } from "../../components/Legend";
 import { hrefForTab } from "../../lib/tab-links";
-import { todayInTokyo, isValidDateString, isFuture } from "../../../shared/domain/date";
+import { todayInTokyo, isFuture } from "../../../shared/domain/date";
 import {
 	getWeekRange,
 	getPreviousPeriodDate,
@@ -19,15 +15,9 @@ import {
 	canReturnToToday,
 	formatWeekPeriodDisplay,
 } from "../../../shared/domain/period";
+import { useAppMe } from "./app-loader";
+import { resolveTabDate, tabsLoader } from "./tabs-loader";
 import styles from "./week-tab.module.css";
-
-// URLのdateクエリパラメータから、実際に表示する週の基準日を決める(week-month-tabs.md 1.1)
-function resolveDate(rawDate: string | null, today: string): string {
-	if (!rawDate || !isValidDateString(rawDate) || isFuture(rawDate, today)) {
-		return today;
-	}
-	return rawDate;
-}
 
 // 期間内の日付一覧(月曜〜日曜)を返す
 function datesInRange(from: string, to: string): string[] {
@@ -57,26 +47,31 @@ export function WeekTabRoute() {
 	const [searchParams] = useSearchParams();
 
 	const today = todayInTokyo();
-	const date = resolveDate(searchParams.get("date"), today);
+	const date = resolveTabDate(searchParams.get("date"), today);
 	const period = getWeekRange(date);
 	const dates = datesInRange(period.start, period.end);
 
-	const meQuery = useQuery({ queryKey: ["me"], queryFn: getMe });
-	const summaryQuery = useQuery({
-		queryKey: ["summary", period.start, period.end],
-		queryFn: () => getSummary(period.start, period.end),
-	});
+	// /api/meは親(/app)のloaderで取得済みのものを使う。集計は/appのloader(tabsLoader)が取得した結果
+	const me = useAppMe();
+	const loaderData = useLoaderData<typeof tabsLoader>();
+	const revalidator = useRevalidator();
+	const result = loaderData.tab === "week" ? loaderData.result : null;
 
-	const calorieEnabled = meQuery.data?.profile?.calorieTrackingEnabled ?? true;
+	const calorieEnabled = me.profile?.calorieTrackingEnabled ?? true;
 
 	function hrefForWeekDate(target: string): string {
 		return hrefForTab("week", target);
 	}
 
-	const daysByDate = new Map<string, SummaryDay>((summaryQuery.data?.days ?? []).map((d) => [d.date, d]));
+	if (!result) {
+		// URLのtabとloaderの結果が食い違う場合(通常は起きない)は何も描画しない
+		return null;
+	}
+	const summary = "data" in result ? result.data : undefined;
+	const daysByDate = new Map<string, SummaryDay>((summary?.days ?? []).map((d) => [d.date, d]));
 	const hasAnyRecord =
-		summaryQuery.data !== undefined &&
-		(summaryQuery.data.days.some((d) => Object.keys(d.results).length > 0 || d.calories !== null) ||
+		summary !== undefined &&
+		(summary.days.some((d) => Object.keys(d.results).length > 0 || d.calories !== null) ||
 			false);
 
 	function habitCell(habit: SummaryHabit, targetDate: string) {
@@ -120,26 +115,11 @@ export function WeekTabRoute() {
 				/>
 			</div>
 
-			{summaryQuery.isPending ? (
-				<>
-					<div className={styles.card} aria-hidden="true">
-						<Skeleton width="20%" height={18} />
-						<Skeleton height={40} />
-						<Skeleton height={40} />
-					</div>
-					<div className={styles.calorieCard} aria-hidden="true">
-						<Skeleton width="30%" height={18} />
-						<Skeleton height={100} />
-					</div>
-					<p role="status" className="visually-hidden">
-						記録を読み込んでいます
-					</p>
-				</>
-			) : summaryQuery.isError ? (
+			{"error" in result ? (
 				<div role="alert" className={styles.errorCard}>
 					<h2 className={styles.errorTitle}>記録を読み込めませんでした</h2>
-					<p className={styles.errorDesc}>{toDisplayMessage(summaryQuery.error)}</p>
-					<Button type="button" onClick={() => summaryQuery.refetch()}>
+					<p className={styles.errorDesc}>{result.error}</p>
+					<Button type="button" disabled={revalidator.state === "loading"} onClick={() => revalidator.revalidate()}>
 						再読み込み
 					</Button>
 				</div>
@@ -160,8 +140,8 @@ export function WeekTabRoute() {
 								);
 							})}
 						</div>
-						{summaryQuery.data.habits.map((habit) => {
-							const totals = summaryQuery.data.totals.habits[habit.id];
+						{result.data.habits.map((habit) => {
+							const totals = result.data.totals.habits[habit.id];
 							return (
 								<div key={habit.id} className={styles.habitRow}>
 									<div className={styles.habitGrid}>
@@ -193,15 +173,15 @@ export function WeekTabRoute() {
 							<div className={styles.calorieCardHeader}>
 								<h2 className={styles.cardTitle}>カロリー</h2>
 								<span className={styles.calorieAverage}>
-									{summaryQuery.data.totals.calories.average === null ? (
+									{result.data.totals.calories.average === null ? (
 										"記録なし"
 									) : (
 										<>
 											平均{" "}
 											<span className={styles.calorieAverageValue}>
-												{formatKcal(summaryQuery.data.totals.calories.average)}
+												{formatKcal(result.data.totals.calories.average)}
 											</span>{" "}
-											kcal(記録 {summaryQuery.data.totals.calories.recordedDays}日)
+											kcal(記録 {result.data.totals.calories.recordedDays}日)
 										</>
 									)}
 								</span>

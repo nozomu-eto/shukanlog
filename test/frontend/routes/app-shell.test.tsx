@@ -1,18 +1,15 @@
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { RouterProvider, createMemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import { AppShell } from "../../../src/react-app/routes/app/app-shell";
 
+// AppShellはuseNavigationを使うため、MemoryRouterではなくデータルーター(createMemoryRouter)で描画する
 function renderAppShell(initialEntry: string) {
-	return render(
-		<MemoryRouter initialEntries={[initialEntry]}>
-			<Routes>
-				<Route path="/app" element={<AppShell />}>
-					<Route index element={<div>中身</div>} />
-				</Route>
-			</Routes>
-		</MemoryRouter>,
+	const router = createMemoryRouter(
+		[{ path: "/app", element: <AppShell />, children: [{ index: true, element: <div>中身</div> }] }],
+		{ initialEntries: [initialEntry] },
 	);
+	return render(<RouterProvider router={router} />);
 }
 
 describe("AppShell", () => {

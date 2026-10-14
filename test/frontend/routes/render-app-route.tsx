@@ -8,6 +8,7 @@ import { settingsAction } from "../../../src/react-app/routes/app/settings-actio
 import { settingsEmailAction } from "../../../src/react-app/routes/app/settings-email-action";
 import { SettingsRoute } from "../../../src/react-app/routes/app/settings";
 import { SettingsEmailRoute } from "../../../src/react-app/routes/app/settings-email";
+import { dayAction } from "../../../src/react-app/routes/app/day-action";
 import { tabsLoader } from "../../../src/react-app/routes/app/tabs-loader";
 
 // /app配下の画面を、本番のrouter.tsxと同じ親ルート(appLoader・shouldRevalidate・id)と
@@ -32,7 +33,7 @@ export function renderAppRoute(
 					{
 						element: options.withShell ? <AppShell /> : undefined,
 						children: [
-							{ index: true, loader: tabsLoader, element },
+							{ index: true, loader: tabsLoader, action: dayAction, element },
 							// 設定系の画面(本番のrouter.tsxと同じaction)
 							{ path: "settings", action: settingsAction, element: <SettingsRoute /> },
 							{ path: "settings/email", action: settingsEmailAction, element: <SettingsEmailRoute /> },

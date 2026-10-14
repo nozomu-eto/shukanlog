@@ -1,6 +1,5 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { TabsRoute } from "../../../src/react-app/routes/app/tabs";
@@ -27,14 +26,9 @@ vi.mock("../../../src/shared/domain/date", async () => {
 	return { ...actual, todayInTokyo: () => "2026-09-24" };
 });
 
-// 日タブがまだTanStack Queryを使っているため、QueryClientとToastを用意する
+// トースト(ToastProvider)を用意する
 function Providers({ children }: { children: ReactNode }) {
-	const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-	return (
-		<QueryClientProvider client={queryClient}>
-			<ToastProvider>{children}</ToastProvider>
-		</QueryClientProvider>
-	);
+	return <ToastProvider>{children}</ToastProvider>;
 }
 
 function deferred<T>() {
@@ -113,6 +107,34 @@ describe("タブの移動", () => {
 		expect(getSummaryMock).toHaveBeenCalledTimes(1);
 		// タブを切り替えても、親のshouldRevalidateがfalseを返すので/api/meは取り直さない
 		expect(getMeMock.mock.calls.length).toBe(meCallsBeforeSwitch);
+	});
+
+	it("保存が終わる前に週タブへ切り替えても、保存が終わったあとに最新の集計が表示される", async () => {
+		const user = userEvent.setup();
+		// 保存(PUT)を保留にして、完了のタイミングをテストで決める
+		let finishSave!: () => void;
+		putHabitLogMock.mockImplementation(({ habitId, result }: { habitId: string; result: string | null }) => {
+			return new Promise((resolve) => {
+				finishSave = () => {
+					serverResults = { ...serverResults, [habitId]: result };
+					resolve({ habitId, date: "2026-09-24", result });
+				};
+			});
+		});
+		renderAppRoute("/app?tab=day&date=2026-09-24", <TabsRoute />, { withShell: true, wrapper: Providers });
+
+		const buttons = await screen.findAllByRole("button", { name: /できた/ });
+		await user.click(buttons[0]);
+		await waitFor(() => expect(putHabitLogMock).toHaveBeenCalledTimes(1));
+
+		// 保存の途中で週タブへ切り替える。このとき取得した集計は、まだ保存前の内容
+		await user.click(within(screen.getByRole("navigation", { name: "表示期間" })).getByRole("link", { name: "週" }));
+		expect(await screen.findByLabelText("9月24日 服薬 未記録")).toBeInTheDocument();
+
+		// 保存が終わると、React Routerがfetcher(日タブを離れて閉じられた後でも)の保存完了後にloaderを取り直し、
+		// 週タブの集計が最新の内容になる
+		finishSave();
+		expect(await screen.findByLabelText("9月24日 服薬 達成")).toBeInTheDocument();
 	});
 
 	it("日タブで取り消したあと月タブに切り替えると、取り消した内容が集計に表示される", async () => {

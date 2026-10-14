@@ -15,6 +15,7 @@ import { APP_ROUTE_ID, appLoader, appShouldRevalidate, consentLoader } from "./r
 import { consentAction } from "./routes/consent-action";
 import { settingsAction } from "./routes/app/settings-action";
 import { settingsEmailAction } from "./routes/app/settings-email-action";
+import { dayAction } from "./routes/app/day-action";
 import { tabsLoader } from "./routes/app/tabs-loader";
 import { AppErrorElement, AppHydrateFallback } from "./routes/app/app-boundary";
 import { AppShell } from "./routes/app/app-shell";
@@ -63,7 +64,7 @@ export const router = createBrowserRouter([
 			{
 				element: <AppShell />,
 				children: [
-					{ index: true, loader: tabsLoader, element: <TabsRoute /> },
+					{ index: true, loader: tabsLoader, action: dayAction, element: <TabsRoute /> },
 					{ path: "settings", action: settingsAction, element: <SettingsRoute /> },
 					{ path: "settings/email", action: settingsEmailAction, element: <SettingsEmailRoute /> },
 					{ path: "settings/password", element: <SettingsPasswordRoute /> },

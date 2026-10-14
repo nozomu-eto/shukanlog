@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useSearchParams } from "react-router";
 import { useToast } from "../../components/Toast";
+import { useHabitLogSavedToast } from "../../lib/use-habit-log-effects";
 import { useAppMe } from "./app-loader";
 import { DayTabRoute } from "./day-tab";
 import { WeekTabRoute } from "./week-tab";
@@ -14,6 +15,7 @@ export function TabsRoute() {
 	const [searchParams] = useSearchParams();
 	const tab = searchParams.get("tab");
 	const { showToast } = useToast();
+	useHabitLogSavedToast();
 
 	// ログイン時に退会の申請が取り消された場合(GET /api/meのjustCanceledWithdrawal)、
 	// /appに来たタイミングで1回だけ「退会を取り消しました」を表示する

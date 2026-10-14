@@ -4,6 +4,10 @@ import { RouterProvider, createMemoryRouter } from "react-router";
 import { AppHydrateFallback } from "../../../src/react-app/routes/app/app-boundary";
 import { APP_ROUTE_ID, appLoader, appShouldRevalidate } from "../../../src/react-app/routes/app/app-loader";
 import { AppShell } from "../../../src/react-app/routes/app/app-shell";
+import { settingsAction } from "../../../src/react-app/routes/app/settings-action";
+import { settingsEmailAction } from "../../../src/react-app/routes/app/settings-email-action";
+import { SettingsRoute } from "../../../src/react-app/routes/app/settings";
+import { SettingsEmailRoute } from "../../../src/react-app/routes/app/settings-email";
 import { tabsLoader } from "../../../src/react-app/routes/app/tabs-loader";
 
 // /app配下の画面を、本番のrouter.tsxと同じ親ルート(appLoader・shouldRevalidate・id)と
@@ -27,7 +31,12 @@ export function renderAppRoute(
 				children: [
 					{
 						element: options.withShell ? <AppShell /> : undefined,
-						children: [{ index: true, loader: tabsLoader, element }],
+						children: [
+							{ index: true, loader: tabsLoader, element },
+							// 設定系の画面(本番のrouter.tsxと同じaction)
+							{ path: "settings", action: settingsAction, element: <SettingsRoute /> },
+							{ path: "settings/email", action: settingsEmailAction, element: <SettingsEmailRoute /> },
+						],
 					},
 				],
 			},

@@ -15,7 +15,9 @@ export function AppHydrateFallback() {
 }
 
 // /app親ルートのloaderが失敗したとき(/api/meの取得失敗など)の画面。
-// 内部のエラー内容は出さず、「再読み込み」ボタンでloaderをやり直せるようにする
+// 内部のエラー内容は出さず、「再読み込み」ボタンでloaderをやり直せるようにする。
+// errorElementの中でuseRevalidator().revalidate()を使う書き方は、React Router 7.18.4の同梱ドキュメントには
+// 記述が無い。動作はtest/frontend/routes/app-loader.test.tsxの「失敗→再読み込み→成功」で確認している
 export function AppErrorElement() {
 	const revalidator = useRevalidator();
 	return (

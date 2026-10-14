@@ -1,36 +1,37 @@
-import { Link, useNavigate } from "react-router";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { Link, useNavigate, useFetcher } from "react-router";
 import { ChevronRight } from "lucide-react";
 import { authClient } from "../../lib/auth-client";
-import { getMe } from "../../api/me";
-import { patchProfile } from "../../api/profile";
 import { useToast } from "../../components/Toast";
+import { useAppMe } from "./app-loader";
+import type { settingsAction } from "./settings-action";
 import styles from "./settings.module.css";
 
 // 設定画面。docs/design/mockups/Settings.dc.html・SettingsPC.dc.html に合わせている
 export function SettingsRoute() {
 	const navigate = useNavigate();
-	const queryClient = useQueryClient();
 	const { showToast } = useToast();
+	const me = useAppMe();
+	// カロリー記録の切り替えはroute action(settingsAction)に送る。成功すると
+	// React Routerが自動でloaderを取り直すので、/api/meと日・週・月の表示が最新になる
+	const fetcher = useFetcher<typeof settingsAction>();
 
-	const meQuery = useQuery({ queryKey: ["me"], queryFn: getMe });
-	const calorieEnabled = meQuery.data?.profile?.calorieTrackingEnabled ?? true;
+	// 送信中は、送った値(fetcher.formData)を先に表示する。失敗するとformDataが消えて、
+	// loaderの値(サーバーの状態)の表示に戻る
+	const sendingValue = fetcher.formData?.get("calorieTrackingEnabled");
+	const calorieEnabled = sendingValue ? sendingValue === "true" : (me.profile?.calorieTrackingEnabled ?? true);
 
-	// カロリー記録の有効・無効の切り替え。切り替えたら、日・週・月の表示にも反映されるよう
-	// ["me"](calorieTrackingEnabledの読み取り元)と["day"]・["summary"](カロリーの表示先)の
-	// キャッシュを無効化する
-	const toggleCalorieMutation = useMutation({
-		mutationFn: (next: boolean) => patchProfile(next),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["me"] });
-			queryClient.invalidateQueries({ queryKey: ["day"] });
-			queryClient.invalidateQueries({ queryKey: ["summary"] });
-			showToast("設定を変更しました");
-		},
-		onError: () => {
-			showToast("設定を変更できませんでした。通信状況を確認して、もう一度お試しください");
-		},
-	});
+	// actionの結果が返ってきたら、結果をトーストで知らせる
+	useEffect(() => {
+		if (!fetcher.data) {
+			return;
+		}
+		showToast(
+			fetcher.data.ok
+				? "設定を変更しました"
+				: "設定を変更できませんでした。通信状況を確認して、もう一度お試しください",
+		);
+	}, [fetcher.data, showToast]);
 
 	async function handleLogout() {
 		await authClient.signOut();
@@ -47,7 +48,7 @@ export function SettingsRoute() {
 					<Link to="/app/settings/email" className={`${styles.listItem} ${styles.listItemTall}`}>
 						<span className={styles.listItemLabel}>
 							<span>メールアドレス</span>
-							<span className={styles.listItemSub}>{meQuery.data?.user.email ?? ""}</span>
+							<span className={styles.listItemSub}>{me.user.email}</span>
 						</span>
 						<ChevronRight size={18} aria-hidden="true" className={styles.listItemArrow} />
 					</Link>
@@ -74,8 +75,8 @@ export function SettingsRoute() {
 						aria-checked={calorieEnabled}
 						aria-labelledby="calorie-label"
 						className={styles.switch}
-						disabled={toggleCalorieMutation.isPending}
-						onClick={() => toggleCalorieMutation.mutate(!calorieEnabled)}
+						disabled={fetcher.state !== "idle"}
+						onClick={() => fetcher.submit({ calorieTrackingEnabled: String(!calorieEnabled) }, { method: "post" })}
 					>
 						<span className={calorieEnabled ? `${styles.switchTrack} ${styles.switchTrackOn}` : styles.switchTrack}>
 							<span className={styles.switchKnob} />

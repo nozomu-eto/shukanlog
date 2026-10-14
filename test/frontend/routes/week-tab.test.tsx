@@ -138,4 +138,22 @@ describe("WeekTabRoute", () => {
 		await screen.findByText("服薬");
 		expect(getMeMock).toHaveBeenCalledTimes(1);
 	});
+
+	it("最初からweekタブのURLを開くと、取得が終わるまでHydrateFallbackを表示し、そのあとweekタブを表示する", async () => {
+		let resolveSummary!: (value: ReturnType<typeof baseSummary>) => void;
+		getSummaryMock.mockReturnValue(
+			new Promise((resolve) => {
+				resolveSummary = resolve;
+			}),
+		);
+		renderWeekTab();
+
+		// 取得中は、親(/app)のHydrateFallbackが表示され、タブの中身はまだ無い
+		expect(await screen.findByRole("status", { name: "読み込み中" })).toBeInTheDocument();
+		expect(screen.queryByText("服薬")).not.toBeInTheDocument();
+
+		resolveSummary(baseSummary());
+		await screen.findByText("服薬");
+		expect(screen.queryByRole("status", { name: "読み込み中" })).not.toBeInTheDocument();
+	});
 });

@@ -24,10 +24,11 @@ describe("public/robots.txt", () => {
 describe("public/sitemap.xml", () => {
 	const content = readFileSync(path.join(process.cwd(), "public/sitemap.xml"), "utf-8");
 
-	it("公開してよい4ページの絶対URLを含む", () => {
+	it("公開してよい5ページの絶対URLを含む", () => {
 		expect(content).toContain("<loc>https://shukanlog.com/</loc>");
 		expect(content).toContain("<loc>https://shukanlog.com/terms</loc>");
 		expect(content).toContain("<loc>https://shukanlog.com/privacy</loc>");
 		expect(content).toContain("<loc>https://shukanlog.com/licenses</loc>");
+		expect(content).toContain("<loc>https://shukanlog.com/contact</loc>");
 	});
 });

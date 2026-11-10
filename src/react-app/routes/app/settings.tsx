@@ -100,13 +100,13 @@ export function SettingsRoute() {
 						ライセンス
 						<ChevronRight size={18} aria-hidden="true" className={styles.listItemArrow} />
 					</Link>
-					<a href="mailto:info@shukanlog.com" className={`${styles.listItem} ${styles.listItemTall}`}>
+					<Link to="/contact" className={`${styles.listItem} ${styles.listItemTall}`}>
 						<span className={styles.listItemLabel}>
 							<span>お問い合わせ</span>
 							<span className={styles.listItemSub}>info@shukanlog.com</span>
 						</span>
 						<ChevronRight size={18} aria-hidden="true" className={styles.listItemArrow} />
-					</a>
+					</Link>
 				</div>
 			</section>
 

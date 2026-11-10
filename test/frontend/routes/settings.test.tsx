@@ -38,6 +38,14 @@ describe("SettingsRoute", () => {
 		expect(await screen.findByText("a@example.com")).toBeInTheDocument();
 	});
 
+	it("サポートのお問い合わせはメールアプリではなくお問い合わせページへ移動する", async () => {
+		renderSettings();
+		const contactText = await screen.findByText("お問い合わせ");
+		const contactLink = contactText.closest("a");
+
+		expect(contactLink).toHaveAttribute("href", "/contact");
+	});
+
 	it("スイッチを切り替えるとAPIが呼ばれ、表示(aria-checked)が変わる", async () => {
 		const user = userEvent.setup();
 		const me = {

@@ -1,4 +1,4 @@
-import { Navigate, Link, useLocation } from "react-router";
+import { Navigate, useLocation } from "react-router";
 import { authClient } from "../lib/auth-client";
 import { UnauthHeader } from "../components/UnauthHeader";
 import { Button } from "../components/Button";
@@ -100,23 +100,6 @@ export function TopRoute() {
 				</section>
 			</main>
 
-			<footer className={styles.footer}>
-				<nav aria-label="サイト情報" className={styles.footerNav}>
-					<Link to="/terms" className={styles.footerLink}>
-						利用規約
-					</Link>
-					<Link to="/privacy" className={styles.footerLink}>
-						プライバシーポリシー
-					</Link>
-					<Link to="/licenses" className={styles.footerLink}>
-						ライセンス
-					</Link>
-					<a href="mailto:info@shukanlog.com" className={styles.footerLink}>
-						お問い合わせ
-					</a>
-				</nav>
-				<p className={styles.copyright}>© 2026 shukanlog</p>
-			</footer>
 		</div>
 	);
 }

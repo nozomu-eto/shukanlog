@@ -26,7 +26,7 @@ describe("SiteLayout", () => {
 		expect(screen.getAllByRole("contentinfo")).toHaveLength(1);
 		expect(screen.getByRole("link", { name: "利用規約" })).toHaveAttribute("href", "/terms");
 		expect(screen.getByRole("link", { name: "プライバシーポリシー" })).toHaveAttribute("href", "/privacy");
-		expect(screen.getByRole("link", { name: "ライセンス" })).toHaveAttribute("href", "/licenses");
+		expect(screen.queryByRole("link", { name: "ライセンス" })).not.toBeInTheDocument();
 		expect(screen.getByRole("link", { name: "お問い合わせ" })).toHaveAttribute("href", "/contact");
 
 		fireEvent.click(screen.getByRole("link", { name: "利用規約" }));

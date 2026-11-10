@@ -12,9 +12,6 @@ export function SiteFooter() {
 				<Link to="/privacy" className={styles.footerLink}>
 					プライバシーポリシー
 				</Link>
-				<Link to="/licenses" className={styles.footerLink}>
-					ライセンス
-				</Link>
 				<Link to="/contact" className={styles.footerLink}>
 					お問い合わせ
 				</Link>

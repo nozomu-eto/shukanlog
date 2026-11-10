@@ -24,54 +24,60 @@ import { SettingsRoute } from "./routes/app/settings";
 import { SettingsEmailRoute } from "./routes/app/settings-email";
 import { SettingsPasswordRoute } from "./routes/app/settings-password";
 import { SettingsWithdrawRoute } from "./routes/app/settings-withdraw";
+import { SiteLayout } from "./components/SiteLayout";
 
 // 画面のルーティング定義。URLはdocs/design.md 8章に合わせている。
 // ログインと同意の状態による振り分けは、/consentと/appのloader(routes/app/app-loader.ts)が行う。
 // /login等は、useSession()で判定するRedirectIfAuthenticatedがOutletの手前で行う
 export const router = createBrowserRouter([
-	{ path: "/", element: <TopRoute /> },
 	{
-		// パスを持たない層(レイアウトルート)にすることで、子は/からの相対パスとして解決される
-		element: <RedirectIfAuthenticated />,
+		element: <SiteLayout />,
 		children: [
-			{ path: "login", element: <LoginRoute /> },
-			{ path: "signup", element: <SignupRoute /> },
-			{ path: "verify", element: <VerifyRoute /> },
-			{ path: "reset", element: <ResetRequestRoute /> },
-			{ path: "reset/new", element: <ResetNewRoute /> },
-		],
-	},
-	{
-		path: "/consent",
-		loader: consentLoader,
-		HydrateFallback: AppHydrateFallback,
-		errorElement: <AppErrorElement />,
-		// actionはindexルートに置く(画面のConsentRouteがindexルートのため、fetcher.submitの送信先になる)
-		children: [{ index: true, action: consentAction, element: <ConsentRoute /> }],
-	},
-	{ path: "/terms", element: <TermsRoute /> },
-	{ path: "/privacy", element: <PrivacyRoute /> },
-	{ path: "/licenses", element: <LicensesRoute /> },
-	{
-		path: "/app",
-		// 子ルートがuseRouteLoaderData(APP_ROUTE_ID)で親のloaderの結果を取り出すためのid
-		id: APP_ROUTE_ID,
-		loader: appLoader,
-		shouldRevalidate: appShouldRevalidate,
-		HydrateFallback: AppHydrateFallback,
-		errorElement: <AppErrorElement />,
-		children: [
+			{ path: "/", element: <TopRoute /> },
 			{
-				element: <AppShell />,
+				// パスを持たない層(レイアウトルート)にすることで、子は/からの相対パスとして解決される
+				element: <RedirectIfAuthenticated />,
 				children: [
-					{ index: true, loader: tabsLoader, action: dayAction, element: <TabsRoute /> },
-					{ path: "settings", action: settingsAction, element: <SettingsRoute /> },
-					{ path: "settings/email", action: settingsEmailAction, element: <SettingsEmailRoute /> },
-					{ path: "settings/password", element: <SettingsPasswordRoute /> },
-					{ path: "settings/withdraw", element: <SettingsWithdrawRoute /> },
+					{ path: "login", element: <LoginRoute /> },
+					{ path: "signup", element: <SignupRoute /> },
+					{ path: "verify", element: <VerifyRoute /> },
+					{ path: "reset", element: <ResetRequestRoute /> },
+					{ path: "reset/new", element: <ResetNewRoute /> },
 				],
 			},
+			{
+				path: "/consent",
+				loader: consentLoader,
+				HydrateFallback: AppHydrateFallback,
+				errorElement: <AppErrorElement />,
+				// actionはindexルートに置く(画面のConsentRouteがindexルートのため、fetcher.submitの送信先になる)
+				children: [{ index: true, action: consentAction, element: <ConsentRoute /> }],
+			},
+			{ path: "/terms", element: <TermsRoute /> },
+			{ path: "/privacy", element: <PrivacyRoute /> },
+			{ path: "/licenses", element: <LicensesRoute /> },
+			{
+				path: "/app",
+				// 子ルートがuseRouteLoaderData(APP_ROUTE_ID)で親のloaderの結果を取り出すためのid
+				id: APP_ROUTE_ID,
+				loader: appLoader,
+				shouldRevalidate: appShouldRevalidate,
+				HydrateFallback: AppHydrateFallback,
+				errorElement: <AppErrorElement />,
+				children: [
+					{
+						element: <AppShell />,
+						children: [
+							{ index: true, loader: tabsLoader, action: dayAction, element: <TabsRoute /> },
+							{ path: "settings", action: settingsAction, element: <SettingsRoute /> },
+							{ path: "settings/email", action: settingsEmailAction, element: <SettingsEmailRoute /> },
+							{ path: "settings/password", element: <SettingsPasswordRoute /> },
+							{ path: "settings/withdraw", element: <SettingsWithdrawRoute /> },
+						],
+					},
+				],
+			},
+			{ path: "*", element: <NotFoundRoute /> },
 		],
 	},
-	{ path: "*", element: <NotFoundRoute /> },
 ]);

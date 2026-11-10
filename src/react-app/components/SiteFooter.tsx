@@ -15,9 +15,9 @@ export function SiteFooter() {
 				<Link to="/licenses" className={styles.footerLink}>
 					ライセンス
 				</Link>
-				<a href="mailto:info@shukanlog.com" className={styles.footerLink}>
+				<Link to="/contact" className={styles.footerLink}>
 					お問い合わせ
-				</a>
+				</Link>
 			</nav>
 			<p className={styles.copyright}>© 2026 shukanlog</p>
 		</footer>

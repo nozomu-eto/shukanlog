@@ -120,6 +120,7 @@ shukanlog(Cloudflare版)の見た目と操作のルール。実装はこの文�
 | パスワードの変更 | `/app/settings/password` | パスワードの変更 |
 | 退会 | `/app/settings/withdraw` | 退会 |
 | 利用規約・プライバシーポリシー・ライセンス | `/terms`、`/privacy`、`/licenses` | (未作成。本文は既存の内容を移植) |
+| お問い合わせ | `/contact` | お問い合わせ先の案内(認証不要) |
 | 404 | それ以外のURL | 404 |
 
 ## 9. 認証まわりの決定事項

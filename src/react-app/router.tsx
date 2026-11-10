@@ -10,6 +10,7 @@ import { RedirectIfAuthenticated } from "./routes/redirect-if-authenticated";
 import { TermsRoute } from "./routes/terms";
 import { PrivacyRoute } from "./routes/privacy";
 import { LicensesRoute } from "./routes/licenses";
+import { ContactRoute } from "./routes/contact";
 import { NotFoundRoute } from "./routes/not-found";
 import { APP_ROUTE_ID, appLoader, appShouldRevalidate, consentLoader } from "./routes/app/app-loader";
 import { consentAction } from "./routes/consent-action";
@@ -56,6 +57,7 @@ export const router = createBrowserRouter([
 			{ path: "/terms", element: <TermsRoute /> },
 			{ path: "/privacy", element: <PrivacyRoute /> },
 			{ path: "/licenses", element: <LicensesRoute /> },
+			{ path: "/contact", element: <ContactRoute /> },
 			{
 				path: "/app",
 				// 子ルートがuseRouteLoaderData(APP_ROUTE_ID)で親のloaderの結果を取り出すためのid

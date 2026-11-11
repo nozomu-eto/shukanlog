@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSearchParams, useLoaderData, useRevalidator, useFetcher } from "react-router";
+import { Link, useLocation, useSearchParams, useLoaderData, useRevalidator, useFetcher } from "react-router";
 import { Plus } from "lucide-react";
 import type { DayCalorieItem, DayHabit } from "../../api/days";
 import { StatusIcon } from "../../components/StatusIcon";
@@ -14,6 +14,7 @@ import type { dayAction } from "./day-action";
 import { todayInTokyo, formatDateForDisplay } from "../../../shared/domain/date";
 import { getPreviousPeriodDate, getNextPeriodDate, canGoToNextPeriod, canReturnToToday, getPeriodRange } from "../../../shared/domain/period";
 import { hrefForTab } from "../../lib/tab-links";
+import { getHistoryReturnFromLocation } from "./history-return-context";
 import type { HabitLogResult } from "../../../shared/types";
 import styles from "./day-tab.module.css";
 
@@ -96,6 +97,7 @@ function toResult(value: FormDataEntryValue | null): HabitLogResult | null {
 // 記録の取得は/appのloader(tabsLoader)、習慣の保存はroute action(dayAction)が行う
 export function DayTabRoute() {
 	const [searchParams] = useSearchParams();
+	const location = useLocation();
 	const { showToast } = useToast();
 	const me = useAppMe();
 	const loaderData = useLoaderData<typeof tabsLoader>();
@@ -104,6 +106,10 @@ export function DayTabRoute() {
 
 	const today = todayInTokyo();
 	const date = resolveTabDate(searchParams.get("date"), today);
+	const historyReturn = getHistoryReturnFromLocation(location);
+	const historyReturnState = historyReturn
+		? { historyReturnTo: historyReturn }
+		: undefined;
 	const isToday = date === today;
 	const result = loaderData.tab === "day" ? loaderData.result : null;
 
@@ -132,7 +138,18 @@ export function DayTabRoute() {
 				nextLabel="次の日"
 				todayHref={canReturnToToday(dayPeriod, today) ? hrefForDate(today) : null}
 				todayLabel={isToday ? "今日" : undefined}
+				linkState={historyReturnState}
 			/>
+			{historyReturn ? (
+				<div className={styles.returnLinkRow}>
+					<Link
+						to={hrefForTab(historyReturn.tab, historyReturn.date)}
+						className={styles.returnLink}
+					>
+						{historyReturn.tab === "week" ? "週の表示に戻る" : "月の表示に戻る"}
+					</Link>
+				</div>
+			) : null}
 
 			<div className={styles.body}>
 				{"error" in result ? (

@@ -109,17 +109,12 @@
 
 .habitTotals {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: flex-end;
 	align-items: center;
-	gap: 10px;
+	gap: 4px 10px;
 	font-size: 13px;
 	color: var(--color-text-muted);
-}
-
-.habitTotalItem {
-	display: flex;
-	align-items: center;
-	gap: 3px;
 }
 
 .calorieCardHeader {
@@ -289,9 +284,10 @@
 
 	.mobileHabitTotals {
 		display: flex;
+		flex-wrap: wrap;
 		justify-content: flex-end;
 		align-items: center;
-		gap: 10px;
+		gap: 4px 10px;
 		font-size: 13px;
 		color: var(--color-text-muted);
 	}

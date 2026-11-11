@@ -37,6 +37,7 @@
 .currentEmailValue {
 	font-size: 15px;
 	color: var(--color-text-muted);
+	overflow-wrap: anywhere;
 }
 
 .lead {
@@ -53,7 +54,8 @@
 
 @media (min-width: 1024px) {
 	.body {
-		width: 640px;
+		width: calc(100% - 40px);
+		max-width: 640px;
 		margin: 0 auto;
 		padding: 24px 0 40px;
 	}

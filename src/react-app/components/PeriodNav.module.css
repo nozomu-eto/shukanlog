@@ -49,6 +49,9 @@
 }
 
 .todayButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	min-height: 44px;
 	padding: 0 16px;
 	border-radius: 999px;
@@ -58,6 +61,7 @@
 	font-weight: 700;
 	color: var(--color-text);
 	cursor: pointer;
+	text-decoration: none;
 }
 
 @media (min-width: 1024px) {

@@ -68,13 +68,14 @@ describe("WeekTabRoute", () => {
 		renderWeekTab();
 
 		expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent("9/21(月)〜9/27(日)");
+		expect(screen.getByRole("heading", { name: "カロリー" })).toBeInTheDocument();
 	});
 
 	it("未来のマスはリンクにならず、今日以前のマスはその日の日タブへのリンクになる", async () => {
 		getSummaryMock.mockResolvedValue(baseSummary());
 		renderWeekTab();
 
-		await screen.findByText("服薬");
+		await screen.findByRole("heading", { name: "習慣" });
 
 		// 今日(9/24)より後の9/25〜9/27は未来のマス(リンクではない)。習慣2件分、それぞれ表示される
 		for (const label of ["9月25日 未来の日", "9月26日 未来の日", "9月27日 未来の日"]) {
@@ -89,11 +90,37 @@ describe("WeekTabRoute", () => {
 		expect(link).toHaveAttribute("href", expect.stringContaining("date=2026-09-21"));
 	});
 
+	it("スマホの日付行は各日の状態を名前に含み、今日までの日付を正しい日タブへ案内する", async () => {
+		getSummaryMock.mockResolvedValue(baseSummary());
+		renderWeekTab();
+
+		const expectedDates = ["2026-09-21", "2026-09-22", "2026-09-23", "2026-09-24"];
+		for (const date of expectedDates) {
+			const links = await screen.findAllByRole("link");
+			expect(links.some((link) => link.getAttribute("href")?.includes(`date=${date}`))).toBe(true);
+		}
+		expect(screen.getByRole("link", { name: "9月21日 服薬 達成、運動 一部達成" })).toBeInTheDocument();
+		expect(screen.getByRole("link", { name: "9月24日 服薬 達成、運動 一部達成" }).className).toMatch(/mobileDayToday/);
+		expect(screen.getByRole("link", { name: "9月23日 服薬 未達成、運動 未達成" })).toBeInTheDocument();
+	});
+
+	it("日付行はキーボードから選択できる", async () => {
+		const user = userEvent.setup();
+		getSummaryMock.mockResolvedValue(baseSummary());
+		const router = renderAppRoute(`/app?tab=week&date=2026-09-24`, <WeekTabRoute />);
+
+		const dayLink = await screen.findByRole("link", { name: "9月21日 服薬 達成、運動 一部達成" });
+		dayLink.focus();
+		await user.keyboard("{Enter}");
+		expect(router.state.location.search).toContain("tab=day");
+		expect(router.state.location.search).toContain("date=2026-09-21");
+	});
+
 	it("習慣ごとの集計(◯の数・分母、3段階評価は△も)を表示する", async () => {
 		getSummaryMock.mockResolvedValue(baseSummary());
 		renderWeekTab();
 
-		await screen.findByText("服薬");
+		await screen.findByRole("heading", { name: "習慣" });
 		expect(screen.getAllByText("/ 4日", { exact: false }).length).toBeGreaterThan(0);
 	});
 
@@ -111,7 +138,7 @@ describe("WeekTabRoute", () => {
 		});
 		renderWeekTab();
 
-		await screen.findByText("服薬");
+		await screen.findByRole("heading", { name: "習慣" });
 		expect(screen.queryByRole("heading", { name: "カロリー" })).not.toBeInTheDocument();
 	});
 
@@ -126,7 +153,7 @@ describe("WeekTabRoute", () => {
 		expect(alert).toHaveTextContent("サーバーで問題が起きました");
 
 		await user.click(screen.getByRole("button", { name: "再読み込み" }));
-		await screen.findByText("服薬");
+		await screen.findByRole("heading", { name: "習慣" });
 		expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 		expect(getSummaryMock).toHaveBeenCalledTimes(2);
 	});
@@ -135,7 +162,7 @@ describe("WeekTabRoute", () => {
 		getSummaryMock.mockResolvedValue(baseSummary());
 		renderWeekTab();
 
-		await screen.findByText("服薬");
+		await screen.findByRole("heading", { name: "習慣" });
 		expect(getMeMock).toHaveBeenCalledTimes(1);
 	});
 
@@ -153,7 +180,7 @@ describe("WeekTabRoute", () => {
 		expect(screen.queryByText("服薬")).not.toBeInTheDocument();
 
 		resolveSummary(baseSummary());
-		await screen.findByText("服薬");
+		await screen.findByRole("heading", { name: "習慣" });
 		expect(screen.queryByRole("status", { name: "読み込み中" })).not.toBeInTheDocument();
 	});
 });

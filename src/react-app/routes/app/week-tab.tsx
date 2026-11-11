@@ -100,6 +100,17 @@ export function WeekTabRoute() {
 	}
 
 	const maxCalorie = Math.max(1, ...dates.map((d) => daysByDate.get(d)?.calories ?? 0));
+	const habits = "data" in result ? result.data.habits : [];
+	// 日別リンクの読み上げ名に、日付と各習慣の記録状態をまとめて伝える
+	function dayLabel(targetDate: string): string {
+		const { month, day } = monthDayLabel(targetDate);
+		if (isFuture(targetDate, today)) return `${month}月${day}日 未来の日`;
+		const statuses = habits.map((habit) => {
+			const status = daysByDate.get(targetDate)?.results[habit.id] ?? null;
+			return `${habit.name} ${getStatusLabel(status)}`;
+		});
+		return `${month}月${day}日 ${statuses.join("、")}`;
+	}
 
 	return (
 		<div className={styles.body}>
@@ -140,32 +151,95 @@ export function WeekTabRoute() {
 								);
 							})}
 						</div>
-						{result.data.habits.map((habit) => {
-							const totals = result.data.totals.habits[habit.id];
-							return (
-								<div key={habit.id} className={styles.habitRow}>
-									<div className={styles.habitGrid}>
-										<span className={styles.habitName}>{habit.name}</span>
-										{dates.map((d) => habitCell(habit, d))}
-									</div>
-									{totals ? (
-										<div className={styles.habitTotals}>
-											<span className={styles.habitTotalItem}>
-												<StatusIcon status="completed" size={14} />
-												{totals.completed}
-											</span>
-											{habit.evaluationScale === 3 ? (
-												<span className={styles.habitTotalItem}>
-													<StatusIcon status="partial" size={14} />
-													{totals.partial}
-												</span>
-											) : null}
-											<span>/ {totals.eligibleDays}日</span>
+						<div className={styles.desktopWeekView}>
+							{habits.map((habit) => {
+								const totals = result.data.totals.habits[habit.id];
+								return (
+									<div key={habit.id} className={styles.habitRow}>
+										<div className={styles.habitGrid}>
+											<span className={styles.habitName}>{habit.name}</span>
+											{dates.map((d) => habitCell(habit, d))}
 										</div>
-									) : null}
-								</div>
-							);
-						})}
+										{totals ? (
+											<div className={styles.habitTotals}>
+												<span className={styles.habitTotalItem}>
+													<StatusIcon status="completed" size={14} />
+													{totals.completed}
+												</span>
+												{habit.evaluationScale === 3 ? (
+													<span className={styles.habitTotalItem}>
+														<StatusIcon status="partial" size={14} />
+														{totals.partial}
+													</span>
+												) : null}
+												<span>/ {totals.eligibleDays}日</span>
+											</div>
+										) : null}
+									</div>
+								);
+							})}
+						</div>
+						<div className={styles.mobileWeekView} role="group" aria-label="日ごとの習慣の記録">
+							{dates.map((d, i) => {
+								const { month, day } = monthDayLabel(d);
+								const future = isFuture(d, today);
+								const isToday = d === today;
+								const contents = (
+									<>
+										<span className={`${styles.mobileDayDate} ${isToday ? styles.mobileDayDateToday : ""}`}>
+											<span>{WEEKDAY_LABELS[i]}</span>
+											<span>{month}/{day}</span>
+										</span>
+										<span className={styles.mobileDayStatuses}>
+											{habits.map((habit) => {
+												const status = daysByDate.get(d)?.results[habit.id] ?? null;
+												return (
+													<span key={habit.id} className={styles.mobileDayStatus}>
+														<span className={styles.mobileDayHabit}>{habit.name}</span>
+														<StatusIcon status={status} size={20} />
+													</span>
+												);
+											})}
+										</span>
+										{future ? <span className={styles.mobileFutureLabel}>未来の日</span> : null}
+									</>
+								);
+								return future ? (
+									<div key={d} role="group" aria-label={dayLabel(d)} className={`${styles.mobileDayRow} ${styles.mobileDayFuture}`}>
+										{contents}
+									</div>
+								) : (
+									<Link
+										key={d}
+										to={hrefForTab("day", d)}
+										aria-label={dayLabel(d)}
+										className={`${styles.mobileDayRow} ${isToday ? styles.mobileDayToday : ""}`}
+									>
+										{contents}
+									</Link>
+								);
+							})}
+							{habits.map((habit) => {
+								const totals = result.data.totals.habits[habit.id];
+								if (!totals) return null;
+								return (
+									<div key={habit.id} className={styles.mobileHabitTotals}>
+										<span className={styles.mobileHabitTotalName}>{habit.name}</span>
+										<span className={styles.habitTotalItem}>
+											<StatusIcon status="completed" size={14} />
+											{totals.completed}
+										</span>
+										{habit.evaluationScale === 3 ? (
+											<span className={styles.habitTotalItem}>
+												<StatusIcon status="partial" size={14} />
+												{totals.partial}
+											</span>
+										) : null}
+										<span>/ {totals.eligibleDays}日</span>
+									</div>
+								);
+							})}
+						</div>
 					</section>
 
 					{calorieEnabled ? (

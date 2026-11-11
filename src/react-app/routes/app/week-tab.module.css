@@ -44,6 +44,16 @@
 	text-align: center;
 }
 
+.desktopWeekView {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.mobileWeekView {
+	display: none;
+}
+
 .weekdayCell {
 	display: flex;
 	flex-direction: column;
@@ -199,6 +209,98 @@
 	margin: 0;
 	font-size: 14px;
 	line-height: 1.7;
+}
+
+@media (max-width: 1023px) {
+	.weekdayRow,
+	.desktopWeekView {
+		display: none;
+	}
+
+	.mobileWeekView {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.mobileDayRow {
+		min-height: 56px;
+		box-sizing: border-box;
+		display: grid;
+		grid-template-columns: 48px minmax(0, 1fr);
+		align-items: center;
+		gap: 8px;
+		padding: 6px 8px;
+		border: 1px solid var(--color-border);
+		border-radius: 10px;
+		background: var(--color-surface);
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.mobileDayToday {
+		border: 2px solid var(--color-text);
+	}
+
+	.mobileDayDate {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		font-family: var(--font-heading);
+		font-size: 13px;
+		line-height: 1.3;
+	}
+
+	.mobileDayDateToday {
+		font-weight: 700;
+	}
+
+	.mobileDayStatuses {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 4px 10px;
+		min-width: 0;
+	}
+
+	.mobileDayStatus {
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+		min-height: 28px;
+	}
+
+	.mobileDayHabit {
+		font-size: 12px;
+		font-weight: 700;
+	}
+
+	.mobileFutureLabel {
+		grid-column: 2;
+		font-size: 11px;
+		color: var(--color-text-muted);
+	}
+
+	.mobileDayFuture {
+		border-style: dashed;
+		border-color: var(--color-future-border);
+		opacity: 0.7;
+	}
+
+	.mobileHabitTotals {
+		display: flex;
+		justify-content: flex-end;
+		align-items: center;
+		gap: 10px;
+		font-size: 13px;
+		color: var(--color-text-muted);
+	}
+
+	.mobileHabitTotalName {
+		margin-right: auto;
+		font-weight: 700;
+		color: var(--color-text);
+	}
 }
 
 @media (min-width: 1024px) {

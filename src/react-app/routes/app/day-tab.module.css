@@ -7,6 +7,21 @@
 	padding: 4px 20px 16px;
 }
 
+.returnLinkRow {
+	display: flex;
+	justify-content: flex-end;
+	padding: 0 20px;
+}
+
+.returnLink {
+	min-height: 44px;
+	display: inline-flex;
+	align-items: center;
+	color: var(--color-text);
+	font-size: 14px;
+	font-weight: 700;
+}
+
 .card {
 	background: var(--color-surface);
 	border: 1px solid var(--color-border);
@@ -216,6 +231,13 @@
 		max-width: 1040px;
 		margin: 0 auto;
 		padding: 24px 0;
+	}
+
+	.returnLinkRow {
+		width: calc(100% - 40px);
+		max-width: 1040px;
+		margin: 0 auto;
+		padding: 0;
 	}
 
 	.columns {

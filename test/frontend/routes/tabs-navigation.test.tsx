@@ -173,4 +173,44 @@ describe("タブの移動", () => {
 		pending.resolve(summaryFromServer());
 		await waitFor(() => expect(screen.getByRole("status", { name: "画面の読み込み状況" })).toHaveTextContent(""));
 	});
+
+	it("週から過去日へ移動し、連続する日を編集しても元の週へ戻れる", async () => {
+		const user = userEvent.setup();
+		const router = renderAppRoute("/app?tab=week&date=2026-09-14", <TabsRoute />, { withShell: true });
+
+		const weekDateLinks = await screen.findAllByRole("link", { name: /9月14日 服薬 未記録/ });
+		await user.click(weekDateLinks[0]);
+		expect(await screen.findByRole("heading", { level: 1, name: "9月14日(月)" })).toBeInTheDocument();
+		expect(screen.getByRole("link", { name: "週の表示に戻る" })).toHaveAttribute("href", "/app?tab=week&date=2026-09-14");
+		const medication = (await screen.findAllByRole("button", { name: /できた/ }))[0];
+		await user.click(medication);
+		await waitFor(() => expect(putHabitLogMock).toHaveBeenCalledWith({ habitId: "h1", date: "2026-09-14", result: "completed" }));
+
+		await user.click(screen.getByRole("link", { name: "次の日" }));
+		expect(await screen.findByRole("heading", { level: 1, name: "9月15日(火)" })).toBeInTheDocument();
+		await user.click(screen.getByRole("link", { name: "次の日" }));
+		expect(await screen.findByRole("heading", { level: 1, name: "9月16日(水)" })).toBeInTheDocument();
+		await user.click(screen.getByRole("link", { name: "週の表示に戻る" }));
+		expect(await screen.findByRole("heading", { level: 1, name: "9/14(月)〜9/20(日)" })).toBeInTheDocument();
+
+		await router.navigate(-1);
+		expect(await screen.findByRole("heading", { level: 1, name: "9月16日(水)" })).toBeInTheDocument();
+	});
+
+	it("月から日へ移動して元の月へ戻れる", async () => {
+		const user = userEvent.setup();
+		renderAppRoute("/app?tab=month&date=2026-08-01", <TabsRoute />, { withShell: true });
+
+		await user.click(await screen.findByRole("link", { name: /8月1日 服薬/ }));
+		expect(await screen.findByRole("heading", { level: 1, name: "8月1日(土)" })).toBeInTheDocument();
+		await user.click(screen.getByRole("link", { name: "月の表示に戻る" }));
+		expect(await screen.findByRole("heading", { level: 1, name: "2026年8月" })).toBeInTheDocument();
+	});
+
+	it("直接URLで日タブを開いた場合は期間への戻り導線を表示しない", async () => {
+		renderAppRoute("/app?tab=day&date=2026-09-14", <TabsRoute />, { withShell: true });
+
+		await screen.findByRole("heading", { level: 1, name: "9月14日(月)" });
+		expect(screen.queryByRole("link", { name: /の表示に戻る/ })).not.toBeInTheDocument();
+	});
 });

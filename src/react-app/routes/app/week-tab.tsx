@@ -6,6 +6,7 @@ import { PeriodNav } from "../../components/PeriodNav";
 import { PageTitle } from "../../components/PageTitle";
 import { Legend } from "../../components/Legend";
 import { hrefForTab } from "../../lib/tab-links";
+import { createHistoryReturnState } from "./history-return-context";
 import { todayInTokyo, isFuture } from "../../../shared/domain/date";
 import { formatAverageCalories } from "../../../shared/domain/calories";
 import { countHabitStatuses } from "../../../shared/domain/summary";
@@ -93,6 +94,7 @@ export function WeekTabRoute() {
 			<Link
 				key={targetDate}
 				to={hrefForTab("day", targetDate)}
+				state={createHistoryReturnState("week", date)}
 				aria-label={label}
 				className={isToday ? `${styles.dayCell} ${styles.dayCellToday}` : styles.dayCell}
 			>
@@ -213,6 +215,7 @@ export function WeekTabRoute() {
 									<Link
 										key={d}
 										to={hrefForTab("day", d)}
+										state={createHistoryReturnState("week", date)}
 										aria-label={dayLabel(d)}
 										className={`${styles.mobileDayRow} ${isToday ? styles.mobileDayToday : ""}`}
 									>

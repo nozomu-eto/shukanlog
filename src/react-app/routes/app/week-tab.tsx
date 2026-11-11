@@ -7,6 +7,7 @@ import { PageTitle } from "../../components/PageTitle";
 import { Legend } from "../../components/Legend";
 import { hrefForTab } from "../../lib/tab-links";
 import { todayInTokyo, isFuture } from "../../../shared/domain/date";
+import { formatAverageCalories } from "../../../shared/domain/calories";
 import {
 	getWeekRange,
 	getPreviousPeriodDate,
@@ -179,7 +180,7 @@ export function WeekTabRoute() {
 										<>
 											平均{" "}
 											<span className={styles.calorieAverageValue}>
-												{formatKcal(result.data.totals.calories.average)}
+												{formatAverageCalories(result.data.totals.calories.average)}
 											</span>{" "}
 											kcal(記録 {result.data.totals.calories.recordedDays}日)
 										</>

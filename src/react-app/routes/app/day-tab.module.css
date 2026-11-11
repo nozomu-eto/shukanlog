@@ -118,6 +118,14 @@
 	gap: 8px;
 }
 
+.columns,
+.habitColumn,
+.calorieColumn {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
 .calorieHeader {
 	display: flex;
 	align-items: center;
@@ -215,6 +223,15 @@
 		grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
 		gap: 24px;
 		align-items: start;
+	}
+
+	.columnsWithoutCalories {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.habitColumn,
+	.calorieColumn {
+		gap: 16px;
 	}
 
 	.card {

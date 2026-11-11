@@ -103,6 +103,27 @@ describe("日タブ", () => {
 		getDayMock.mockImplementation((date: string) => Promise.resolve(dayFromServer(date)));
 	});
 
+	it("初回ログイン後は記録方法とカロリー設定を案内する", async () => {
+		getMeMock.mockResolvedValue({
+			user: { email: "a@example.com" },
+			accountCreatedDate: DATE,
+			profile: { calorieTrackingEnabled: true },
+			consent: { currentVersion: "2026-09-25", agreed: true },
+			justCanceledWithdrawal: false,
+		});
+		renderDay();
+
+		expect(await screen.findByRole("heading", { name: "今日の記録をはじめましょう" })).toBeInTheDocument();
+		expect(screen.getByText(/ボタンを押すだけで保存されます/)).toBeInTheDocument();
+		expect(screen.getByText(/カロリー記録は任意で、設定からオフにできます/)).toBeInTheDocument();
+	});
+
+	it("既存利用者には初回案内を表示しない", async () => {
+		renderDay();
+		await screen.findAllByRole("button", { name: /できた/ });
+		expect(screen.queryByRole("heading", { name: "今日の記録をはじめましょう" })).not.toBeInTheDocument();
+	});
+
 	it("ボタンを押すと保存され、もう一度押すと取り消される", async () => {
 		const user = userEvent.setup();
 		putHabitLogMock.mockImplementation((params: PendingPut["params"]) => {

@@ -97,6 +97,18 @@ describe("WeekTabRoute", () => {
 		expect(screen.getByRole("heading", { name: "カロリー" })).toBeInTheDocument();
 	});
 
+	it("集計で記録済み状態と未記録を分けて示し、対象日数を表示する", async () => {
+		getSummaryMock.mockResolvedValue(baseSummary());
+		renderWeekTab();
+
+		await screen.findByRole("heading", { name: "習慣" });
+		expect(screen.getAllByText("達成 3").length).toBeGreaterThan(0);
+		expect(screen.getAllByText("未達成 1").length).toBeGreaterThan(0);
+		expect(screen.getAllByText("未記録 0").length).toBeGreaterThan(0);
+		expect(screen.getAllByText("/ 対象 4日").length).toBeGreaterThan(0);
+		expect(screen.getByText("空欄 = 未記録")).toBeInTheDocument();
+	});
+
 	it("未来のマスはリンクにならず、今日以前のマスはその日の日タブへのリンクになる", async () => {
 		getSummaryMock.mockResolvedValue(baseSummary());
 		renderWeekTab();
@@ -142,12 +154,12 @@ describe("WeekTabRoute", () => {
 		expect(router.state.location.search).toContain("date=2026-09-21");
 	});
 
-	it("習慣ごとの集計(◯の数・分母、3段階評価は△も)を表示する", async () => {
+	it("習慣ごとの集計で各状態と対象日数を表示する", async () => {
 		getSummaryMock.mockResolvedValue(baseSummary());
 		renderWeekTab();
 
 		await screen.findByRole("heading", { name: "習慣" });
-		expect(screen.getAllByText("/ 4日", { exact: false }).length).toBeGreaterThan(0);
+		expect(screen.getAllByText("/ 対象 4日").length).toBeGreaterThan(0);
 	});
 
 	it("カロリー記録を無効にしている利用者には、カロリーの棒グラフを表示しない", async () => {

@@ -152,11 +152,12 @@
 
 .summaryValue {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
-	gap: 4px;
+	gap: 2px 8px;
 	font-family: var(--font-heading);
 	font-weight: 700;
-	font-size: 18px;
+	font-size: 13px;
 }
 
 .summarySub {
@@ -297,6 +298,10 @@
 
 	.summaryLabel {
 		font-size: 15px;
+	}
+
+	.summaryValue {
+		font-size: 14px;
 	}
 
 	.summaryValue {

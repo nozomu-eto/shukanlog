@@ -107,6 +107,18 @@ describe("MonthTabRoute", () => {
 		expect(future.tagName).not.toBe("A");
 	});
 
+	it("月間集計で未達成と未記録を分け、一部達成と対象日数も示す", async () => {
+		getSummaryMock.mockResolvedValue(baseSummary());
+		renderMonthTab();
+
+		await screen.findByLabelText("2月1日 服薬 達成 運動 一部達成 1950kcal");
+		expect(screen.getByText("達成 2")).toBeInTheDocument();
+		expect(screen.getAllByText("未達成 0").length).toBeGreaterThan(0);
+		expect(screen.getAllByText("未記録 8").length).toBeGreaterThan(0);
+		expect(screen.getAllByText("対象 10日").length).toBeGreaterThan(0);
+		expect(screen.getByText("一部達成 1")).toBeInTheDocument();
+	});
+
 	it("カロリー記録を無効にしている利用者には、マスのカロリー・平均カロリーを表示せず、説明を「左:服薬 右:運動」にする", async () => {
 		getMeMock.mockResolvedValue({
 			user: { email: "a@example.com" },

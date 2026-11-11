@@ -20,7 +20,7 @@ import { tabsLoader } from "../../../src/react-app/routes/app/tabs-loader";
 export function renderAppRoute(
 	path: string,
 	element: ReactNode,
-	options: { withShell?: boolean } = {},
+	options: { withShell?: boolean; state?: unknown } = {},
 ) {
 	const router = createMemoryRouter(
 		[
@@ -45,7 +45,7 @@ export function renderAppRoute(
 			{ path: "/login", element: <div>ログイン画面</div> },
 			{ path: "/consent", element: <div>同意画面</div> },
 		],
-		{ initialEntries: [path] },
+		{ initialEntries: [options.state === undefined ? path : { pathname: path, state: options.state }] },
 	);
 	render(
 		<ToastProvider>

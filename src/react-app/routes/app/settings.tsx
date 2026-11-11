@@ -1,15 +1,18 @@
 import { useEffect } from "react";
-import { Link, useNavigate, useFetcher } from "react-router";
+import { Link, useNavigate, useFetcher, useLocation } from "react-router";
 import { ChevronRight } from "lucide-react";
 import { authClient } from "../../lib/auth-client";
 import { useToast } from "../../components/Toast";
 import { useAppMe } from "./app-loader";
 import type { settingsAction } from "./settings-action";
+import { getSettingsReturnTo } from "./settings-return-context";
 import styles from "./settings.module.css";
 
 // 設定画面。docs/design/mockups/Settings.dc.html・SettingsPC.dc.html に合わせている
 export function SettingsRoute() {
 	const navigate = useNavigate();
+	const location = useLocation();
+	const settingsState = { settingsReturnTo: getSettingsReturnTo(location.state) };
 	const { showToast } = useToast();
 	const me = useAppMe();
 	// カロリー記録の切り替えはroute action(settingsAction)に送る。成功すると
@@ -45,14 +48,14 @@ export function SettingsRoute() {
 			<section className={styles.section}>
 				<h2 className={styles.sectionTitle}>アカウント</h2>
 				<div className={styles.list}>
-					<Link to="/app/settings/email" className={`${styles.listItem} ${styles.listItemTall}`}>
+					<Link to="/app/settings/email" state={settingsState} className={`${styles.listItem} ${styles.listItemTall}`}>
 						<span className={styles.listItemLabel}>
 							<span>メールアドレス</span>
 							<span className={styles.listItemSub}>{me.user.email}</span>
 						</span>
 						<ChevronRight size={18} aria-hidden="true" className={styles.listItemArrow} />
 					</Link>
-					<Link to="/app/settings/password" className={styles.listItem}>
+					<Link to="/app/settings/password" state={settingsState} className={styles.listItem}>
 						パスワードを変更
 						<ChevronRight size={18} aria-hidden="true" className={styles.listItemArrow} />
 					</Link>
@@ -111,7 +114,7 @@ export function SettingsRoute() {
 			</section>
 
 			<section className={styles.withdrawSection}>
-				<Link to="/app/settings/withdraw" className={styles.withdrawButton}>
+				<Link to="/app/settings/withdraw" state={settingsState} className={styles.withdrawButton}>
 					退会する
 				</Link>
 				<p className={styles.withdrawNote}>退会後30日間はデータを保管し、その後完全に削除します。</p>

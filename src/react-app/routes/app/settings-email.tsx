@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from "react";
-import { useFetcher } from "react-router";
+import { useFetcher, useLocation } from "react-router";
 import { Button } from "../../components/Button";
 import { TextField } from "../../components/TextField";
 import { PasswordField } from "../../components/PasswordField";
 import { validateEmail, validatePasswordRequired, validateOtp } from "../../lib/validators";
 import { useAppMe } from "./app-loader";
 import type { settingsEmailAction } from "./settings-email-action";
+import { getSettingsReturnTo } from "./settings-return-context";
 import styles from "./settings-email.module.css";
 
 // メールアドレスの変更(/app/settings/email)。
@@ -15,6 +16,8 @@ import styles from "./settings-email.module.css";
 // 確認が済むまでは今のメールアドレスのまま(確認コードの検証(auth.emailOtp.changeEmail)に
 // 成功した時点でBetter Auth側がセッションのメールアドレスを更新する)
 export function SettingsEmailRoute() {
+	const location = useLocation();
+	const settingsState = { settingsReturnTo: getSettingsReturnTo(location.state) };
 	const me = useAppMe();
 	const fetcher = useFetcher<typeof settingsEmailAction>();
 
@@ -108,7 +111,7 @@ export function SettingsEmailRoute() {
 				) : (
 					<div role="status" className={styles.stepStack}>
 						<p className={styles.lead}>メールアドレスを変更しました。次回から新しいメールアドレスでログインしてください。</p>
-						<Button to="/app/settings">設定に戻る</Button>
+						<Button to="/app/settings" state={settingsState}>設定に戻る</Button>
 					</div>
 				)}
 			</div>

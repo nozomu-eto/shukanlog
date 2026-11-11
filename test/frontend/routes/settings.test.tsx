@@ -15,8 +15,11 @@ vi.mock("../../../src/react-app/lib/auth-client", () => ({
 	authClient: { signOut: signOutMock, getSession: getSessionMock },
 }));
 
-function renderSettings() {
-	return renderAppRoute("/app/settings", <div />);
+function renderSettings(options: { withShell?: boolean; path?: string; state?: unknown } = {}) {
+	return renderAppRoute(options.path ?? "/app/settings", <div>記録</div>, {
+		withShell: options.withShell,
+		state: options.state,
+	});
 }
 
 describe("SettingsRoute", () => {
@@ -44,6 +47,21 @@ describe("SettingsRoute", () => {
 		const contactLink = contactText.closest("a");
 
 		expect(contactLink).toHaveAttribute("href", "/contact");
+	});
+
+	it("過去の月表示から設定サブページを経由して元の日付へ戻れる", async () => {
+		const user = userEvent.setup();
+		renderSettings({
+			withShell: true,
+			state: { settingsReturnTo: "/app?tab=month&date=2026-09-15" },
+		});
+		await user.click(await screen.findByRole("link", { name: /メールアドレス/ }));
+		await user.click(screen.getByRole("link", { name: "戻る" }));
+
+		const returnLink = await screen.findByRole("link", { name: "記録に戻る" });
+		expect(returnLink).toHaveAttribute("href", "/app?tab=month&date=2026-09-15");
+		await user.click(returnLink);
+		expect(await screen.findByText("記録")).toBeInTheDocument();
 	});
 
 	it("スイッチを切り替えるとAPIが呼ばれ、表示(aria-checked)が変わる", async () => {

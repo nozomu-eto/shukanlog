@@ -8,6 +8,7 @@ import { Legend } from "../../components/Legend";
 import { hrefForTab } from "../../lib/tab-links";
 import { todayInTokyo, isFuture } from "../../../shared/domain/date";
 import { formatAverageCalories } from "../../../shared/domain/calories";
+import { countHabitStatuses } from "../../../shared/domain/summary";
 import {
 	getWeekRange,
 	getPreviousPeriodDate,
@@ -155,6 +156,9 @@ export function WeekTabRoute() {
 						<div className={styles.desktopWeekView}>
 							{habits.map((habit) => {
 								const totals = result.data.totals.habits[habit.id];
+								const counts = countHabitStatuses(
+									result.data.days, habit.id, result.data.accountCreatedDate, today, totals?.eligibleDays ?? 0,
+								);
 								return (
 									<div key={habit.id} className={styles.habitRow}>
 										<div className={styles.habitGrid}>
@@ -163,17 +167,13 @@ export function WeekTabRoute() {
 										</div>
 										{totals ? (
 											<div className={styles.habitTotals}>
-												<span className={styles.habitTotalItem}>
-													<StatusIcon status="completed" size={14} />
-													{totals.completed}
-												</span>
+												<span>達成 {counts.completed}</span>
 												{habit.evaluationScale === 3 ? (
-													<span className={styles.habitTotalItem}>
-														<StatusIcon status="partial" size={14} />
-														{totals.partial}
-													</span>
+													<span>一部達成 {counts.partial}</span>
 												) : null}
-												<span>/ {totals.eligibleDays}日</span>
+												<span>未達成 {counts.notCompleted}</span>
+												<span>未記録 {counts.unrecorded}</span>
+												<span>/ 対象 {totals.eligibleDays}日</span>
 											</div>
 										) : null}
 									</div>
@@ -223,20 +223,19 @@ export function WeekTabRoute() {
 							{habits.map((habit) => {
 								const totals = result.data.totals.habits[habit.id];
 								if (!totals) return null;
+								const counts = countHabitStatuses(
+									result.data.days, habit.id, result.data.accountCreatedDate, today, totals.eligibleDays,
+								);
 								return (
 									<div key={habit.id} className={styles.mobileHabitTotals}>
 										<span className={styles.mobileHabitTotalName}>{habit.name}</span>
-										<span className={styles.habitTotalItem}>
-											<StatusIcon status="completed" size={14} />
-											{totals.completed}
-										</span>
+										<span>達成 {counts.completed}</span>
 										{habit.evaluationScale === 3 ? (
-											<span className={styles.habitTotalItem}>
-												<StatusIcon status="partial" size={14} />
-												{totals.partial}
-											</span>
+											<span>一部達成 {counts.partial}</span>
 										) : null}
-										<span>/ {totals.eligibleDays}日</span>
+										<span>未達成 {counts.notCompleted}</span>
+										<span>未記録 {counts.unrecorded}</span>
+										<span>/ 対象 {totals.eligibleDays}日</span>
 									</div>
 								);
 							})}

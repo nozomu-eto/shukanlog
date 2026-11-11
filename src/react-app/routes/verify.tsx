@@ -25,6 +25,8 @@ export function VerifyRoute() {
 	const [submitting, setSubmitting] = useState(false);
 	const [formError, setFormError] = useState<string | null>(null);
 	const [resendSecondsLeft, setResendSecondsLeft] = useState(0);
+	const [resending, setResending] = useState(false);
+	const [resendError, setResendError] = useState<string | null>(null);
 	const [resent, setResent] = useState(false);
 
 	useEffect(() => {
@@ -88,13 +90,30 @@ export function VerifyRoute() {
 	}
 
 	async function handleResend() {
-		if (resendSecondsLeft > 0) {
+		if (resending || resendSecondsLeft > 0) {
 			return;
 		}
 		setResent(false);
-		await authClient.emailOtp.sendVerificationOtp({ email: email!, type: "email-verification" });
-		setResent(true);
-		setResendSecondsLeft(RESEND_WAIT_SECONDS);
+		setResendError(null);
+		setResending(true);
+		try {
+			const { error } = await authClient.emailOtp.sendVerificationOtp({ email: email!, type: "email-verification" });
+			if (error) {
+				if (error.status === 429) {
+					setResendSecondsLeft(RESEND_WAIT_SECONDS);
+					setResendError("再送できるまで少しお待ちください。時間をおいて、もう一度お試しください。");
+					return;
+				}
+				setResendError("確認コードを送信できませんでした。通信状況を確認して、もう一度お試しください。");
+				return;
+			}
+			setResent(true);
+			setResendSecondsLeft(RESEND_WAIT_SECONDS);
+		} catch {
+			setResendError("通信に失敗しました。通信状況を確認して、もう一度お試しください。");
+		} finally {
+			setResending(false);
+		}
 	}
 
 	return (
@@ -128,12 +147,21 @@ export function VerifyRoute() {
 						</Button>
 					</form>
 					<div className={styles.resendBlock}>
-						<Button variant="inline" type="button" onClick={handleResend} disabled={resendSecondsLeft > 0}>
-							{resendSecondsLeft > 0 ? `確認コードを再送する(${resendSecondsLeft}秒後に再送できます)` : "確認コードを再送する"}
+						<Button variant="inline" type="button" onClick={handleResend} disabled={resending || resendSecondsLeft > 0}>
+							{resending
+								? "送信中…"
+								: resendSecondsLeft > 0
+									? `確認コードを再送する(${resendSecondsLeft}秒後に再送できます)`
+									: "確認コードを再送する"}
 						</Button>
+						{resendError ? (
+							<span role="alert" className={styles.resendNote}>
+								{resendError}
+							</span>
+						) : null}
 						{resent ? (
 							<span role="status" className={styles.resendNote}>
-								再送しました。次の再送は60秒後からできます。
+								確認コードを再送しました。有効期限は10分です。次の再送は60秒後からできます。
 							</span>
 						) : null}
 						<span className={styles.resendNote}>

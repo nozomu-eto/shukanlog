@@ -17,7 +17,7 @@ export function Legend() {
 				<StatusIcon status="not_completed" size={16} />
 				未達成
 			</span>
-			<span>空欄 未記録</span>
+		<span>空欄 = 未記録</span>
 		</div>
 	);
 }

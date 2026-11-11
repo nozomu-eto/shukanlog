@@ -1,17 +1,20 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { withdraw } from "../../api/account";
 import { authClient } from "../../lib/auth-client";
 import { toDisplayMessage } from "../../api/errors";
 import { Button } from "../../components/Button";
 import { PasswordField } from "../../components/PasswordField";
 import { validatePasswordRequired } from "../../lib/validators";
+import { getSettingsReturnTo } from "./settings-return-context";
 import styles from "./settings-withdraw.module.css";
 
 // 退会(/app/settings/withdraw)。docs/design/mockups/Withdraw.dc.html・WithdrawPC.dc.html に合わせている。
 // 退会する自体が取り消せない操作の最終確認を兼ねるため(説明・パスワード入力を経ている)、
 // 「退会する」ボタンに別途の確認ダイアログは重ねない
 export function SettingsWithdrawRoute() {
+	const location = useLocation();
+	const settingsState = { settingsReturnTo: getSettingsReturnTo(location.state) };
 	const navigate = useNavigate();
 	const [currentPassword, setCurrentPassword] = useState("");
 	const [tried, setTried] = useState(false);
@@ -69,7 +72,7 @@ export function SettingsWithdrawRoute() {
 					<Button type="submit" variant="danger" disabled={submitting}>
 						退会する
 					</Button>
-					<Button to="/app/settings" variant="secondary">
+					<Button to="/app/settings" state={settingsState} variant="secondary">
 						やめる
 					</Button>
 				</form>

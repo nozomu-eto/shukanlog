@@ -151,7 +151,8 @@
 
 @media (min-width: 1024px) {
 	.main {
-		width: 1040px;
+		width: calc(100% - 40px);
+		max-width: 1040px;
 		margin: 0 auto;
 		padding: 64px 0 48px;
 		gap: 48px;

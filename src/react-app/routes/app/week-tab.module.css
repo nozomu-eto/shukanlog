@@ -203,7 +203,8 @@
 
 @media (min-width: 1024px) {
 	.body {
-		width: 1040px;
+		width: calc(100% - 40px);
+		max-width: 1040px;
 		margin: 0 auto;
 		padding: 16px 0 24px;
 		grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);

@@ -144,65 +144,69 @@ export function DayTabRoute() {
 						</Button>
 					</div>
 				) : (
-					<>
-						{isToday &&
-						me.accountCreatedDate === today &&
-						result.data.habits.every((h) => h.result === null) ? (
-							<section aria-labelledby="welcome-title" className={`${styles.card} ${styles.welcomeCard}`}>
-								<h2 id="welcome-title" className={styles.cardTitle}>
-									今日の記録をはじめましょう
-								</h2>
-								<p className={styles.welcomeDesc}>
-									服薬と運動は、ボタンを押すだけで保存されます。記録した日は、週・月のタブで振り返れます。
-								</p>
-							</section>
-						) : null}
+					<div className={result.data.calories ? styles.columns : `${styles.columns} ${styles.columnsWithoutCalories}`}>
+						<div className={styles.habitColumn}>
+							{isToday &&
+							me.accountCreatedDate === today &&
+							result.data.habits.every((h) => h.result === null) ? (
+								<section aria-labelledby="welcome-title" className={`${styles.card} ${styles.welcomeCard}`}>
+									<h2 id="welcome-title" className={styles.cardTitle}>
+										今日の記録をはじめましょう
+									</h2>
+									<p className={styles.welcomeDesc}>
+										服薬と運動は、ボタンを押すだけで保存されます。記録した日は、週・月のタブで振り返れます。
+									</p>
+								</section>
+							) : null}
 
-						{result.data.habits.map((habit) => (
-							<HabitCard key={habit.id} habit={habit} date={date} />
-						))}
+							{result.data.habits.map((habit) => (
+								<HabitCard key={habit.id} habit={habit} date={date} />
+							))}
+						</div>
 
 						{result.data.calories ? (
-							<section className={styles.card}>
-								<div className={styles.calorieHeader}>
-									<h2 className={styles.cardTitle}>カロリー</h2>
-									<button
-										type="button"
-										className={styles.recordButton}
-										onClick={() => setCalorieDialog({ mode: "new" })}
-									>
-										<Plus size={16} aria-hidden="true" />
-										記録する
-									</button>
-								</div>
-								{result.data.calories.items.length > 0 ? (
-									<div className={styles.calorieTotal}>
-										<span className={styles.calorieTotalValue}>
-											{formatKcal(result.data.calories.total)}
-											<span className={styles.calorieTotalUnit}>kcal</span>
-										</span>
-										<ul className={styles.calorieList}>
-											{result.data.calories.items.map((item) => (
-												<li key={item.id}>
-													<button
-														type="button"
-														className={styles.calorieItem}
-														aria-label={`${item.note ?? ""} ${item.calories}kcal を編集`}
-														onClick={() => setCalorieDialog({ mode: "edit", item })}
-													>
-														<span>{item.note}</span>
-														<span className={styles.calorieItemValue}>{formatKcal(item.calories)} kcal</span>
-													</button>
-												</li>
-											))}
-										</ul>
+							<div className={styles.calorieColumn}>
+								<section className={styles.card}>
+									<div className={styles.calorieHeader}>
+										<h2 className={styles.cardTitle}>カロリー</h2>
+										<button
+											type="button"
+											className={styles.recordButton}
+											onClick={() => setCalorieDialog({ mode: "new" })}
+										>
+											<Plus size={16} aria-hidden="true" />
+											記録する
+										</button>
 									</div>
-								) : (
-									<p className={styles.calorieEmpty}>この日のカロリーはまだ記録されていません。</p>
-								)}
-							</section>
+									{result.data.calories.items.length > 0 ? (
+										<div className={styles.calorieTotal}>
+											<span className={styles.calorieTotalValue}>
+												{formatKcal(result.data.calories.total)}
+												<span className={styles.calorieTotalUnit}>kcal</span>
+											</span>
+											<ul className={styles.calorieList}>
+												{result.data.calories.items.map((item) => (
+													<li key={item.id}>
+														<button
+															type="button"
+															className={styles.calorieItem}
+															aria-label={`${item.note ?? ""} ${item.calories}kcal を編集`}
+															onClick={() => setCalorieDialog({ mode: "edit", item })}
+														>
+															<span>{item.note}</span>
+															<span className={styles.calorieItemValue}>{formatKcal(item.calories)} kcal</span>
+														</button>
+													</li>
+												))}
+											</ul>
+										</div>
+									) : (
+										<p className={styles.calorieEmpty}>この日のカロリーはまだ記録されていません。</p>
+									)}
+								</section>
+							</div>
 						) : null}
-					</>
+					</div>
 				)}
 
 				<p className={styles.disclaimer}>

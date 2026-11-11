@@ -2,6 +2,7 @@ import { Outlet, useSearchParams, useLocation, useNavigation, Link } from "react
 import { Settings, ChevronLeft } from "lucide-react";
 import { PageTitle } from "../../components/PageTitle";
 import { useRevalidateOnVisible } from "../../lib/use-revalidate-on-visible";
+import { createSettingsReturnState, getSettingsReturnTo } from "./settings-return-context";
 import styles from "./app-shell.module.css";
 
 type Tab = "day" | "week" | "month";
@@ -14,11 +15,11 @@ const TABS: { tab: Tab; label: string }[] = [
 // 設定画面とそのサブページは、docs/design/mockups/Settings.dc.html等の通り、
 // スマホでは日週月の切り替えの代わりに「戻る」+ページ名の見出しを表示する(PCは常に通常のヘッダー)。
 // パスごとの戻り先・見出しをここにまとめる
-const SETTINGS_PAGES: Record<string, { title: string; backTo: string; backLabel: string }> = {
-	"/app/settings": { title: "設定", backTo: "/app", backLabel: "記録に戻る" },
-	"/app/settings/email": { title: "メールアドレスの変更", backTo: "/app/settings", backLabel: "戻る" },
-	"/app/settings/password": { title: "パスワードの変更", backTo: "/app/settings", backLabel: "戻る" },
-	"/app/settings/withdraw": { title: "退会", backTo: "/app/settings", backLabel: "戻る" },
+const SETTINGS_PAGES: Record<string, { title: string; backLabel: string }> = {
+	"/app/settings": { title: "設定", backLabel: "記録に戻る" },
+	"/app/settings/email": { title: "メールアドレスの変更", backLabel: "戻る" },
+	"/app/settings/password": { title: "パスワードの変更", backLabel: "戻る" },
+	"/app/settings/withdraw": { title: "退会", backLabel: "戻る" },
 };
 
 // /app配下の共通の枠(ヘッダー・日週月の切り替え)。docs/design.md 5章・docs/week-month-tabs.md 1.1。
@@ -35,12 +36,16 @@ export function AppShell() {
 	const activeTab: Tab = (searchParams.get("tab") as Tab | null) ?? "day";
 	const date = searchParams.get("date");
 	const settingsPage = SETTINGS_PAGES[location.pathname];
+	const settingsReturnTo = getSettingsReturnTo(location.state);
+	const settingsReturnParams = new URLSearchParams(settingsReturnTo.split("?")[1] ?? "");
+	const tabDate = settingsPage ? settingsReturnParams.get("date") : date;
+	const settingsState = { settingsReturnTo };
 
 	function hrefFor(tab: Tab): string {
 		const params = new URLSearchParams();
 		params.set("tab", tab);
-		if (date) {
-			params.set("date", date);
+		if (tabDate) {
+			params.set("date", tabDate);
 		}
 		return `/app?${params.toString()}`;
 	}
@@ -54,7 +59,12 @@ export function AppShell() {
 			{settingsPage ? <PageTitle title={settingsPage.title} /> : null}
 			<header className={settingsPage ? `${styles.header} ${styles.headerSettings}` : styles.header}>
 				{settingsPage ? (
-					<Link to={settingsPage.backTo} aria-label={settingsPage.backLabel} className={styles.backButton}>
+					<Link
+						to={location.pathname === "/app/settings" ? settingsReturnTo : "/app/settings"}
+						state={settingsState}
+						aria-label={settingsPage.backLabel}
+						className={styles.backButton}
+					>
 						<ChevronLeft size={20} aria-hidden="true" />
 					</Link>
 				) : null}
@@ -74,6 +84,7 @@ export function AppShell() {
 				</nav>
 				<Link
 					to="/app/settings"
+					state={createSettingsReturnState(location)}
 					aria-label="設定"
 					aria-current={settingsPage ? "page" : undefined}
 					className={settingsPage ? `${styles.settingsLink} ${styles.settingsLinkActive}` : styles.settingsLink}

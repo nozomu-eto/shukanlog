@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from "react";
+import { useLocation } from "react-router";
 import { authClient, getAuthErrorCode } from "../../lib/auth-client";
 import { Button } from "../../components/Button";
 import { PasswordField } from "../../components/PasswordField";
 import { validatePasswordRequired, validateNewPassword } from "../../lib/validators";
+import { getSettingsReturnTo } from "./settings-return-context";
 import styles from "./settings-password.module.css";
 
 // パスワードの変更(/app/settings/password)。
@@ -11,6 +13,8 @@ import styles from "./settings-password.module.css";
 // 無効にする(design.md 9章)。今の端末は、変更後にBetter Auth側で発行される新しいセッションの
 // Cookieがそのまま反映されるため、ログインしたままになる
 export function SettingsPasswordRoute() {
+	const location = useLocation();
+	const settingsState = { settingsReturnTo: getSettingsReturnTo(location.state) };
 	const [done, setDone] = useState(false);
 	const [currentPassword, setCurrentPassword] = useState("");
 	const [newPassword, setNewPassword] = useState("");
@@ -61,7 +65,7 @@ export function SettingsPasswordRoute() {
 				{done ? (
 					<div role="status" className={styles.stepStack}>
 						<p className={styles.lead}>パスワードを変更しました。</p>
-						<Button to="/app/settings">設定に戻る</Button>
+						<Button to="/app/settings" state={settingsState}>設定に戻る</Button>
 					</div>
 				) : (
 					<form className={styles.stepStack} onSubmit={handleSubmit} noValidate>

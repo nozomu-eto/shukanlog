@@ -63,6 +63,32 @@ describe("WeekTabRoute", () => {
 		});
 	});
 
+	it.each([
+		[1718.4, "1,718"],
+		[1718.5, "1,719"],
+		[1718.9, "1,719"],
+		[1999.9, "2,000"],
+		[0, "0"],
+	] as const)("平均カロリー %s を %s kcal として表示する", async (average, expected) => {
+		getSummaryMock.mockResolvedValue({
+			...baseSummary(),
+			totals: { ...baseSummary().totals, calories: { average, recordedDays: 4 } },
+		});
+		renderWeekTab();
+
+		expect(await screen.findByText(expected, { exact: true })).toBeInTheDocument();
+	});
+
+	it("平均カロリーがnullなら記録なしと表示する", async () => {
+		getSummaryMock.mockResolvedValue({
+			...baseSummary(),
+			totals: { ...baseSummary().totals, calories: { average: null, recordedDays: 0 } },
+		});
+		renderWeekTab();
+
+		expect(await screen.findByText("記録なし", { exact: true })).toBeInTheDocument();
+	});
+
 	it("期間の見出しを表示する(2026-09-24を含む週: 9/21(月)〜9/27(日))", async () => {
 		getSummaryMock.mockResolvedValue(baseSummary());
 		renderWeekTab();

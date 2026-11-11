@@ -8,6 +8,7 @@ import { Legend } from "../../components/Legend";
 import { hrefForTab } from "../../lib/tab-links";
 import { todayInTokyo, isFuture } from "../../../shared/domain/date";
 import { formatAverageCalories } from "../../../shared/domain/calories";
+import { countHabitStatuses } from "../../../shared/domain/summary";
 import {
 	getMonthRange,
 	getMonthCalendarCells,
@@ -66,6 +67,14 @@ export function MonthTabRoute() {
 	const habits = summary?.habits ?? [];
 	const medicationHabit = habits[0];
 	const exerciseHabit = habits[1];
+	const medicationEligibleDays = medicationHabit ? summary?.totals.habits[medicationHabit.id]?.eligibleDays ?? 0 : 0;
+	const exerciseEligibleDays = exerciseHabit ? summary?.totals.habits[exerciseHabit.id]?.eligibleDays ?? 0 : 0;
+	const medicationCounts = medicationHabit && summary
+		? countHabitStatuses(summary.days, medicationHabit.id, summary.accountCreatedDate, today, medicationEligibleDays)
+		: null;
+	const exerciseCounts = exerciseHabit && summary
+		? countHabitStatuses(summary.days, exerciseHabit.id, summary.accountCreatedDate, today, exerciseEligibleDays)
+		: null;
 
 	return (
 		<div className={styles.body}>
@@ -172,34 +181,33 @@ export function MonthTabRoute() {
 							{medicationHabit ? (
 								<div className={styles.summaryCard}>
 									<span className={styles.summaryLabel}>{medicationHabit.name}</span>
-									<span className={styles.summaryValue}>
-										<StatusIcon status="completed" size={14} />
-										<span className={styles.summaryValueNumber}>
-											{result.data.totals.habits[medicationHabit.id]?.completed ?? 0}
-										</span>
-									</span>
-									<span className={styles.summarySub}>
-										/ {result.data.totals.habits[medicationHabit.id]?.eligibleDays ?? 0}日
-									</span>
+									{medicationCounts ? (
+										<>
+											<span className={styles.summaryValue}>
+												<span>達成 {medicationCounts.completed}</span>
+												<span>未達成 {medicationCounts.notCompleted}</span>
+												<span>未記録 {medicationCounts.unrecorded}</span>
+											</span>
+											<span className={styles.summarySub}>対象 {result.data.totals.habits[medicationHabit.id]?.eligibleDays ?? 0}日</span>
+										</>
+									) : null}
 								</div>
 							) : null}
 
 							{exerciseHabit ? (
 								<div className={styles.summaryCard}>
 									<span className={styles.summaryLabel}>{exerciseHabit.name}</span>
-									<span className={styles.summaryValue}>
-										<StatusIcon status="completed" size={14} />
-										<span className={styles.summaryValueNumber}>
-											{result.data.totals.habits[exerciseHabit.id]?.completed ?? 0}
-										</span>
-										<StatusIcon status="partial" size={14} />
-										<span className={styles.summaryValueNumber}>
-											{result.data.totals.habits[exerciseHabit.id]?.partial ?? 0}
-										</span>
-									</span>
-									<span className={styles.summarySub}>
-										/ {result.data.totals.habits[exerciseHabit.id]?.eligibleDays ?? 0}日
-									</span>
+									{exerciseCounts ? (
+										<>
+											<span className={styles.summaryValue}>
+												<span>達成 {exerciseCounts.completed}</span>
+												<span>一部達成 {exerciseCounts.partial}</span>
+												<span>未達成 {exerciseCounts.notCompleted}</span>
+												<span>未記録 {exerciseCounts.unrecorded}</span>
+											</span>
+											<span className={styles.summarySub}>対象 {result.data.totals.habits[exerciseHabit.id]?.eligibleDays ?? 0}日</span>
+										</>
+									) : null}
 								</div>
 							) : null}
 

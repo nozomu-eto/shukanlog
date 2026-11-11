@@ -7,6 +7,7 @@ import { PageTitle } from "../../components/PageTitle";
 import { Legend } from "../../components/Legend";
 import { hrefForTab } from "../../lib/tab-links";
 import { todayInTokyo, isFuture } from "../../../shared/domain/date";
+import { formatAverageCalories } from "../../../shared/domain/calories";
 import {
 	getMonthRange,
 	getMonthCalendarCells,
@@ -208,8 +209,8 @@ export function MonthTabRoute() {
 									<span className={styles.summaryValue}>
 										<span className={styles.summaryValueNumber}>
 											{result.data.totals.calories.average === null
-												? "記録なし"
-												: formatKcalPc(result.data.totals.calories.average)}
+											? "記録なし"
+												: formatAverageCalories(result.data.totals.calories.average)}
 										</span>
 										{result.data.totals.calories.average === null ? null : " kcal"}
 									</span>

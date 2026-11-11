@@ -60,6 +60,32 @@ describe("MonthTabRoute", () => {
 		});
 	});
 
+	it.each([
+		[1718.4, "1,718"],
+		[1718.5, "1,719"],
+		[1718.9, "1,719"],
+		[1999.9, "2,000"],
+		[0, "0"],
+	] as const)("平均カロリー %s を %s kcal として表示する", async (average, expected) => {
+		getSummaryMock.mockResolvedValue({
+			...baseSummary(),
+			totals: { ...baseSummary().totals, calories: { average, recordedDays: 2 } },
+		});
+		renderMonthTab();
+
+		expect(await screen.findByText(expected, { exact: true })).toBeInTheDocument();
+	});
+
+	it("平均カロリーがnullなら記録なしと表示する", async () => {
+		getSummaryMock.mockResolvedValue({
+			...baseSummary(),
+			totals: { ...baseSummary().totals, calories: { average: null, recordedDays: 0 } },
+		});
+		renderMonthTab();
+
+		expect(await screen.findByText("記録なし", { exact: true })).toBeInTheDocument();
+	});
+
 	it("月初の曜日に合わせた空欄のマスを表示する(2026年2月は1日が日曜・28日が土曜のため、月曜始まりで前月分6マス+翌月分1マス=7マス空欄)", async () => {
 		getSummaryMock.mockResolvedValue(baseSummary());
 		renderMonthTab();

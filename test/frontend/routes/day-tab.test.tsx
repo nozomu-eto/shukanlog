@@ -371,8 +371,23 @@ describe("日タブ", () => {
 		renderDay();
 
 		await screen.findByRole("heading", { level: 1 });
+		expect(screen.getByText("今日")).toBeInTheDocument();
+		expect(screen.queryByRole("link", { name: "今日に戻る" })).not.toBeInTheDocument();
 		const nextButton = screen.getByLabelText("次の日");
 		expect(nextButton).toHaveAttribute("aria-disabled", "true");
 		expect(nextButton.tagName).not.toBe("A");
+	});
+
+	it("過去日から「今日に戻る」を押すと今日の日タブへ移動する", async () => {
+		const user = userEvent.setup();
+		renderDay("/app?tab=day&date=2026-09-24");
+
+		const todayLink = await screen.findByRole("link", { name: "今日に戻る" });
+		expect(todayLink).toHaveAttribute("href", expect.stringContaining("date=2026-09-25"));
+
+		await user.click(todayLink);
+		expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent("9月25日");
+		expect(screen.getByText("今日")).toBeInTheDocument();
+		expect(screen.queryByRole("link", { name: "今日に戻る" })).not.toBeInTheDocument();
 	});
 });

@@ -15,20 +15,22 @@ type PeriodNavProps = {
 	// todayHrefがnull(今日を含む期間を表示中)のときに、ボタンの代わりに表示するラベル(日タブの「今日」等)。
 	// 省略時は何も表示しない
 	todayLabel?: string;
+	// 日付を移動しても遷移元の期間を保つための履歴state
+	linkState?: unknown;
 };
 
 // 期間の移動(前へ・見出し・次へ、今日に戻る)。日・週・月タブで共通利用する部品。
 // 前後の移動先・可否はsrc/shared/domain/period.tsの関数で呼び出し側が計算し、hrefとして渡す
-export function PeriodNav({ heading, prevHref, prevLabel, nextHref, nextLabel, todayHref, todayLabel }: PeriodNavProps) {
+export function PeriodNav({ heading, prevHref, prevLabel, nextHref, nextLabel, todayHref, todayLabel, linkState }: PeriodNavProps) {
 	return (
 		<div className={styles.periodBar}>
-			<Link to={prevHref} aria-label={prevLabel} className={styles.navButton}>
+			<Link to={prevHref} state={linkState} aria-label={prevLabel} className={styles.navButton}>
 				<ChevronLeft size={20} aria-hidden="true" />
 			</Link>
 			<div className={styles.dateBlock}>
 				<h1 className={styles.dateHeading}>{heading}</h1>
 				{todayHref ? (
-					<Link to={todayHref} className={styles.todayButton}>
+					<Link to={todayHref} state={linkState} className={styles.todayButton}>
 						今日に戻る
 					</Link>
 				) : todayLabel ? (
@@ -36,7 +38,7 @@ export function PeriodNav({ heading, prevHref, prevLabel, nextHref, nextLabel, t
 				) : null}
 			</div>
 			{nextHref ? (
-				<Link to={nextHref} aria-label={nextLabel} className={styles.navButton}>
+				<Link to={nextHref} state={linkState} aria-label={nextLabel} className={styles.navButton}>
 					<ChevronRight size={20} aria-hidden="true" />
 				</Link>
 			) : (

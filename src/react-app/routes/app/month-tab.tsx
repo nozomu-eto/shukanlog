@@ -6,6 +6,7 @@ import { PeriodNav } from "../../components/PeriodNav";
 import { PageTitle } from "../../components/PageTitle";
 import { Legend } from "../../components/Legend";
 import { hrefForTab } from "../../lib/tab-links";
+import { createHistoryReturnState } from "./history-return-context";
 import { todayInTokyo, isFuture } from "../../../shared/domain/date";
 import { formatAverageCalories } from "../../../shared/domain/calories";
 import { countHabitStatuses } from "../../../shared/domain/summary";
@@ -145,6 +146,7 @@ export function MonthTabRoute() {
 									<Link
 										key={cell.date}
 										to={hrefForTab("day", cell.date)}
+										state={createHistoryReturnState("month", date)}
 										aria-label={label}
 										className={isToday ? `${styles.dayCell} ${styles.dayCellToday}` : styles.dayCell}
 									>

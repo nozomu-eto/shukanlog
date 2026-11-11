@@ -13,9 +13,9 @@ const EXAMPLE_ROWS: { name: string; cells: Status[] }[] = [
 ];
 
 const FEATURES = [
-	{ title: "1日1回、記号をえらぶだけ", desc: "服薬は◯×、運動は◯△×で記録します" },
-	{ title: "週・月でふりかえる", desc: "カレンダーで、続いている日がひと目で分かります" },
-	{ title: "カロリーもいっしょに", desc: "必要なければ設定でオフにできます" },
+	{ title: "ボタンひとつで記録", desc: "服薬は◯×、運動は◯△×から選べます" },
+	{ title: "週・月でふりかえる", desc: "日ごとの記録をカレンダーで確認できます" },
+	{ title: "カロリーは任意", desc: "使わない場合は、設定からオフにできます" },
 ];
 
 // トップページ(/)。docs/design/mockups/Top.dc.html・TopPC.dc.html に合わせている。
@@ -45,11 +45,11 @@ export function TopRoute() {
 				<div className={styles.hero}>
 					<div className={styles.heroText}>
 						<h1 className={styles.heading}>
-							カロリーと習慣を
+							服薬・運動を記録して
 							<br />
-							シンプルに記録するアプリです
+							週・月でふりかえる
 						</h1>
-						<p className={styles.lead}>個人向けの健康習慣記録サービスです。</p>
+						<p className={styles.lead}>毎日の記録はボタンを選ぶだけ。カロリー記録は必要な方だけ使えます。</p>
 						<div className={styles.actions}>
 							<Button to="/signup">無料ではじめる</Button>
 							<Button to="/login" variant="secondary">

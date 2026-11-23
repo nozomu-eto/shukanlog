@@ -1,4 +1,5 @@
-/* トップページ。docs/design/mockups/Top.dc.html・TopPC.dc.html に合わせる */
+/* トップページ(LP)。スマートフォン優先で書き、1024px以上でPCレイアウトにする。
+   色・フォントは styles/tokens.css の変数だけを使う */
 .page {
 	min-height: 100%;
 	display: flex;
@@ -9,8 +10,32 @@
 	flex-grow: 1;
 	display: flex;
 	flex-direction: column;
+}
+
+/* セクションの帯。背景色で区切り、中身は .inner で幅をそろえる */
+.band {
+	padding: 40px 0;
+}
+
+.surface {
+	background: var(--color-surface);
+	border-block: 1px solid var(--color-border);
+}
+
+.accent {
+	background: var(--color-tab-background);
+	border-top: 1px solid var(--color-border);
+}
+
+.inner {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 1040px;
+	margin: 0 auto;
+	padding: 0 20px;
+	display: flex;
+	flex-direction: column;
 	gap: 20px;
-	padding: 20px 20px 16px;
 }
 
 .statusBanner {
@@ -22,10 +47,11 @@
 	font-weight: 500;
 }
 
-.hero {
+.hero,
+.heroText {
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	gap: 20px;
 }
 
 .heading {
@@ -33,13 +59,61 @@
 	font-family: var(--font-heading);
 	font-weight: 700;
 	font-size: 26px;
-	line-height: 1.4;
+	line-height: 1.45;
+}
+
+.h2 {
+	margin: 0;
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 22px;
+	line-height: 1.5;
+}
+
+.h3 {
+	margin: 0;
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 17px;
+	line-height: 1.5;
+}
+
+.h3Lead {
+	composes: h3;
+	margin: 0;
+	color: var(--color-text-muted);
+}
+
+.lead,
+.prose,
+.explain,
+.card {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	font-size: 15px;
+	line-height: 1.8;
+}
+
+.lead p,
+.prose p,
+.explain p,
+.card p,
+.hero p {
+	margin: 0;
 }
 
 .lead {
-	margin: 0;
-	font-size: 15px;
-	line-height: 1.8;
+	color: var(--color-text-muted);
+}
+
+.lead strong {
+	color: var(--color-text);
+}
+
+.small {
+	font-size: 13px;
+	line-height: 1.7;
 	color: var(--color-text-muted);
 }
 
@@ -49,53 +123,147 @@
 	gap: 10px;
 }
 
-.exampleCard {
-	background: var(--color-surface);
-	border: 1px solid var(--color-border);
-	border-radius: 16px;
-	padding: 16px;
+/* 画像+キャプション */
+.figure {
+	margin: 0;
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
+	min-width: 0;
 }
 
-.exampleHeader {
+.figure figcaption,
+.reviewItem figcaption {
+	font-size: 13px;
+	line-height: 1.7;
+	color: var(--color-text-muted);
+}
+
+.figure a {
+	color: var(--color-text);
+}
+
+/* スマートフォンでは画像が画面いっぱいに広がりすぎないよう幅を抑えて中央に置く */
+.heroFigure,
+.split > .figure {
+	width: 100%;
+	max-width: 440px;
+	margin-inline: auto;
+}
+
+.split {
 	display: flex;
-	justify-content: space-between;
-	align-items: baseline;
+	flex-direction: column;
+	gap: 24px;
 }
 
-.exampleTitle {
+/* カード(悩み・ステップ) */
+.cards {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.card {
+	box-sizing: border-box;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 16px;
+	padding: 20px;
+}
+
+.surface .card {
+	background: var(--color-background);
+}
+
+.stepNumber {
+	align-self: flex-start;
+	padding: 2px 12px;
+	border-radius: 999px;
+	background: var(--color-text);
+	color: #ffffff;
 	font-family: var(--font-heading);
-	font-weight: 700;
-	font-size: 15px;
-}
-
-.exampleNote {
-	font-size: 12px;
-	color: var(--color-text-muted);
-}
-
-.weekGrid {
-	display: grid;
-	grid-template-columns: 40px repeat(7, minmax(0, 1fr));
-	gap: 4px;
-	align-items: center;
-}
-
-.weekHeaderRow {
-	font-size: 12px;
-	color: var(--color-text-muted);
-	text-align: center;
-}
-
-.habitName {
 	font-size: 13px;
 	font-weight: 700;
 }
 
-.cell {
+/* 選択肢の説明(ボタンには見せない静的な一覧) */
+.options {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	font-size: 15px;
+	line-height: 1.6;
+}
+
+.option {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+}
+
+.option svg {
+	flex-shrink: 0;
+	margin-top: 1px;
+}
+
+.note {
+	background: var(--color-background);
+	border: 1px solid var(--color-border);
+	border-radius: 12px;
+	padding: 14px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+/* 「×」と「空欄」の比較(説明用) */
+.compare {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+}
+
+.compareItem {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 12px;
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+.compareTitle {
+	font-weight: 700;
+}
+
+.compareRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+}
+
+.habitName {
+	font-weight: 700;
+}
+
+.compareCell {
+	width: 36px;
 	height: 36px;
+	flex-shrink: 0;
 	border-radius: 8px;
 	border: 1px solid var(--color-border);
 	display: flex;
@@ -103,80 +271,74 @@
 	justify-content: center;
 }
 
-.features {
-	background: var(--color-surface);
-	border: 1px solid var(--color-border);
-	border-radius: 16px;
-	padding: 16px;
+/* 日・週・月の比較。スマートフォンは横スクロール(スナップ付き)、PCは3列 */
+.reviewScroll {
+	display: flex;
+	gap: 16px;
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	padding-bottom: 8px;
+}
+
+.reviewScroll:focus-visible {
+	outline: 3px solid var(--color-text);
+	outline-offset: 2px;
+}
+
+.reviewItem {
+	margin: 0;
+	flex: 0 0 82%;
+	max-width: 340px;
+	scroll-snap-align: start;
 	display: flex;
 	flex-direction: column;
-	gap: 14px;
+	gap: 10px;
 }
 
-.feature {
-	display: flex;
-	gap: 12px;
-	align-items: flex-start;
-}
-
-.featureWithBorder {
-	border-top: 1px solid var(--color-border-subtle);
-	padding-top: 14px;
-}
-
-.featureNumber {
-	font-family: var(--font-heading);
-	font-weight: 700;
-	font-size: 15px;
-	width: 24px;
-	flex-shrink: 0;
-}
-
-.featureBody {
+.reviewItem figcaption {
 	display: flex;
 	flex-direction: column;
-	gap: 2px;
+	gap: 4px;
 }
 
-.featureTitle {
-	font-size: 15px;
-	font-weight: 700;
-}
-
-.featureDesc {
-	font-size: 13px;
-	line-height: 1.6;
-	color: var(--color-text-muted);
+.captionText {
+	font-size: 14px;
+	line-height: 1.7;
+	color: var(--color-text);
 }
 
 @media (min-width: 1024px) {
-	.main {
-		width: calc(100% - 40px);
-		max-width: 1040px;
-		margin: 0 auto;
-		padding: 64px 0 48px;
-		gap: 48px;
+	.band {
+		padding: 72px 0;
+	}
+
+	.inner {
+		gap: 32px;
 	}
 
 	.hero {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 56px;
+		gap: 24px 56px;
 		align-items: center;
 	}
 
-	.heroText {
-		display: flex;
-		flex-direction: column;
-		gap: 24px;
+	.statusBanner {
+		grid-column: 1 / -1;
 	}
 
 	.heading {
 		font-size: 38px;
-		line-height: 1.45;
 	}
 
-	.lead {
+	.h2 {
+		font-size: 28px;
+	}
+
+	.lead,
+	.prose,
+	.explain,
+	.card {
 		font-size: 16px;
 	}
 
@@ -189,23 +351,39 @@
 		flex: 1 1 0;
 	}
 
-	.exampleCard {
-		border-radius: 20px;
-		padding: 24px;
-		gap: 14px;
+	.accent .actions {
+		max-width: 480px;
 	}
 
-	.features {
+	.heroFigure {
+		margin-inline: 0;
+	}
+
+	.split {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 56px;
+		align-items: start;
+	}
+
+	.split > .figure {
+		margin-inline: 0;
+	}
+
+	.cards {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: 20px;
 	}
 
-	.feature {
-		flex-direction: column;
-		gap: 6px;
-		border-top: none;
-		padding-top: 0;
+	.reviewScroll {
+		overflow: visible;
+		gap: 24px;
 	}
 
+	.reviewItem {
+		flex: 1 1 0;
+		max-width: none;
+		min-width: 0;
+	}
 }

@@ -1,0 +1,10 @@
+/* アプリ画面の画像。枠線と角丸で画面の例であることを示し、縦横比は style の aspect-ratio で保つ */
+.shot {
+	display: block;
+	width: 100%;
+	height: auto;
+	object-fit: cover;
+	border: 1px solid var(--color-border);
+	border-radius: 16px;
+	background: var(--color-surface);
+}
